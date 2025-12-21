@@ -8,6 +8,13 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
+dependencies = [
+    "openai-whisper>=20231117",
+    "moviepy>=1.0.3",
+    "requests>=2.31.0",
+    "yt-dlp>=2023.12.30",
+    "pathlib2>=2.3.7; python_version < '3.4'"
+]
 
 [project.urls]
 Homepage = "https://github.com/your/repo"
@@ -22,6 +29,7 @@ where = ["src"]
 
 [project.scripts]
 video-summarizer = "src.main:main"
+audio-summarizer = "src.main:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
