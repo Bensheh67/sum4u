@@ -235,216 +235,471 @@ async def read_root():
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音频/视频总结工具 Web UI</title>
     <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #f9fafb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 900px;
-            margin: 0 auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
             padding: 20px;
-            background-color: #f5f5f5;
+            min-height: 100vh;
         }
+
         .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .header-info {
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .tab {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-            border-radius: 5px 5px 0 0;
         }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        .header-info {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tab {
+            display: flex;
+            background-color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .tab button {
-            background-color: inherit;
-            float: left;
+            flex: 1;
+            background-color: transparent;
+            color: var(--text-secondary);
             border: none;
             outline: none;
             cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.3s;
-            font-size: 16px;
+            padding: 18px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
         }
+
         .tab button:hover {
-            background-color: #ddd;
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.5);
         }
+
         .tab button.active {
-            background-color: #3498db;
-            color: white;
-        }
-        .tabcontent {
-            display: none;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
+            color: var(--primary-color);
             background-color: white;
         }
+
+        .tab button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 40px;
+        }
+
         .tabcontent.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 24px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #34495e;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
         }
-        input[type="text"], input[type="url"], select, textarea {
-            width: 100%;
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            font-weight: 400;
         }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
         input[type="file"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #fafafa;
+            padding: 14px;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+            background-color: var(--secondary-color);
+            font-size: 1rem;
+            transition: var(--transition);
         }
+
+        input[type="file"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        small {
+            display: block;
+            margin-top: 6px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
         button {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
-            padding: 12px 20px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--radius);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
+
         button:hover:not(:disabled) {
-            background-color: #2980b9;
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
         }
+
         button:disabled {
-            background-color: #bdc3c7;
+            background-color: #d1d5db;
             cursor: not-allowed;
+            transform: none;
         }
+
         .progress-container {
-            margin-top: 20px;
+            margin-top: 30px;
             display: none;
         }
+
         .progress-bar {
             width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 4px;
+            height: 12px;
+            background-color: #e5e7eb;
+            border-radius: 6px;
             overflow: hidden;
+            margin-bottom: 12px;
         }
+
         .progress-fill {
-            height: 20px;
-            background-color: #3498db;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #6366f1);
             width: 0%;
-            transition: width 0.3s;
+            transition: width 0.4s ease;
+            border-radius: 6px;
         }
+
         .status-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 16px;
+            border-radius: var(--radius);
             display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
+
+        .status-message a {
+            color: white;
+            text-decoration: underline;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
         .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
+
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
+
         .info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+            border: 1px solid rgba(59, 130, 246, 0.2);
         }
+
         .results-section {
             margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            border-radius: var(--radius);
+            background-color: var(--secondary-color);
             display: none;
+            border: 1px solid var(--border-color);
         }
+
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
         }
+
+        .results-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
         .results-list {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
-        }
-        .result-item {
             padding: 10px;
-            border-bottom: 1px solid #eee;
+        }
+
+        .result-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            background: white;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            transition: var(--transition);
         }
+
+        .result-item:hover {
+            box-shadow: var(--shadow);
+            transform: translateY(-2px);
+        }
+
         .result-item:last-child {
             border-bottom: none;
         }
+
         .result-actions {
             display: flex;
             gap: 10px;
+            flex-shrink: 0;
+            margin-left: 15px;
         }
+
         .result-actions button {
-            padding: 5px 10px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
-        .info-icon {
-            color: #3498db;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 300px;
-            background-color: #555;
-            color: #fff;
+
+        #noResultsMessage, #noHistoryMessage {
             text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -150px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
         }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-completed {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-processing {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+        }
+
+        .task-type {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .task-details {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .task-input {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .clear-history-btn {
+            background-color: #ef4444 !important;
+        }
+
+        .clear-history-btn:hover {
+            background-color: #dc2626 !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: var(--radius);
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .tabcontent {
+                padding: 25px 20px;
+            }
+
+            .tab button {
+                padding: 14px 10px;
+                font-size: 0.9rem;
+            }
+
+            .result-actions {
+                flex-direction: column;
+            }
+
+            .result-actions button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎵 音频/视频总结工具 Web UI</h1>
-        <div class="header-info">
-            <p>支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
-        </div>
+        <header>
+            <h1>🎵 音频/视频总结工具 Web UI</h1>
+            <div class="header-info">
+                <p>支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
+            </div>
+        </header>
 
         <div class="tab">
             <button class="tablinks active" onclick="openTab(event, 'url')">视频URL处理</button>
@@ -645,7 +900,7 @@ async def read_root():
                     <h3>处理任务历史</h3>
                     <div>
                         <button onclick="loadTaskHistory()">刷新列表</button>
-                        <button onclick="clearTaskHistory()" style="background-color: #e74c3c;">清空历史</button>
+                        <button onclick="clearTaskHistory()" class="clear-history-btn">清空历史</button>
                     </div>
                 </div>
                 <div class="results-list" id="historyList">
@@ -1018,16 +1273,18 @@ async def read_root():
                         }
 
                         taskItem.innerHTML = `
-                            <div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <strong>${taskTypeText}</strong>
-                                    <span class="status-message ${statusClass}" style="padding: 2px 8px; border-radius: 4px; font-size: 12px;">${statusText}</span>
+                            <div style="flex: 1;">
+                                <div class="task-type">${taskTypeText}</div>
+                                <div class="task-details">
+                                    <span class="status-badge status-${task.status}">${statusText}</span>
                                 </div>
-                                <div style="margin-top: 5px;">
-                                    <small>输入: ${task.input.length > 50 ? task.input.substring(0, 50) + '...' : task.input}</small>
+                                <div class="task-input">
+                                    输入: ${task.input.length > 50 ? task.input.substring(0, 50) + '...' : task.input}
                                 </div>
-                                <div style="margin-top: 3px;">
-                                    <small>模型: ${task.model} | 时间: ${task.start_time} | 时长: ${duration}</small>
+                                <div class="task-meta">
+                                    <span>模型: ${task.model}</span>
+                                    <span>时间: ${task.start_time}</span>
+                                    <span>时长: ${duration}</span>
                                 </div>
                             </div>
                             <div class="result-actions">
