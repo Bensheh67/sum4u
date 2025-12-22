@@ -11,6 +11,11 @@ requests>=2.31.0
 # 视频下载
 yt-dlp>=2023.12.30
 
+# Web框架
+fastapi>=0.104.1
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+
 # 其他工具
 pathlib2>=2.3.7; python_version < "3.4"
 # 推荐使用uv进行依赖和虚拟环境管理
