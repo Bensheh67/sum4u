@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 import uuid
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -1343,11 +1343,27 @@ async def read_root():
 
 @app.post("/process-url")
 async def process_video_url_endpoint(
-    url: str = Form(...),
+    url: str = Form(None),
     model: str = Form(default="small"),
     prompt_template: str = Form(default="default课堂笔记"),
-    prompt: Optional[str] = Form(default=None)
+    prompt: Optional[str] = Form(default=None),
+    # 为支持JSON请求添加参数
+    request: Request = None
 ):
+    # 检查请求是否为JSON格式
+    if request and request.headers.get("content-type") == "application/json":
+        try:
+            body = await request.json()
+            url = body.get("url", url)
+            model = body.get("model", model)
+            prompt_template = body.get("prompt_template", prompt_template)
+            prompt = body.get("prompt", prompt)
+        except:
+            pass  # 如果JSON解析失败，使用表单参数
+
+    # 确保URL不为空
+    if not url:
+        raise HTTPException(status_code=422, detail="URL是必需的")
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
@@ -1408,11 +1424,27 @@ async def upload_audio_endpoint(
 
 @app.post("/batch-process")
 async def batch_process_endpoint(
-    upload_dir: str = Form(default="uploads"),
+    upload_dir: str = Form(None),
     model: str = Form(default="small"),
     prompt_template: str = Form(default="default课堂笔记"),
-    prompt: Optional[str] = Form(default=None)
+    prompt: Optional[str] = Form(default=None),
+    # 为支持JSON请求添加参数
+    request: Request = None
 ):
+    # 检查请求是否为JSON格式
+    if request and request.headers.get("content-type") == "application/json":
+        try:
+            body = await request.json()
+            upload_dir = body.get("upload_dir", upload_dir) or "uploads"
+            model = body.get("model", model)
+            prompt_template = body.get("prompt_template", prompt_template)
+            prompt = body.get("prompt", prompt)
+        except:
+            pass  # 如果JSON解析失败，使用表单参数
+
+    # 确保upload_dir不为空
+    if not upload_dir:
+        upload_dir = "uploads"
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
