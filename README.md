@@ -1,4 +1,4 @@
-# 音频/视频总结工具 (Audio/Video Summarizer SHELL)
+# 音频/视频总结工具 (Audio/Video Summarizer Script)
 
 一个强大的Python命令行工具，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
 
