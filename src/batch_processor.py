@@ -14,6 +14,7 @@ from .audio_handler import handle_audio_upload
 from .transcribe import transcribe_local_audio
 from .summarize import summarize_text
 from .utils import safe_filename
+from .config import config_manager
 
 
 def get_audio_files_from_dir(upload_dir: str) -> List[str]:
@@ -30,17 +31,17 @@ def get_audio_files_from_dir(upload_dir: str) -> List[str]:
     return sorted(unique_files)
 
 
-def process_single_audio(audio_file: str, model: str, prompt_to_use: str, language: str = None) -> Dict[str, Any]:
+def process_single_audio(audio_file: str, model: str, prompt_to_use: str, language: str = None, provider: str = "deepseek") -> Dict[str, Any]:
     """处理单个音频文件"""
     # 处理音频文件
     processed_audio_path = handle_audio_upload(audio_file, output_dir="downloads")
-    
+
     # 转录音频
     transcript = transcribe_local_audio(processed_audio_path, model=model, language=language)
-    
+
     # 生成总结
-    summary = summarize_text(transcript, prompt=prompt_to_use)
-    
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
+
     return {
         "transcript": transcript,
         "summary": summary,
@@ -48,57 +49,57 @@ def process_single_audio(audio_file: str, model: str, prompt_to_use: str, langua
     }
 
 
-def process_batch(upload_dir: str = "uploads", model: str = "small", 
-                 prompt_to_use: str = None, prompt_template: str = "default课堂笔记", 
-                 language: str = None) -> List[Dict[str, Any]]:
+def process_batch(upload_dir: str = "uploads", model: str = "small",
+                 prompt_to_use: str = None, prompt_template: str = "default课堂笔记",
+                 language: str = None, provider: str = "deepseek") -> List[Dict[str, Any]]:
     """批量处理音频文件"""
     from .prompts import prompt_templates
-    
+
     # 获取实际使用的提示词
     if prompt_to_use is None:
         prompt_to_use = prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
-    
+
     # 确保上传目录存在
     Path(upload_dir).mkdir(exist_ok=True)
-    
+
     # 获取所有音频文件
     audio_files = get_audio_files_from_dir(upload_dir)
-    
+
     if not audio_files:
         print(f"⚠️  在 {upload_dir} 目录中未找到音频文件")
         return []
-    
+
     total_files = len(audio_files)
     print(f"📁 找到 {total_files} 个音频文件")
-    
+
     results = []
     for i, audio_file in enumerate(audio_files, 1):
         print(f"🎵 处理第 {i}/{total_files} 个文件: {os.path.basename(audio_file)}")
-        
+
         try:
             # 处理单个文件
-            result = process_single_audio(audio_file, model, prompt_to_use, language)
-            
+            result = process_single_audio(audio_file, model, prompt_to_use, language, provider)
+
             # 生成安全的文件名
             file_stem = Path(audio_file).stem
             safe_stem = safe_filename(file_stem)
-            
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            
+
             # 保存转录文本到transcriptions文件夹
             transcriptions_dir = Path("transcriptions")
             transcriptions_dir.mkdir(exist_ok=True)
             transcript_path = transcriptions_dir / f"local_{safe_stem}_{timestamp}_转录.txt"
             with open(transcript_path, "w", encoding="utf-8") as f:
                 f.write(result["transcript"])
-            
+
             # 保存总结到summaries文件夹
             summaries_dir = Path("summaries")
             summaries_dir.mkdir(exist_ok=True)
             summary_path = summaries_dir / f"local_{safe_stem}_{timestamp}_总结.md"
             with open(summary_path, "w", encoding="utf-8") as f:
                 f.write(result["summary"])
-            
+
             results.append({
                 "file": audio_file,
                 "status": "success",
@@ -107,7 +108,7 @@ def process_batch(upload_dir: str = "uploads", model: str = "small",
                 "error": None
             })
             print(f"✅ 第 {i} 个文件处理完成")
-            
+
         except Exception as e:
             error_msg = str(e)
             results.append({
@@ -118,10 +119,10 @@ def process_batch(upload_dir: str = "uploads", model: str = "small",
                 "error": error_msg
             })
             print(f"❌ 第 {i} 个文件处理失败: {error_msg}")
-    
+
     # 生成批量处理报告
     generate_batch_report(results, upload_dir, model, prompt_template, language)
-    
+
     return results
 
 

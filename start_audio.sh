@@ -1,12 +1,37 @@
 #!/bin/bash
 
 # 音频/视频总结工具快速启动脚本
-# 使用方法: 
+# 使用方法:
 #   ./start.sh "视频URL" (视频模式)
 #   ./start_audio.sh "音频文件路径" (音频模式)
 
 echo "🎙️ 音频/视频总结工具快速启动"
 echo "================================"
+
+# 检查配置文件是否存在
+if [ ! -f "config.json" ]; then
+    echo "📝 检测到首次运行，正在创建默认配置文件..."
+    python3 -c "from src.config import initialize_config; initialize_config()"
+    echo "💡 请运行以下命令设置您的API密钥:"
+    echo "   python3 setup_api_keys.py"
+    read -p "是否现在运行配置向导？(y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        python3 setup_api_keys.py
+    fi
+else
+    # 检查API密钥是否已配置
+    deepseek_key=$(python3 -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
+    if [ "$deepseek_key" = "False" ]; then
+        echo "⚠️  检测到API密钥未配置"
+        echo "💡 提示：您可以运行 python3 setup_api_keys.py 来配置API密钥"
+        read -p "是否现在运行配置向导？(y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            python3 setup_api_keys.py
+        fi
+    fi
+fi
 
 # 检查参数
 if [ $# -lt 1 ]; then
@@ -32,7 +57,7 @@ else
     # 是文件路径，处理音频
     IS_URL=false
     echo "🎵 检测到音频文件: $INPUT"
-    
+
     # 检查文件是否存在
     if [ ! -f "$INPUT" ]; then
         echo "❌ 错误: 音频文件不存在: $INPUT"
@@ -174,6 +199,7 @@ echo "================================"
 echo "✅ 处理完成！"
 echo "📁 请查看 summaries/ 文件夹中的结果文件"
 echo ""
+
 echo "💡 小贴士:"
 echo "   - 如果对结果不满意，可以尝试不同的模板"
 echo "   - 长音频/视频可能需要更多处理时间"

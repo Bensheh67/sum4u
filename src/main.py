@@ -18,6 +18,8 @@ from .prompts import prompt_templates
 from .audio_handler import handle_audio_upload
 from .utils import safe_filename
 from .batch_processor import process_batch
+from .config import config_manager
+from .config import config_manager, get_api_key, set_api_key
 
 
 def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool = False) -> str:
@@ -74,10 +76,13 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     transcript = transcribe_local_audio(processed_audio_path, model=model, language=language)
     print("转录完成！")
 
-    print("[3/3] 结构化总结...")
-    summary = summarize_text(transcript, prompt=prompt_to_use)
+    print("[3/4] 结构化总结...")
+    # 确定AI提供商
+    provider = "deepseek"  # 默认使用deepseek
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
     print("摘要完成！")
 
+    print("[4/4] 保存结果...")
     # 保存到总结文件夹
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(summary)
@@ -95,10 +100,13 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
     transcript = transcribe_audio(audio_path, model=model)
     print("转录完成！")
 
-    print("[3/3] 结构化总结...")
-    summary = summarize_text(transcript, prompt=prompt_to_use)
+    print("[3/4] 结构化总结...")
+    # 确定AI提供商
+    provider = "deepseek"  # 默认使用deepseek
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
     print("摘要完成！")
 
+    print("[4/4] 保存结果...")
     # 保存到总结文件夹
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(summary)
@@ -113,6 +121,7 @@ def main():
     group.add_argument("--url", help="视频链接（支持B站、YouTube等）")
     group.add_argument("--audio-file", help="本地音频文件路径（支持MP3, WAV, M4A等格式）")
     group.add_argument("--batch", action="store_true", help="批量处理上传文件夹中的所有音频文件")
+    group.add_argument("--setup-api", action="store_true", help="交互式设置API密钥")
 
     parser.add_argument("--upload-dir", required=False, default="uploads", help="批量处理的上传文件夹路径，默认为uploads")
     parser.add_argument("--model", required=False, default="small", help="Whisper模型大小 (tiny, base, small, medium, large-v1, large-v2, large-v3)，默认small")
@@ -120,11 +129,25 @@ def main():
     parser.add_argument("--prompt", required=False, help="自定义摘要提示词")
     parser.add_argument("--prompt_template", required=False, default="default课堂笔记", help="选择摘要提示词模板，可选: default课堂笔记, youtube_英文笔记, youtube_结构化提取, youtube_精炼提取, youtube_专业课笔记, 爆款短视频文案, youtube_视频总结")
     parser.add_argument("--language", required=False, help="指定音频语言（如 zh, en），不指定则自动检测")
+    parser.add_argument("--provider", required=False, help="AI服务提供商 (deepseek, openai, anthropic)")
 
     args = parser.parse_args()
 
+    # 如果请求设置API密钥，则启动设置向导
+    if args.setup_api:
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        setup_script = Path(__file__).parent.parent / "setup_api_keys.py"
+        if setup_script.exists():
+            subprocess.run([sys.executable, str(setup_script)])
+        else:
+            print("❌ 配置脚本未找到，请确保 setup_api_keys.py 存在于项目根目录")
+        return
+
     # 如果没有提供任何参数，则显示帮助信息
-    if not args.url and not args.audio_file and not args.batch:
+    if not args.url and not args.audio_file and not args.batch and not args.setup_api:
         parser.print_help()
         sys.exit(1)
 
@@ -153,7 +176,14 @@ def main():
         else:
             output_path = summaries_dir / auto_filename
 
-        process_video_url(args.url, args.model, prompt_to_use, output_path)
+        # 使用用户指定的模型，否则使用默认模型
+        model_to_use = config_manager.get_default_model() if not args.model else args.model
+        provider_to_use = args.provider if args.provider else "deepseek"
+
+        # 更新prompt_to_use使用用户的模板或自定义提示词
+        prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
+
+        process_video_url(args.url, model_to_use, prompt_to_use, output_path)
 
     elif args.audio_file:
         # 处理本地音频文件
@@ -173,14 +203,28 @@ def main():
         else:
             output_path = summaries_dir / auto_filename
 
-        process_local_audio(args.audio_file, args.model, prompt_to_use, output_path, args.language)
+        # 使用用户指定的模型，否则使用默认模型
+        model_to_use = config_manager.get_default_model() if not args.model else args.model
+        provider_to_use = args.provider if args.provider else "deepseek"
+
+        # 更新prompt_to_use使用用户的模板或自定义提示词
+        prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
+
+        process_local_audio(args.audio_file, model_to_use, prompt_to_use, output_path, args.language)
 
     elif args.batch:
         # 批量处理模式
         print(f"批量处理模式: 处理 {args.upload_dir} 文件夹中的所有音频文件")
+        # 使用用户指定的模型，否则使用默认模型
+        model_to_use = config_manager.get_default_model() if not args.model else args.model
+        provider_to_use = args.provider if args.provider else "deepseek"
+
+        # 更新prompt_to_use使用用户的模板或自定义提示词
+        prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
+
         process_batch(
             upload_dir=args.upload_dir,
-            model=args.model,
+            model=model_to_use,
             prompt_to_use=prompt_to_use,
             prompt_template=args.prompt_template,
             language=args.language

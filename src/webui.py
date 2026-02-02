@@ -28,6 +28,8 @@ from src.prompts import prompt_templates
 from src.audio_handler import handle_audio_upload
 from src.utils import safe_filename
 from src.batch_processor import process_batch
+from src.config import config_manager, get_api_key, set_api_key
+from src.config import config_manager, get_api_key, set_api_key
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
 
@@ -705,6 +707,7 @@ async def read_root():
             <button class="tablinks active" onclick="openTab(event, 'url')">视频URL处理</button>
             <button class="tablinks" onclick="openTab(event, 'audio')">本地音频处理</button>
             <button class="tablinks" onclick="openTab(event, 'batch')">批量处理</button>
+            <button class="tablinks" onclick="openTab(event, 'api_config')">API配置</button>
             <button class="tablinks" onclick="openTab(event, 'results')">查看结果</button>
             <button class="tablinks" onclick="openTab(event, 'history')">任务历史</button>
         </div>
@@ -875,6 +878,46 @@ async def read_root():
                 </div>
                 <div id="batchStatusMessage" class="status-message info"></div>
             </div>
+        </div>
+
+        <!-- API配置标签页 -->
+        <div id="api_config" class="tabcontent">
+            <h2>API配置</h2>
+            <p>在此配置您的AI服务API密钥，配置后将永久保存在本地。</p>
+
+            <div class="form-group">
+                <label for="deepseekApiKey">DeepSeek API密钥:</label>
+                <input type="password" id="deepseekApiKey" name="deepseekApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
+                <small>用于DeepSeek API服务的密钥</small>
+            </div>
+
+            <div class="form-group">
+                <label for="openaiApiKey">OpenAI API密钥 (可选):</label>
+                <input type="password" id="openaiApiKey" name="openaiApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
+                <small>用于OpenAI API服务的密钥</small>
+            </div>
+
+            <div class="form-group">
+                <label for="anthropicApiKey">Anthropic API密钥 (可选):</label>
+                <input type="password" id="anthropicApiKey" name="anthropicApiKey" placeholder="sk-ant-xxxxxxxxxxxxxxxx">
+                <small>用于Anthropic API服务的密钥</small>
+            </div>
+
+            <div class="form-group">
+                <label for="defaultModel">默认AI模型:</label>
+                <select id="defaultModel" name="defaultModel">
+                    <option value="deepseek-chat">DeepSeek Chat</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="claude-3-haiku">Claude 3 Haiku</option>
+                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                </select>
+            </div>
+
+            <button onclick="saveApiConfig()">保存配置</button>
+
+            <div id="apiConfigStatus" class="status-message" style="display:none;"></div>
         </div>
 
         <!-- 查看结果标签页 -->
@@ -1334,6 +1377,98 @@ async def read_root():
                 alert('清空历史记录失败: ' + error.message);
             }
         }
+
+        // 保存API配置
+        async function saveApiConfig() {
+            const deepseekApiKey = document.getElementById('deepseekApiKey').value;
+            const openaiApiKey = document.getElementById('openaiApiKey').value;
+            const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const defaultModel = document.getElementById('defaultModel').value;
+
+            const config = {
+                api_keys: {
+                    deepseek: deepseekApiKey,
+                    openai: openaiApiKey,
+                    anthropic: anthropicApiKey
+                },
+                default_model: defaultModel
+            };
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                const statusElement = document.getElementById('apiConfigStatus');
+                if (response.ok) {
+                    statusElement.textContent = '配置保存成功！';
+                    statusElement.className = 'status-message success';
+                    statusElement.style.display = 'block';
+
+                    // 清空输入框中的密钥（出于安全考虑）
+                    document.getElementById('deepseekApiKey').value = '';
+                    document.getElementById('openaiApiKey').value = '';
+                    document.getElementById('anthropicApiKey').value = '';
+                } else {
+                    statusElement.textContent = '配置保存失败: ' + result.detail;
+                    statusElement.className = 'status-message error';
+                    statusElement.style.display = 'block';
+                }
+
+                // 3秒后隐藏状态信息
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                const statusElement = document.getElementById('apiConfigStatus');
+                statusElement.textContent = '保存配置时发生错误: ' + error.message;
+                statusElement.className = 'status-message error';
+                statusElement.style.display = 'block';
+
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 页面加载时加载API配置
+        window.addEventListener('load', function() {
+            loadApiConfig();
+        });
+
+        // 加载API配置
+        async function loadApiConfig() {
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+
+                    // 注意：出于安全原因，我们不会在前端显示实际的API密钥
+                    // 但我们可以设置占位符来显示密钥是否已配置
+                    if (config.api_keys && config.api_keys.deepseek) {
+                        document.getElementById('deepseekApiKey').placeholder = '[已配置 - 输入新密钥以更新]';
+                    }
+                    if (config.api_keys && config.api_keys.openai) {
+                        document.getElementById('openaiApiKey').placeholder = '[已配置 - 输入新密钥以更新]';
+                    }
+                    if (config.api_keys && config.api_keys.anthropic) {
+                        document.getElementById('anthropicApiKey').placeholder = '[已配置 - 输入新密钥以更新]';
+                    }
+
+                    if (config.default_model) {
+                        document.getElementById('defaultModel').value = config.default_model;
+                    }
+                }
+            } catch (error) {
+                console.error('加载API配置失败:', error);
+            }
+        }
     </script>
 </body>
 </html>
@@ -1618,6 +1753,45 @@ async def clear_task_history():
     global task_history
     task_history = []
     return {"message": "任务历史记录已清空"}
+
+
+@app.get("/api/config")
+async def get_config():
+    """获取API配置"""
+    try:
+        config_data = {
+            "api_keys": {
+                "deepseek": bool(config_manager.get_api_key("deepseek")),
+                "openai": bool(config_manager.get_api_key("openai")),
+                "anthropic": bool(config_manager.get_api_key("anthropic"))
+            },
+            "default_model": config_manager.get_default_model()
+        }
+        return config_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取配置失败: {str(e)}")
+
+
+@app.post("/api/config")
+async def update_config(request: Request):
+    """更新API配置"""
+    try:
+        data = await request.json()
+
+        # 更新API密钥
+        api_keys = data.get("api_keys", {})
+        for provider, key in api_keys.items():
+            if key:  # 只有当提供了密钥时才更新
+                set_api_key(provider, key)
+
+        # 更新默认模型
+        default_model = data.get("default_model")
+        if default_model:
+            config_manager.set_default_model(default_model)
+
+        return {"message": "配置更新成功"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新配置失败: {str(e)}")
 
 
 if __name__ == "__main__":
