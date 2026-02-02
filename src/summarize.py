@@ -39,7 +39,7 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
     :return: 结构化摘要文本
     """
     def call_api(chunk):
-        api_key = "sk-82ea2cd0ff7c47548b0a4a72e7e697ce"
+        api_key = "DEEPSEEK_API_KEY_REMOVED"
         p = prompt if prompt else prompt_default
         p = p + "\n" + chunk
         headers = {
