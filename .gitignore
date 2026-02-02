@@ -122,3 +122,7 @@ cython_debug/
 /downloads/
 /summaries/
 /transcriptions/
+
+
+# 编程工具文件夹
+.qwen/
