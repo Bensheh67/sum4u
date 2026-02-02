@@ -126,3 +126,5 @@ cython_debug/
 
 # 编程工具文件夹
 .qwen/
+
+.idea
