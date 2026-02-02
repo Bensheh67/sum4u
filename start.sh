@@ -6,6 +6,31 @@
 echo "🎥 视频总结工具快速启动"
 echo "================================"
 
+# 检查配置文件是否存在
+if [ ! -f "config.json" ]; then
+    echo "📝 检测到首次运行，正在创建默认配置文件..."
+    python3 -c "from src.config import initialize_config; initialize_config()"
+    echo "💡 请运行以下命令设置您的API密钥:"
+    echo "   python3 setup_api_keys.py"
+    read -p "是否现在运行配置向导？(y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        python3 setup_api_keys.py
+    fi
+else
+    # 检查API密钥是否已配置
+    deepseek_key=$(python3 -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
+    if [ "$deepseek_key" = "False" ]; then
+        echo "⚠️  检测到API密钥未配置"
+        echo "💡 提示：您可以运行 python3 setup_api_keys.py 来配置API密钥"
+        read -p "是否现在运行配置向导？(y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            python3 setup_api_keys.py
+        fi
+    fi
+fi
+
 # 检查参数
 if [ $# -lt 1 ]; then
     echo "❌ 错误: 请提供视频URL"
@@ -90,6 +115,7 @@ if [ "$TEMPLATE_IDX" -eq 0 ]; then
     # 用户选择了自定义提示词
     read -p "请输入自定义提示词：" CUSTOM_PROMPT
     echo ""
+
     if [ -z "$CUSTOM_PROMPT" ]; then
         echo "⚠️  您没有输入自定义提示词，将使用默认模板"
         python3 src/main.py --url "$URL" --model "$MODEL_SIZE"
@@ -110,6 +136,7 @@ echo "================================"
 echo "✅ 处理完成！"
 echo "📁 请查看 summaries/ 文件夹中的结果文件"
 echo ""
+
 echo "💡 小贴士:"
 echo "   - 如果对结果不满意，可以尝试不同的模板"
 echo "   - 长视频可能需要更多处理时间"
