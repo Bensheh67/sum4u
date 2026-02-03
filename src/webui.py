@@ -15,6 +15,7 @@ import asyncio
 import threading
 import time
 from datetime import datetime
+import uvicorn
 
 # 添加src目录到Python路径
 src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,6 @@ from src.prompts import prompt_templates
 from src.audio_handler import handle_audio_upload
 from src.utils import safe_filename
 from src.batch_processor import process_batch
-from src.config import config_manager, get_api_key, set_api_key
 from src.config import config_manager, get_api_key, set_api_key
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
@@ -1795,5 +1795,4 @@ async def update_config(request: Request):
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
