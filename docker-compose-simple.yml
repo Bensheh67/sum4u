@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  video-summarizer:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    ports:
+      - "8000:8000"
+    volumes:
+      # 挂载数据卷，保持处理结果
+      - ./data/downloads:/app/downloads
+      - ./data/summaries:/app/summaries
+      - ./data/transcriptions:/app/transcriptions
+      - ./data/uploads:/app/uploads
+      # 挂载配置文件（可选，如果没有会自动创建）
+      - ./config.json:/app/config.json
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

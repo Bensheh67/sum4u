@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  video-summarizer:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # 挂载当前目录下的输出文件夹，以便持久化结果
+      - ./downloads:/app/downloads
+      - ./summaries:/app/summaries
+      - ./transcriptions:/app/transcriptions
+      - ./uploads:/app/uploads
+      # 挂载配置文件
+      - ./config.json:/app/config.json
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

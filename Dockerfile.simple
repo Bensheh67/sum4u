@@ -1,0 +1,29 @@
+FROM python:3.10-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 yt-dlp
+RUN pip install --no-cache-dir yt-dlp
+
+# 复制项目文件
+COPY . .
+
+# 安装 Python 依赖
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 创建必要的目录
+RUN mkdir -p downloads summaries transcriptions uploads
+
+# 暴露端口
+EXPOSE 8000
+
+# 设置启动命令
+CMD ["sh", "-c", "python3 -c \"from src.config import initialize_config; initialize_config()\" && python3 -c \"import uvicorn; from src.webui import app; uvicorn.run(app, host='0.0.0.0', port=8000)\""]
