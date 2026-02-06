@@ -9,7 +9,7 @@
 </p>
 1. 一个强大的Python命令行工具及Web界面，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
 2. /skill 符合claude skill规范，可以直接使用
-
+<img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://github.com/user-attachments/assets/db0770a6-8dee-4c03-9319-553f69efd2e8" />
 ## ✨ 特性
 
 - **多平台支持**: 支持YouTube、Bilibili等平台视频下载
@@ -163,9 +163,6 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 ```
 
 启动后访问 `http://localhost:8000` 即可使用Web界面。
-
-<img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://github.com/user-attachments/assets/db0770a6-8dee-4c03-9319-553f69efd2e8" />
-
 
 Web界面功能包括：
 
