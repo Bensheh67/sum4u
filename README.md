@@ -60,7 +60,7 @@ Docker方式无需安装Python环境和各种依赖，一键即可运行完整�
    ```bash
    # 给启动脚本添加执行权限
    chmod +x docker_setup_simple.sh
-
+   
    # 启动工具（首次运行会自动构建镜像）
    ./docker_setup_simple.sh
    ```
@@ -83,7 +83,7 @@ Docker方式无需安装Python环境和各种依赖，一键即可运行完整�
    ```bash
    # 安装 uv
    pip install uv
-
+   
    # 创建虚拟环境并安装依赖
    uv venv
    source .venv/bin/activate  # Linux/macOS
@@ -95,14 +95,14 @@ Docker方式无需安装Python环境和各种依赖，一键即可运行完整�
    ```bash
    # 安装 yt-dlp (用于视频下载)
    pip install yt-dlp
-
+   
    # 安装 ffmpeg (用于音频处理)
    # macOS
    brew install ffmpeg
-
+   
    # Ubuntu/Debian
    sudo apt update && sudo apt install ffmpeg
-
+   
    # Windows (使用Chocolatey)
    choco install ffmpeg
    ```
@@ -132,6 +132,7 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 ### 2. 快速启动脚本
 
 **处理视频**：
+
 ```bash
 ./start.sh "视频URL"
 ```
@@ -164,6 +165,9 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 启动后访问 `http://localhost:8000` 即可使用Web界面。
 
 Web界面功能包括：
+
+- API配置
+
 - 视频URL处理
 - 本地音频文件上传
 - 批量处理
@@ -240,6 +244,7 @@ docker build -f Dockerfile.beginner -t video-summarizer .
 - `youtube_专业课笔记`: 适用于教学视频的专业笔记格式
 - `爆款短视频文案`: 适用于短视频内容的文案风格
 - `youtube_视频总结`: 综合性视频总结模板
+- 可自行配置prompt
 
 ## 📁 输出文件
 
