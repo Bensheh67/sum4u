@@ -236,163 +236,267 @@ async def read_root():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音频/视频总结工具 Web UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary-color: #f9fafb;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --success-color: #10b981;
-            --error-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
-            --background: #f8fafc;
-            --card-bg: #ffffff;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --radius: 8px;
-            --radius-lg: 12px;
-            --transition: all 0.2s ease;
+            /* Base UI inspired color palette */
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Primary colors */
+            --primary-50: #eff6ff;
+            --primary-100: #dbeafe;
+            --primary-200: #bfdbfe;
+            --primary-300: #93c5fd;
+            --primary-400: #60a5fa;
+            --primary-500: #3b82f6;
+            --primary-600: #2563eb;
+            --primary-700: #1d4ed8;
+            --primary-800: #1e40af;
+            --primary-900: #1e3a8a;
+            
+            /* Success, Warning, Error colors */
+            --success-50: #f0fdf4;
+            --success-100: #dcfce7;
+            --success-200: #bbf7d0;
+            --success-300: #86efac;
+            --success-400: #4ade80;
+            --success-500: #22c55e;
+            --success-600: #16a34a;
+            --success-700: #15803d;
+            --success-800: #166534;
+            --success-900: #14532d;
+            
+            --warning-50: #fffbeb;
+            --warning-100: #fef3c7;
+            --warning-200: #fde68a;
+            --warning-300: #fcd34d;
+            --warning-400: #fbbf24;
+            --warning-500: #f59e0b;
+            --warning-600: #d97706;
+            --warning-700: #b45309;
+            --warning-800: #92400e;
+            --warning-900: #78350f;
+            
+            --error-50: #fef2f2;
+            --error-100: #fee2e2;
+            --error-200: #fecaca;
+            --error-300: #fca5a5;
+            --error-400: #f87171;
+            --error-500: #ef4444;
+            --error-600: #dc2626;
+            --error-700: #b91c1c;
+            --error-800: #991b1b;
+            --error-900: #7f1d1d;
+            
+            /* Modern UI variables */
+            --bg-body: var(--gray-50);
+            --bg-card: white;
+            --bg-panel: var(--gray-100);
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --border: var(--gray-200);
+            --primary: var(--primary-600);
+            --primary-hover: var(--primary-700);
+            --success: var(--success-600);
+            --warning: var(--warning-600);
+            --error: var(--error-600);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-md: 0.625rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--background);
+            background-color: var(--bg-body);
             color: var(--text-primary);
-            line-height: 1.6;
-            padding: 20px;
+            line-height: 1.5;
             min-height: 100vh;
+            padding: 1rem;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
             box-shadow: var(--shadow-lg);
             overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr;
         }
 
         header {
-            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
             color: white;
-            padding: 30px 40px;
+            padding: 2rem 2.5rem;
             text-align: center;
         }
 
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.025em;
-        }
-
-        .header-info {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 600px;
+        .header-content {
+            max-width: 800px;
             margin: 0 auto;
         }
 
-        .tab {
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
             display: flex;
-            background-color: var(--secondary-color);
-            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
         }
 
-        .tab button {
+        .header-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .tabs-container {
+            display: flex;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .tab-button {
             flex: 1;
-            background-color: transparent;
+            min-width: 120px;
+            padding: 1rem 1.5rem;
+            background: transparent;
             color: var(--text-secondary);
             border: none;
-            outline: none;
             cursor: pointer;
-            padding: 18px 20px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 500;
             transition: var(--transition);
             position: relative;
+            white-space: nowrap;
         }
 
-        .tab button:hover {
+        .tab-button:hover {
             color: var(--text-primary);
             background-color: rgba(255, 255, 255, 0.5);
         }
 
-        .tab button.active {
-            color: var(--primary-color);
+        .tab-button.active {
+            color: var(--primary);
             background-color: white;
         }
 
-        .tab button.active::after {
+        .tab-button.active::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
             height: 3px;
-            background-color: var(--primary-color);
+            background-color: var(--primary);
         }
 
-        .tabcontent {
+        .tab-content {
             display: none;
-            padding: 40px;
+            padding: 2rem;
         }
 
-        .tabcontent.active {
+        .tab-content.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeInSlideUp 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        h2 {
+        .section-title {
             font-size: 1.5rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1.5rem;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         label {
-            display: block;
-            margin-bottom: 8px;
             font-weight: 500;
             color: var(--text-primary);
             font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: var(--gray-200);
+            color: var(--gray-600);
+            font-size: 0.75rem;
+            cursor: help;
         }
 
         .tooltip {
             position: relative;
             display: inline-block;
-            margin-left: 6px;
-            cursor: help;
         }
 
-        .tooltip .tooltiptext {
+        .tooltip .tooltip-text {
             visibility: hidden;
             width: 280px;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: var(--gray-800);
             color: white;
             text-align: center;
-            border-radius: 6px;
-            padding: 10px;
+            border-radius: var(--radius);
+            padding: 0.75rem;
             position: absolute;
             z-index: 100;
             bottom: 125%;
@@ -402,151 +506,168 @@ async def read_root():
             transition: opacity 0.3s;
             font-size: 0.85rem;
             line-height: 1.4;
-            font-weight: 400;
+            box-shadow: var(--shadow-lg);
         }
 
-        .tooltip:hover .tooltiptext {
+        .tooltip:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
         }
 
-        input[type="text"],
-        input[type="url"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border-color);
+        input, select, textarea {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
             border-radius: var(--radius);
             font-size: 1rem;
             transition: var(--transition);
             background-color: white;
         }
 
-        input[type="text"]:focus,
-        input[type="url"]:focus,
-        select:focus,
-        textarea:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
         input[type="file"] {
-            width: 100%;
-            padding: 14px;
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius);
-            background-color: var(--secondary-color);
-            font-size: 1rem;
-            transition: var(--transition);
+            border: 2px dashed var(--border);
+            padding: 1.5rem;
+            text-align: center;
+            background-color: var(--gray-50);
         }
 
         input[type="file"]:focus {
-            border-color: var(--primary-color);
+            border-color: var(--primary);
         }
 
-        small {
-            display: block;
-            margin-top: 6px;
-            color: var(--text-secondary);
+        .input-hint {
+            color: var(--text-muted);
             font-size: 0.85rem;
+            margin-top: 0.25rem;
         }
 
-        button {
-            background-color: var(--primary-color);
+        .btn {
+            background-color: var(--primary);
             color: white;
-            padding: 14px 28px;
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: var(--radius);
             cursor: pointer;
             font-size: 1rem;
             font-weight: 500;
             transition: var(--transition);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        button:hover:not(:disabled) {
+        .btn:hover:not(:disabled) {
             background-color: var(--primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+            box-shadow: var(--shadow-md);
         }
 
-        button:disabled {
-            background-color: #d1d5db;
+        .btn:disabled {
+            background-color: var(--gray-300);
             cursor: not-allowed;
             transform: none;
         }
 
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: var(--success-700);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background-color: var(--warning-700);
+        }
+
+        .btn-error {
+            background-color: var(--error);
+        }
+
+        .btn-error:hover:not(:disabled) {
+            background-color: var(--error-700);
+        }
+
         .progress-container {
-            margin-top: 30px;
+            margin-top: 1.5rem;
             display: none;
         }
 
         .progress-bar {
             width: 100%;
-            height: 12px;
-            background-color: #e5e7eb;
-            border-radius: 6px;
+            height: 0.75rem;
+            background-color: var(--gray-200);
+            border-radius: 9999px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 0.75rem;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), #6366f1);
+            background: linear-gradient(90deg, var(--primary), #6366f1);
             width: 0%;
             transition: width 0.4s ease;
-            border-radius: 6px;
+            border-radius: 9999px;
         }
 
         .status-message {
-            padding: 16px;
+            padding: 1rem;
             border-radius: var(--radius);
             display: none;
             font-size: 0.95rem;
             line-height: 1.5;
+            margin-top: 1rem;
         }
 
         .status-message a {
             color: white;
             text-decoration: underline;
-            margin-top: 8px;
+            margin-top: 0.5rem;
             display: inline-block;
         }
 
-        .success {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        .status-success {
+            background-color: var(--success-50);
+            color: var(--success-800);
+            border: 1px solid var(--success-200);
         }
 
-        .error {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+        .status-error {
+            background-color: var(--error-50);
+            color: var(--error-800);
+            border: 1px solid var(--error-200);
         }
 
-        .info {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+        .status-info {
+            background-color: var(--primary-50);
+            color: var(--primary-800);
+            border: 1px solid var(--primary-200);
         }
 
-        .results-section {
-            margin-top: 30px;
+        .results-container {
+            margin-top: 1.5rem;
             border-radius: var(--radius);
-            background-color: var(--secondary-color);
+            background-color: var(--bg-panel);
             display: none;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
 
         .results-header h3 {
@@ -554,24 +675,28 @@ async def read_root():
             font-weight: 600;
             color: var(--text-primary);
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .results-list {
             max-height: 400px;
             overflow-y: auto;
-            padding: 10px;
+            padding: 1rem;
         }
 
         .result-item {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             background: white;
             border-radius: var(--radius);
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
             transition: var(--transition);
+            box-shadow: var(--shadow-sm);
         }
 
         .result-item:hover {
@@ -583,84 +708,99 @@ async def read_root():
             border-bottom: none;
         }
 
-        .result-actions {
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
-            margin-left: 15px;
+        .result-info {
+            flex: 1;
         }
 
-        .result-actions button {
-            padding: 8px 16px;
+        .result-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-left: 1rem;
+        }
+
+        .result-actions .btn {
+            padding: 0.5rem 1rem;
             font-size: 0.9rem;
         }
 
-        #noResultsMessage, #noHistoryMessage {
+        .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--gray-300);
         }
 
         .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
             font-size: 0.8rem;
             font-weight: 500;
+            gap: 0.25rem;
         }
 
-        .status-completed {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
+        .status-badge.completed {
+            background-color: var(--success-100);
+            color: var(--success-800);
         }
 
-        .status-error {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
+        .status-badge.error {
+            background-color: var(--error-100);
+            color: var(--error-800);
         }
 
-        .status-processing {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-        }
-
-        .task-type {
-            font-weight: 600;
-            color: var(--text-primary);
+        .status-badge.processing {
+            background-color: var(--primary-100);
+            color: var(--primary-800);
         }
 
         .task-details {
-            margin-top: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            margin-top: 0.5rem;
         }
 
         .task-input {
             font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
             word-break: break-all;
         }
 
         .task-meta {
             display: flex;
-            gap: 15px;
-            margin-top: 6px;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
-        .clear-history-btn {
-            background-color: #ef4444 !important;
-        }
-
-        .clear-history-btn:hover {
-            background-color: #dc2626 !important;
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
         }
 
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 0.5rem;
             }
 
             .container {
@@ -668,28 +808,50 @@ async def read_root():
             }
 
             header {
-                padding: 20px;
+                padding: 1.5rem;
             }
 
             h1 {
-                font-size: 1.8rem;
+                font-size: 1.75rem;
             }
 
-            .tabcontent {
-                padding: 25px 20px;
+            .header-subtitle {
+                font-size: 0.95rem;
             }
 
-            .tab button {
-                padding: 14px 10px;
+            .tab-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .tabs-container {
+                flex-wrap: wrap;
+            }
+
+            .tab-button {
+                padding: 0.75rem 1rem;
                 font-size: 0.9rem;
+            }
+
+            .form-grid {
+                gap: 1.25rem;
             }
 
             .result-actions {
                 flex-direction: column;
             }
 
-            .result-actions button {
+            .result-actions .btn {
                 width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
             }
         }
     </style>
@@ -697,36 +859,33 @@ async def read_root():
 <body>
     <div class="container">
         <header>
-            <h1>🎵 音频/视频总结工具 Web UI</h1>
-            <div class="header-info">
-                <p>支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
+            <div class="header-content">
+                <h1><i class="fas fa-microphone-alt"></i> 音频/视频总结工具</h1>
+                <p class="header-subtitle">支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
             </div>
         </header>
 
-        <div class="tab">
-            <button class="tablinks active" onclick="openTab(event, 'url')">视频URL处理</button>
-            <button class="tablinks" onclick="openTab(event, 'audio')">本地音频处理</button>
-            <button class="tablinks" onclick="openTab(event, 'batch')">批量处理</button>
-            <button class="tablinks" onclick="openTab(event, 'api_config')">API配置</button>
-            <button class="tablinks" onclick="openTab(event, 'results')">查看结果</button>
-            <button class="tablinks" onclick="openTab(event, 'history')">任务历史</button>
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="url"><i class="fas fa-link"></i> 视频URL处理</button>
+            <button class="tab-button" data-tab="audio"><i class="fas fa-file-audio"></i> 本地音频处理</button>
+            <button class="tab-button" data-tab="batch"><i class="fas fa-layer-group"></i> 批量处理</button>
+            <button class="tab-button" data-tab="api_config"><i class="fas fa-cog"></i> API配置</button>
+            <button class="tab-button" data-tab="results"><i class="fas fa-file-alt"></i> 查看结果</button>
+            <button class="tab-button" data-tab="history"><i class="fas fa-history"></i> 任务历史</button>
         </div>
 
         <!-- 视频URL处理标签页 -->
-        <div id="url" class="tabcontent active">
-            <h2>处理视频URL</h2>
-            <form id="urlForm">
+        <div id="url" class="tab-content active">
+            <h2 class="section-title"><i class="fas fa-link"></i> 处理视频URL</h2>
+            <form id="urlForm" class="form-grid">
                 <div class="form-group">
-                    <label for="videoUrl">视频URL:</label>
-                    <input type="url" id="videoUrl" name="videoUrl" placeholder="请输入YouTube或Bilibili视频链接" required>
+                    <label for="videoUrl">视频URL <span class="tooltip"><span class="tooltip-trigger"><i class="fas fa-question"></i></span><span class="tooltip-text">支持YouTube、Bilibili等平台的视频链接</span></span></label>
+                    <input type="url" id="videoUrl" name="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                    <small class="input-hint">请输入有效的视频链接</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="whisperModel">Whisper模型大小:
-                        <span class="tooltip">ⓘ
-                            <span class="tooltiptext">tiny: 最快但准确性最低 | small: 平衡速度和准确性（默认）| large: 最准确但最慢</span>
-                        </span>
-                    </label>
+                    <label for="whisperModel">Whisper模型大小 <span class="tooltip"><span class="tooltip-trigger"><i class="fas fa-question"></i></span><span class="tooltip-text">tiny: 最快但准确性最低 | small: 平衡速度和准确性 | large: 最准确但最慢</span></span></label>
                     <select id="whisperModel" name="whisperModel">
                         <option value="tiny">Tiny (最快，准确性最低)</option>
                         <option value="base">Base (快速且准确)</option>
@@ -737,7 +896,7 @@ async def read_root():
                 </div>
 
                 <div class="form-group">
-                    <label for="promptTemplate">摘要模板:</label>
+                    <label for="promptTemplate">摘要模板</label>
                     <select id="promptTemplate" name="promptTemplate">
                         <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
                         <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
@@ -750,33 +909,34 @@ async def read_root():
                 </div>
 
                 <div class="form-group">
-                    <label for="customPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
+                    <label for="customPrompt">自定义提示词 (可选)</label>
                     <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
+                    <small class="input-hint">如果填写将覆盖模板设置</small>
                 </div>
 
-                <button type="submit">开始处理</button>
+                <button type="submit" class="btn"><i class="fas fa-play"></i> 开始处理</button>
             </form>
 
             <div id="urlProgress" class="progress-container">
                 <div class="progress-bar">
                     <div id="urlProgressFill" class="progress-fill"></div>
                 </div>
-                <div id="urlStatusMessage" class="status-message info"></div>
+                <div id="urlStatusMessage" class="status-message status-info"></div>
             </div>
         </div>
 
         <!-- 本地音频处理标签页 -->
-        <div id="audio" class="tabcontent">
-            <h2>处理本地音频文件</h2>
-            <form id="audioForm" enctype="multipart/form-data">
+        <div id="audio" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-file-audio"></i> 处理本地音频文件</h2>
+            <form id="audioForm" enctype="multipart/form-data" class="form-grid">
                 <div class="form-group">
-                    <label for="audioFile">选择音频文件:</label>
+                    <label for="audioFile">选择音频文件</label>
                     <input type="file" id="audioFile" name="audioFile" accept=".mp3,.wav,.m4a,.mp4,.aac,.flac,.wma,.amr" required>
-                    <small>支持格式：MP3, WAV, M4A, MP4, AAC, FLAC, WMA, AMR</small>
+                    <small class="input-hint">支持格式：MP3, WAV, M4A, MP4, AAC, FLAC, WMA, AMR</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="audioWhisperModel">Whisper模型大小:</label>
+                    <label for="audioWhisperModel">Whisper模型大小</label>
                     <select id="audioWhisperModel" name="audioWhisperModel">
                         <option value="tiny">Tiny (最快，准确性最低)</option>
                         <option value="base">Base (快速且准确)</option>
@@ -787,7 +947,7 @@ async def read_root():
                 </div>
 
                 <div class="form-group">
-                    <label for="audioLanguage">音频语言 (可选，留空自动检测):</label>
+                    <label for="audioLanguage">音频语言 (可选)</label>
                     <select id="audioLanguage" name="audioLanguage">
                         <option value="">自动检测</option>
                         <option value="zh">中文 (zh)</option>
@@ -803,7 +963,7 @@ async def read_root():
                 </div>
 
                 <div class="form-group">
-                    <label for="audioPromptTemplate">摘要模板:</label>
+                    <label for="audioPromptTemplate">摘要模板</label>
                     <select id="audioPromptTemplate" name="audioPromptTemplate">
                         <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
                         <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
@@ -816,141 +976,158 @@ async def read_root():
                 </div>
 
                 <div class="form-group">
-                    <label for="audioCustomPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
+                    <label for="audioCustomPrompt">自定义提示词 (可选)</label>
                     <textarea id="audioCustomPrompt" name="audioCustomPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
+                    <small class="input-hint">如果填写将覆盖模板设置</small>
                 </div>
 
-                <button type="submit">上传并处理</button>
+                <button type="submit" class="btn"><i class="fas fa-upload"></i> 上传并处理</button>
             </form>
 
             <div id="audioProgress" class="progress-container">
                 <div class="progress-bar">
                     <div id="audioProgressFill" class="progress-fill"></div>
                 </div>
-                <div id="audioStatusMessage" class="status-message info"></div>
+                <div id="audioStatusMessage" class="status-message status-info"></div>
             </div>
         </div>
 
         <!-- 批量处理标签页 -->
-        <div id="batch" class="tabcontent">
-            <h2>批量处理音频文件</h2>
-            <p>批量处理功能允许您处理上传文件夹中的所有音频文件。</p>
+        <div id="batch" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-layer-group"></i> 批量处理音频文件</h2>
+            <div class="form-grid">
+                <p>批量处理功能允许您处理上传文件夹中的所有音频文件。</p>
 
-            <div class="form-group">
-                <label for="batchUploadDir">上传文件夹路径:</label>
-                <input type="text" id="batchUploadDir" name="batchUploadDir" value="uploads" placeholder="默认为 uploads 文件夹">
+                <div class="form-group">
+                    <label for="batchUploadDir">上传文件夹路径</label>
+                    <input type="text" id="batchUploadDir" name="batchUploadDir" value="uploads" placeholder="默认为 uploads 文件夹">
+                    <small class="input-hint">请确保文件夹中包含支持的音频文件</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchWhisperModel">Whisper模型大小</label>
+                    <select id="batchWhisperModel" name="batchWhisperModel">
+                        <option value="tiny">Tiny (最快，准确性最低)</option>
+                        <option value="base">Base (快速且准确)</option>
+                        <option value="small" selected>Small (平衡速度和准确性)</option>
+                        <option value="medium">Medium (较慢但更准确)</option>
+                        <option value="large">Large (最准确但最慢)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchPromptTemplate">摘要模板</label>
+                    <select id="batchPromptTemplate" name="batchPromptTemplate">
+                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
+                        <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
+                        <option value="youtube_结构化提取">youtube_结构化提取 - 结构化提取要点</option>
+                        <option value="youtube_精炼提取">youtube_精炼提取 - 提取核心要点和精华</option>
+                        <option value="youtube_专业课笔记">youtube_专业课笔记 - 教学视频专业笔记格式</option>
+                        <option value="爆款短视频文案">爆款短视频文案 - 短视频内容文案风格</option>
+                        <option value="youtube_视频总结">youtube_视频总结 - 综合性视频总结模板</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchCustomPrompt">自定义提示词 (可选)</label>
+                    <textarea id="batchCustomPrompt" name="batchCustomPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
+                    <small class="input-hint">如果填写将覆盖模板设置</small>
+                </div>
+
+                <button onclick="startBatchProcess()" class="btn"><i class="fas fa-forward"></i> 开始批量处理</button>
             </div>
-
-            <div class="form-group">
-                <label for="batchWhisperModel">Whisper模型大小:</label>
-                <select id="batchWhisperModel" name="batchWhisperModel">
-                    <option value="tiny">Tiny (最快，准确性最低)</option>
-                    <option value="base">Base (快速且准确)</option>
-                    <option value="small" selected>Small (平衡速度和准确性)</option>
-                    <option value="medium">Medium (较慢但更准确)</option>
-                    <option value="large">Large (最准确但最慢)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="batchPromptTemplate">摘要模板:</label>
-                <select id="batchPromptTemplate" name="batchPromptTemplate">
-                    <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                    <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
-                    <option value="youtube_结构化提取">youtube_结构化提取 - 结构化提取要点</option>
-                    <option value="youtube_精炼提取">youtube_精炼提取 - 提取核心要点和精华</option>
-                    <option value="youtube_专业课笔记">youtube_专业课笔记 - 教学视频专业笔记格式</option>
-                    <option value="爆款短视频文案">爆款短视频文案 - 短视频内容文案风格</option>
-                    <option value="youtube_视频总结">youtube_视频总结 - 综合性视频总结模板</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="batchCustomPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
-                <textarea id="batchCustomPrompt" name="batchCustomPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
-            </div>
-
-            <button onclick="startBatchProcess()">开始批量处理</button>
 
             <div id="batchProgress" class="progress-container">
                 <div class="progress-bar">
                     <div id="batchProgressFill" class="progress-fill"></div>
                 </div>
-                <div id="batchStatusMessage" class="status-message info"></div>
+                <div id="batchStatusMessage" class="status-message status-info"></div>
             </div>
         </div>
 
         <!-- API配置标签页 -->
-        <div id="api_config" class="tabcontent">
-            <h2>API配置</h2>
-            <p>在此配置您的AI服务API密钥，配置后将永久保存在本地。</p>
+        <div id="api_config" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-cog"></i> API配置</h2>
+            <div class="form-grid">
+                <p>在此配置您的AI服务API密钥，配置后将永久保存在本地。</p>
 
-            <div class="form-group">
-                <label for="deepseekApiKey">DeepSeek API密钥:</label>
-                <input type="password" id="deepseekApiKey" name="deepseekApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
-                <small>用于DeepSeek API服务的密钥</small>
+                <div class="form-group">
+                    <label for="deepseekApiKey">DeepSeek API密钥</label>
+                    <input type="password" id="deepseekApiKey" name="deepseekApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
+                    <small class="input-hint">用于DeepSeek API服务的密钥</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="openaiApiKey">OpenAI API密钥 (可选)</label>
+                    <input type="password" id="openaiApiKey" name="openaiApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
+                    <small class="input-hint">用于OpenAI API服务的密钥</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="anthropicApiKey">Anthropic API密钥 (可选)</label>
+                    <input type="password" id="anthropicApiKey" name="anthropicApiKey" placeholder="sk-ant-xxxxxxxxxxxxxxxx">
+                    <small class="input-hint">用于Anthropic API服务的密钥</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultModel">默认AI模型</label>
+                    <select id="defaultModel" name="defaultModel">
+                        <option value="deepseek-chat">DeepSeek Chat</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                    </select>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="saveApiConfig()" class="btn"><i class="fas fa-save"></i> 保存配置</button>
+                </div>
+
+                <div id="apiConfigStatus" class="status-message" style="display:none;"></div>
             </div>
-
-            <div class="form-group">
-                <label for="openaiApiKey">OpenAI API密钥 (可选):</label>
-                <input type="password" id="openaiApiKey" name="openaiApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
-                <small>用于OpenAI API服务的密钥</small>
-            </div>
-
-            <div class="form-group">
-                <label for="anthropicApiKey">Anthropic API密钥 (可选):</label>
-                <input type="password" id="anthropicApiKey" name="anthropicApiKey" placeholder="sk-ant-xxxxxxxxxxxxxxxx">
-                <small>用于Anthropic API服务的密钥</small>
-            </div>
-
-            <div class="form-group">
-                <label for="defaultModel">默认AI模型:</label>
-                <select id="defaultModel" name="defaultModel">
-                    <option value="deepseek-chat">DeepSeek Chat</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="claude-3-haiku">Claude 3 Haiku</option>
-                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                    <option value="claude-3-opus">Claude 3 Opus</option>
-                </select>
-            </div>
-
-            <button onclick="saveApiConfig()">保存配置</button>
-
-            <div id="apiConfigStatus" class="status-message" style="display:none;"></div>
         </div>
 
         <!-- 查看结果标签页 -->
-        <div id="results" class="tabcontent">
-            <h2>处理结果</h2>
-            <div class="results-section" id="resultsSection">
+        <div id="results" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-file-alt"></i> 处理结果</h2>
+            <div class="results-container" id="resultsSection">
                 <div class="results-header">
-                    <h3>生成的总结文件</h3>
-                    <button onclick="loadResults()">刷新列表</button>
+                    <h3><i class="fas fa-folder-open"></i> 生成的总结文件</h3>
+                    <button onclick="loadResults()" class="btn"><i class="fas fa-sync-alt"></i> 刷新列表</button>
                 </div>
                 <div class="results-list" id="resultsList">
                     <!-- 结果将通过JavaScript动态加载 -->
                 </div>
             </div>
-            <p id="noResultsMessage">暂无处理结果，处理完成后文件将显示在此处。</p>
+            <div id="noResultsMessage" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>暂无处理结果</h3>
+                <p>处理完成后文件将显示在此处</p>
+            </div>
         </div>
 
         <!-- 任务历史标签页 -->
-        <div id="history" class="tabcontent">
-            <h2>任务历史记录</h2>
-            <div class="results-section" id="historySection">
+        <div id="history" class="tab-content">
+            <h2 class="section-title"><i class="fas fa-history"></i> 任务历史记录</h2>
+            <div class="results-container" id="historySection">
                 <div class="results-header">
-                    <h3>处理任务历史</h3>
+                    <h3><i class="fas fa-list"></i> 处理任务历史</h3>
                     <div>
-                        <button onclick="loadTaskHistory()">刷新列表</button>
-                        <button onclick="clearTaskHistory()" class="clear-history-btn">清空历史</button>
+                        <button onclick="loadTaskHistory()" class="btn"><i class="fas fa-sync-alt"></i> 刷新列表</button>
+                        <button onclick="clearTaskHistory()" class="btn btn-error"><i class="fas fa-trash"></i> 清空历史</button>
                     </div>
                 </div>
                 <div class="results-list" id="historyList">
                     <!-- 历史记录将通过JavaScript动态加载 -->
                 </div>
             </div>
-            <p id="noHistoryMessage">暂无任务历史记录。</p>
+            <div id="noHistoryMessage" class="empty-state">
+                <i class="fas fa-history"></i>
+                <h3>暂无任务历史记录</h3>
+                <p>处理过的任务将显示在此处</p>
+            </div>
         </div>
     </div>
 
@@ -985,24 +1162,32 @@ async def read_root():
         }
 
         // 标签页切换功能
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].className = tabcontent[i].className.replace(" active", "");
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).className += " active";
-            evt.currentTarget.className += " active";
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+                
+                // 移除所有激活状态
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 激活当前标签
+                button.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
 
-            // 如果切换到结果标签页，加载结果
-            if (tabName === 'results') {
-                loadResults();
-            }
-        }
+                // 如果切换到结果标签页，加载结果
+                if (tabName === 'results') {
+                    loadResults();
+                }
+                // 如果切换到历史标签页，加载历史
+                else if (tabName === 'history') {
+                    loadTaskHistory();
+                }
+            });
+        });
 
         // 处理视频URL表单提交
         document.getElementById('urlForm').addEventListener('submit', async function(e) {
@@ -1022,7 +1207,7 @@ async def read_root():
             document.getElementById('urlProgress').style.display = 'block';
             document.getElementById('urlProgressFill').style.width = '5%';
             document.getElementById('urlStatusMessage').textContent = '正在发送请求...';
-            document.getElementById('urlStatusMessage').className = 'status-message info';
+            document.getElementById('urlStatusMessage').className = 'status-message status-info';
             document.getElementById('urlStatusMessage').style.display = 'block';
 
             try {
@@ -1051,7 +1236,7 @@ async def read_root():
                 await pollTaskStatus(taskId, 'url');
             } catch (error) {
                 document.getElementById('urlStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('urlStatusMessage').className = 'status-message error';
+                document.getElementById('urlStatusMessage').className = 'status-message status-error';
                 document.getElementById('urlStatusMessage').style.display = 'block';
             }
         });
@@ -1082,7 +1267,7 @@ async def read_root():
             document.getElementById('audioProgress').style.display = 'block';
             document.getElementById('audioProgressFill').style.width = '5%';
             document.getElementById('audioStatusMessage').textContent = '正在上传文件...';
-            document.getElementById('audioStatusMessage').className = 'status-message info';
+            document.getElementById('audioStatusMessage').className = 'status-message status-info';
             document.getElementById('audioStatusMessage').style.display = 'block';
 
             try {
@@ -1103,7 +1288,7 @@ async def read_root():
                 await pollTaskStatus(taskId, 'audio');
             } catch (error) {
                 document.getElementById('audioStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('audioStatusMessage').className = 'status-message error';
+                document.getElementById('audioStatusMessage').className = 'status-message status-error';
                 document.getElementById('audioStatusMessage').style.display = 'block';
             }
         });
@@ -1122,7 +1307,7 @@ async def read_root():
                     status = await response.json();
                 } catch (error) {
                     document.getElementById(prefix + 'StatusMessage').textContent = '错误: 无法获取任务状态 - ' + error.message;
-                    document.getElementById(prefix + 'StatusMessage').className = 'status-message error';
+                    document.getElementById(prefix + 'StatusMessage').className = 'status-message status-error';
                     document.getElementById(prefix + 'StatusMessage').style.display = 'block';
                     return;
                 }
@@ -1138,12 +1323,12 @@ async def read_root():
                     statusMessage.textContent = status.message;
 
                     if (status.status === 'completed') {
-                        statusMessage.className = 'status-message success';
-                        statusMessage.innerHTML = status.message + '<br><a href="/download-result/' + encodeURIComponent(status.result_path) + '" target="_blank">点击下载结果</a>';
+                        statusMessage.className = 'status-message status-success';
+                        statusMessage.innerHTML = status.message + '<br><a href="/download-result/' + encodeURIComponent(status.result_path) + '" target="_blank" class="btn"><i class="fas fa-download"></i> 点击下载结果</a>';
                     } else if (status.status === 'error') {
-                        statusMessage.className = 'status-message error';
+                        statusMessage.className = 'status-message status-error';
                     } else {
-                        statusMessage.className = 'status-message info';
+                        statusMessage.className = 'status-message status-info';
                     }
 
                     statusMessage.style.display = 'block';
@@ -1167,7 +1352,7 @@ async def read_root():
             document.getElementById('batchProgress').style.display = 'block';
             document.getElementById('batchProgressFill').style.width = '5%';
             document.getElementById('batchStatusMessage').textContent = '正在开始批量处理...';
-            document.getElementById('batchStatusMessage').className = 'status-message info';
+            document.getElementById('batchStatusMessage').className = 'status-message status-info';
             document.getElementById('batchStatusMessage').style.display = 'block';
 
             try {
@@ -1196,7 +1381,7 @@ async def read_root():
                 await pollTaskStatus(taskId, 'batch');
             } catch (error) {
                 document.getElementById('batchStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('batchStatusMessage').className = 'status-message error';
+                document.getElementById('batchStatusMessage').className = 'status-message status-error';
                 document.getElementById('batchStatusMessage').style.display = 'block';
             }
         }
@@ -1221,14 +1406,13 @@ async def read_root():
                         const sizeInMB = (result.size / (1024 * 1024)).toFixed(2);
 
                         resultItem.innerHTML = `
-                            <div>
-                                <strong>${result.filename}</strong>
-                                <br>
-                                <small>修改时间: ${result.modified} | 大小: ${sizeInMB} MB</small>
+                            <div class="result-info">
+                                <div class="result-title">${result.filename}</div>
+                                <div class="result-meta">修改时间: ${result.modified} | 大小: ${sizeInMB} MB</div>
                             </div>
                             <div class="result-actions">
                                 <a href="/download-result/${encodeURIComponent(result.path)}" target="_blank">
-                                    <button>下载</button>
+                                    <button class="btn"><i class="fas fa-download"></i> 下载</button>
                                 </a>
                             </div>
                         `;
@@ -1244,7 +1428,7 @@ async def read_root():
                 }
             } catch (error) {
                 console.error('加载结果列表失败:', error);
-                document.getElementById('resultsList').innerHTML = '<div class="error">加载结果失败: ' + error.message + '</div>';
+                document.getElementById('resultsList').innerHTML = '<div class="status-message status-error">加载结果失败: ' + error.message + '</div>';
             }
         }
 
@@ -1268,13 +1452,13 @@ async def read_root():
                         let taskTypeText = '';
                         switch(task.type) {
                             case 'video_url':
-                                taskTypeText = '视频URL处理';
+                                taskTypeText = '🔗 视频URL处理';
                                 break;
                             case 'local_audio':
-                                taskTypeText = '本地音频处理';
+                                taskTypeText = '🎵 本地音频处理';
                                 break;
                             case 'batch_process':
-                                taskTypeText = '批量处理';
+                                taskTypeText = '📦 批量处理';
                                 break;
                             default:
                                 taskTypeText = task.type;
@@ -1286,7 +1470,7 @@ async def read_root():
                         switch(task.status) {
                             case 'completed':
                                 statusText = '已完成';
-                                statusClass = 'success';
+                                statusClass = 'completed';
                                 break;
                             case 'error':
                                 statusText = '失败';
@@ -1294,11 +1478,11 @@ async def read_root():
                                 break;
                             case 'processing':
                                 statusText = '处理中';
-                                statusClass = 'info';
+                                statusClass = 'processing';
                                 break;
                             default:
                                 statusText = task.status;
-                                statusClass = 'info';
+                                statusClass = 'processing';
                         }
 
                         // 计算处理时长
@@ -1316,26 +1500,26 @@ async def read_root():
                         }
 
                         taskItem.innerHTML = `
-                            <div style="flex: 1;">
-                                <div class="task-type">${taskTypeText}</div>
+                            <div class="result-info">
+                                <div class="result-title">${taskTypeText}</div>
                                 <div class="task-details">
-                                    <span class="status-badge status-${task.status}">${statusText}</span>
+                                    <span class="status-badge ${statusClass}"><i class="fas fa-circle"></i> ${statusText}</span>
                                 </div>
                                 <div class="task-input">
                                     输入: ${task.input.length > 50 ? task.input.substring(0, 50) + '...' : task.input}
                                 </div>
                                 <div class="task-meta">
-                                    <span>模型: ${task.model}</span>
-                                    <span>时间: ${task.start_time}</span>
-                                    <span>时长: ${duration}</span>
+                                    <span><i class="fas fa-microchip"></i> ${task.model}</span>
+                                    <span><i class="fas fa-clock"></i> ${task.start_time}</span>
+                                    <span><i class="fas fa-hourglass-half"></i> ${duration}</span>
                                 </div>
                             </div>
                             <div class="result-actions">
                                 ${task.result_path ?
                                     `<a href="/download-result/${encodeURIComponent(task.result_path)}" target="_blank">
-                                        <button>下载结果</button>
+                                        <button class="btn"><i class="fas fa-download"></i> 下载结果</button>
                                     </a>` :
-                                    '<button disabled>无结果</button>'
+                                    '<button class="btn" disabled><i class="fas fa-ban"></i> 无结果</button>'
                                 }
                             </div>
                         `;
@@ -1351,7 +1535,7 @@ async def read_root():
                 }
             } catch (error) {
                 console.error('加载任务历史失败:', error);
-                document.getElementById('historyList').innerHTML = '<div class="error">加载任务历史失败: ' + error.message + '</div>';
+                document.getElementById('historyList').innerHTML = '<div class="status-message status-error">加载任务历史失败: ' + error.message + '</div>';
             }
         }
 
@@ -1408,7 +1592,7 @@ async def read_root():
                 const statusElement = document.getElementById('apiConfigStatus');
                 if (response.ok) {
                     statusElement.textContent = '配置保存成功！';
-                    statusElement.className = 'status-message success';
+                    statusElement.className = 'status-message status-success';
                     statusElement.style.display = 'block';
 
                     // 清空输入框中的密钥（出于安全考虑）
@@ -1417,7 +1601,7 @@ async def read_root():
                     document.getElementById('anthropicApiKey').value = '';
                 } else {
                     statusElement.textContent = '配置保存失败: ' + result.detail;
-                    statusElement.className = 'status-message error';
+                    statusElement.className = 'status-message status-error';
                     statusElement.style.display = 'block';
                 }
 
@@ -1428,7 +1612,7 @@ async def read_root():
             } catch (error) {
                 const statusElement = document.getElementById('apiConfigStatus');
                 statusElement.textContent = '保存配置时发生错误: ' + error.message;
-                statusElement.className = 'status-message error';
+                statusElement.className = 'status-message status-error';
                 statusElement.style.display = 'block';
 
                 setTimeout(() => {
