@@ -164,7 +164,8 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 
 启动后访问 `http://localhost:8000` 即可使用Web界面。
 
-![截屏2026-02-06 13.49.01](/Users/benshome/Desktop/截屏2026-02-06 13.49.01.png)
+<img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://github.com/user-attachments/assets/db0770a6-8dee-4c03-9319-553f69efd2e8" />
+
 
 Web界面功能包括：
 
