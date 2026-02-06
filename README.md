@@ -7,8 +7,8 @@
   <img src="https://img.shields.io/badge/Docker-Supported-blueviolet?logo=docker" alt="Docker Support">
   <img src="https://img.shields.io/badge/MIT-License-yellow" alt="License">
 </p>
-
-一个强大的Python命令行工具及Web界面，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
+1. 一个强大的Python命令行工具及Web界面，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
+2. /skill 符合claude skill规范，可以直接使用
 
 ## ✨ 特性
 
