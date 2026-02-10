@@ -1,104 +1,110 @@
 #!/usr/bin/env python3
 """
-setup_api_keys.py
-API密钥配置脚本 - 帮助用户设置API密钥
+API密钥配置向导
 """
 
+import json
 import os
-import sys
-import getpass
 from pathlib import Path
 
-# 添加src目录到Python路径
-src_dir = Path(__file__).parent / "src"
-sys.path.insert(0, str(src_dir))
-
-from src.config import config_manager
-
-
 def setup_api_keys():
-    """交互式设置API密钥"""
-    print("🎤 音频/视频总结工具 - API密钥配置向导")
-    print("=" * 50)
-    print("此向导将帮助您配置AI服务的API密钥")
-    print("配置信息将保存在 config.json 文件中")
-    print()
-
-    # 显示当前配置
-    print("当前配置:")
-    for provider, key in config_manager.config["api_keys"].items():
-        status = "已设置" if key else "未设置"
-        print(f"  {provider.capitalize()} API密钥: {status}")
-    print(f"  默认模型: {config_manager.get_default_model()}")
-    print()
-
-    while True:
-        print("请选择操作:")
-        print("1. 设置API密钥")
-        print("2. 查看当前配置")
-        print("3. 退出")
-
-        choice = input("\n请输入选项 (1-3): ").strip()
-
-        if choice == "1":
-            configure_keys()
-        elif choice == "2":
-            show_current_config()
-        elif choice == "3":
-            print("再见！")
-            break
-        else:
-            print("无效选项，请重新输入")
-
-
-def configure_keys():
-    """配置API密钥"""
-    print("\n设置API密钥 (直接回车跳过):")
-
-    providers = ["deepseek", "openai", "anthropic"]
-
-    for provider in providers:
-        current_key = config_manager.get_api_key(provider)
-        prompt_text = f"{provider.upper()} API密钥"
-
+    """设置API密钥的交互式向导"""
+    print("=" * 60)
+    print("API密钥配置向导")
+    print("=" * 60)
+    
+    print("\n欢迎使用音频/视频总结工具！")
+    print("在开始使用前，请配置您的API密钥。")
+    
+    # 检查配置文件是否存在
+    config_file = Path("config.json")
+    if config_file.exists():
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+    else:
+        config = {
+            "api_keys": {
+                "deepseek": "",
+                "openai": "",
+                "anthropic": "",
+                "tikhub": ""
+            },
+            "default_model": "deepseek-chat",
+            "default_language": "auto",
+            "external_apis": {
+                "douyin_api_endpoint": "https://api.tikhub.io"
+            },
+            "output_settings": {
+                "transcription_folder": "transcriptions",
+                "summary_folder": "summaries",
+                "download_folder": "downloads"
+            }
+        }
+    
+    print("\n当前配置状态:")
+    api_keys = config.get("api_keys", {})
+    
+    providers = {
+        "deepseek": "DeepSeek API密钥",
+        "openai": "OpenAI API密钥", 
+        "anthropic": "Anthropic API密钥",
+        "tikhub": "TikHub API密钥 (用于抖音/TikTok)"
+    }
+    
+    for provider, desc in providers.items():
+        status = "已配置" if api_keys.get(provider) else "未配置"
+        print(f"  • {desc}: {status}")
+    
+    print("\n" + "-" * 60)
+    print("API密钥配置说明:")
+    print("1. DeepSeek API密钥: 用于AI摘要生成")
+    print("2. TikHub API密钥: 用于处理抖音/TikTok视频")
+    print("   - 访问 https://user.tikhub.io/users/signin 注册账户")
+    print("   - 登录后进入用户中心 > API密钥 > 创建API密钥")
+    print("   - 复制API密钥并在此处输入")
+    print("-" * 60)
+    
+    # 配置API密钥
+    for provider, desc in providers.items():
+        current_key = api_keys.get(provider, "")
         if current_key:
-            prompt_text += f" (当前已配置，回车保持不变)"
-
-        # 使用getpass隐藏输入
-        new_key = getpass.getpass(f"请输入{prompt_text}: ")
-
-        if new_key:  # 如果输入了新密钥，则更新
-            config_manager.set_api_key(provider, new_key)
-            print(f"✓ {provider.upper()} API密钥已更新")
-        elif current_key and not new_key:
-            print(f"- 保持当前 {provider.upper()} API密钥不变")
+            print(f"\n{desc}:")
+            print(f"  当前已配置: {current_key[:10]}...{current_key[-5:]}")
+            update = input("  是否更新? (y/N): ").lower().strip()
+            if update != 'y':
+                continue
+        
+        print(f"\n请输入{desc}:")
+        if provider == "tikhub":
+            print("  (可访问 https://user.tikhub.io/users/signin 获取免费API密钥)")
+        
+        new_key = input(f"  {desc}: ").strip()
+        if new_key:
+            api_keys[provider] = new_key
+            print(f"  ✓ {desc}已更新")
         else:
-            print(f"- {provider.upper()} API密钥未设置")
-
-    # 设置默认模型
-    print(f"\n当前默认模型: {config_manager.get_default_model()}")
-    new_model = input("输入新的默认模型 (回车跳过): ").strip()
-    if new_model:
-        config_manager.set_default_model(new_model)
-        print(f"✓ 默认模型已更新为: {new_model}")
-
-    print("\n✅ API密钥配置完成！")
-
-
-def show_current_config():
-    """显示当前配置"""
-    print("\n当前配置详情:")
-    print("-" * 30)
-    print("API密钥状态:")
-    for provider, key in config_manager.config["api_keys"].items():
-        status = "已设置" if key else "未设置"
-        masked_key = f"{key[:5]}..." if key else ""
-        print(f"  {provider.capitalize()}: {status} {masked_key}")
-
-    print(f"\n默认模型: {config_manager.get_default_model()}")
-    print(f"配置文件位置: {config_manager.config_file.absolute()}")
-    print()
-
+            print(f"  - 未更新{desc}")
+    
+    # 更新配置
+    config["api_keys"] = api_keys
+    
+    # 保存配置
+    with open(config_file, 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+    
+    print("\n" + "=" * 60)
+    print("配置完成！")
+    print("=" * 60)
+    
+    print("\n配置摘要:")
+    for provider, desc in providers.items():
+        status = "已配置" if config["api_keys"].get(provider) else "未配置"
+        print(f"  • {desc}: {status}")
+    
+    print("\n现在您可以启动WebUI开始使用工具了！")
+    print("运行命令: ./webui.sh 或 python3 -m src.webui")
+    
+    return config
 
 if __name__ == "__main__":
     setup_api_keys()

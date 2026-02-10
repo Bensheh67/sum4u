@@ -76,6 +76,28 @@ def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool
             else:
                 video_id = "unknown"
                 platform = "youtube"
+        elif "douyin.com" in url_or_path or "v.douyin.com" in url_or_path:
+            # 抖音视频ID提取
+            import re
+            # 尝试从URL中提取视频ID
+            match = re.search(r'/video/(\d+)', url_or_path)
+            if match:
+                video_id = match.group(1)[:10]
+            else:
+                # 尝试从短链接或其他格式提取
+                video_id = url_or_path.split('/')[-1].split('?')[0][:10]
+            platform = "douyin"
+        elif "tiktok.com" in url_or_path:
+            # TikTok视频ID提取
+            import re
+            # 尝试从URL中提取视频ID
+            match = re.search(r'/video/(\d+)', url_or_path)
+            if match:
+                video_id = match.group(1)[:11]
+            else:
+                # 尝试从短链接或其他格式提取
+                video_id = url_or_path.split('/')[-1].split('?')[0][:11]
+            platform = "tiktok"
         else:
             video_id = "unknown"
             platform = "other"
@@ -182,13 +204,18 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
         task_status[task_id] = {"status": "processing", "progress": 5, "message": "正在验证视频URL..."}
 
         print(f"[{task_id}] 验证视频URL: {video_url}")
-        if not video_url or not (video_url.startswith('http://') or video_url.startswith('https://')):
+        
+        # 先尝试清理URL（特别是处理分享链接）
+        from .douyin_handler import clean_douyin_url
+        cleaned_url = clean_douyin_url(video_url)
+        
+        if not cleaned_url or not (cleaned_url.startswith('http://') or cleaned_url.startswith('https://')):
             raise ValueError("无效的视频URL")
 
         task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
 
         print(f"[{task_id}] 下载并提取音频...")
-        audio_path = download_audio(video_url)
+        audio_path = download_audio(cleaned_url)
         print(f"[{task_id}] 音频已保存: {audio_path}")
         task_status[task_id] = {"status": "processing", "progress": 20, "message": "开始转录..."}
 
@@ -861,7 +888,7 @@ async def read_root():
         <header>
             <div class="header-content">
                 <h1><i class="fas fa-microphone-alt"></i> 音频/视频总结工具</h1>
-                <p class="header-subtitle">支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
+                <p class="header-subtitle">支持抖音、TikTok、B站、YouTube等视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
             </div>
         </header>
 
@@ -879,9 +906,9 @@ async def read_root():
             <h2 class="section-title"><i class="fas fa-link"></i> 处理视频URL</h2>
             <form id="urlForm" class="form-grid">
                 <div class="form-group">
-                    <label for="videoUrl">视频URL <span class="tooltip"><span class="tooltip-trigger"><i class="fas fa-question"></i></span><span class="tooltip-text">支持YouTube、Bilibili等平台的视频链接</span></span></label>
-                    <input type="url" id="videoUrl" name="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
-                    <small class="input-hint">请输入有效的视频链接</small>
+                    <label for="videoUrl">视频URL <span class="tooltip"><span class="tooltip-trigger"><i class="fas fa-question"></i></span><span class="tooltip-text">支持抖音、TikTok、B站、YouTube等平台的视频链接（支持分享链接）</span></span></label>
+                    <input type="text" id="videoUrl" name="videoUrl" placeholder="https://www.youtube.com/watch?v=... 或分享链接" required>
+                    <small class="input-hint">请输入视频链接或分享链接</small>
                 </div>
 
                 <div class="form-group">
@@ -1049,12 +1076,28 @@ async def read_root():
         <div id="api_config" class="tab-content">
             <h2 class="section-title"><i class="fas fa-cog"></i> API配置</h2>
             <div class="form-grid">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>首次使用提示:</strong> 
+                    如果您是首次使用，请先配置API密钥。对于抖音/TikTok功能，您需要获取TikHub API密钥：<br>
+                    1. 访问 <a href="https://user.tikhub.io/users/signin" target="_blank">https://user.tikhub.io/users/signin</a> 注册账户<br>
+                    2. 登录后进入用户中心 > API密钥 > 创建API密钥<br>
+                    3. <strong>推荐使用环境变量存储API密钥：</strong> 设置环境变量 <code>TIKHUB_API_KEY</code> 以提高安全性<br>
+                    4. 或将API密钥复制到下方输入框
+                </div>
+
                 <p>在此配置您的AI服务API密钥，配置后将永久保存在本地。</p>
 
                 <div class="form-group">
-                    <label for="deepseekApiKey">DeepSeek API密钥</label>
+                    <label for="deepseekApiKey">DeepSeek API密钥 <span class="required">*</span></label>
                     <input type="password" id="deepseekApiKey" name="deepseekApiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
-                    <small class="input-hint">用于DeepSeek API服务的密钥</small>
+                    <small class="input-hint">用于AI摘要生成的密钥</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="tikhubApiKey">TikHub API密钥 <span class="required">*</span></label>
+                    <input type="password" id="tikhubApiKey" name="tikhubApiKey" placeholder="TIKHUB_API_KEY_REMOVED==">
+                    <small class="input-hint">用于处理抖音/TikTok视频的API密钥 <a href="https://user.tikhub.io/users/signin" target="_blank">获取API密钥</a></small>
                 </div>
 
                 <div class="form-group">
@@ -1567,13 +1610,15 @@ async def read_root():
             const deepseekApiKey = document.getElementById('deepseekApiKey').value;
             const openaiApiKey = document.getElementById('openaiApiKey').value;
             const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const tikhubApiKey = document.getElementById('tikhubApiKey').value;
             const defaultModel = document.getElementById('defaultModel').value;
 
             const config = {
                 api_keys: {
                     deepseek: deepseekApiKey,
                     openai: openaiApiKey,
-                    anthropic: anthropicApiKey
+                    anthropic: anthropicApiKey,
+                    tikhub: tikhubApiKey
                 },
                 default_model: defaultModel
             };
@@ -1647,6 +1692,15 @@ async def read_root():
 
                     if (config.default_model) {
                         document.getElementById('defaultModel').value = config.default_model;
+                    }
+                    
+                    if (config.external_apis && config.external_apis.douyin_api_endpoint) {
+                        document.getElementById('douyinApiEndpoint').value = config.external_apis.douyin_api_endpoint;
+                    }
+                    
+                    // 设置TikHub API密钥状态指示
+                    if (config.api_keys && config.api_keys.tikhub) {
+                        document.getElementById('tikhubApiKey').placeholder = '[已配置 - 输入新密钥以更新]';
                     }
                 }
             } catch (error) {
@@ -1949,6 +2003,9 @@ async def get_config():
                 "openai": bool(config_manager.get_api_key("openai")),
                 "anthropic": bool(config_manager.get_api_key("anthropic"))
             },
+            "external_apis": {
+                "douyin_api_endpoint": config_manager.config.get("external_apis", {}).get("douyin_api_endpoint", "https://api.douyin.wtf")
+            },
             "default_model": config_manager.get_default_model()
         }
         return config_data
@@ -1968,10 +2025,21 @@ async def update_config(request: Request):
             if key:  # 只有当提供了密钥时才更新
                 set_api_key(provider, key)
 
+        # 更新外部API配置
+        external_apis = data.get("external_apis", {})
+        if "douyin_api_endpoint" in external_apis:
+            # 确保配置字典存在
+            if "external_apis" not in config_manager.config:
+                config_manager.config["external_apis"] = {}
+            config_manager.config["external_apis"]["douyin_api_endpoint"] = external_apis["douyin_api_endpoint"]
+        
         # 更新默认模型
         default_model = data.get("default_model")
         if default_model:
             config_manager.set_default_model(default_model)
+
+        # 保存配置
+        config_manager.save_config()
 
         return {"message": "配置更新成功"}
     except Exception as e:

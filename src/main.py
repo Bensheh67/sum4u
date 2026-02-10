@@ -52,6 +52,28 @@ def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool
             else:
                 video_id = "unknown"
                 platform = "youtube"
+        elif "douyin.com" in url_or_path or "v.douyin.com" in url_or_path:
+            # 抖音视频ID提取
+            import re
+            # 尝试从URL中提取视频ID
+            match = re.search(r'/video/(\d+)', url_or_path)
+            if match:
+                video_id = match.group(1)[:10]
+            else:
+                # 尝试从短链接或其他格式提取
+                video_id = url_or_path.split('/')[-1].split('?')[0][:10]
+            platform = "douyin"
+        elif "tiktok.com" in url_or_path:
+            # TikTok视频ID提取
+            import re
+            # 尝试从URL中提取视频ID
+            match = re.search(r'/video/(\d+)', url_or_path)
+            if match:
+                video_id = match.group(1)[:11]
+            else:
+                # 尝试从短链接或其他格式提取
+                video_id = url_or_path.split('/')[-1].split('?')[0][:11]
+            platform = "tiktok"
         else:
             video_id = "unknown"
             platform = "other"

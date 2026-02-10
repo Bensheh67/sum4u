@@ -12,6 +12,7 @@ except ImportError:
     raise ImportError("未找到 moviepy，请先运行 pip install moviepy 安装依赖。")
 import subprocess
 from .utils import get_platform
+from .douyin_handler import is_douyin_url, process_douyin_url
 
 # 仅在需要时导入 bilix
 
@@ -124,14 +125,32 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
     subprocess.run(cmd, check=True)
     return str(audio_path)
 
+async def download_douyin_audio(url: str, output_dir: str = "downloads") -> str:
+    """使用TikHub API下载抖音视频音频"""
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 优先从环境变量获取API密钥，备用从配置获取
+    api_key = os.getenv('TIKHUB_API_KEY')
+    if not api_key:
+        from .config import config_manager
+        api_key = config_manager.config.get("api_keys", {}).get("tikhub")
+
+    # 使用抖音处理器下载音频
+    from .douyin_handler import process_douyin_url
+    audio_path = process_douyin_url(url, output_dir, api_key)
+    return audio_path
+
 async def download_audio_from_url(url: str, output_dir: str = "downloads") -> str:
-    platform = get_platform(url)
-    if platform == 'bilibili':
-        return await download_bilibili_audio(url, output_dir)
-    elif platform == 'youtube':
-        return await download_youtube_audio(url, output_dir)
+    if is_douyin_url(url):
+        return await download_douyin_audio(url, output_dir)
     else:
-        raise ValueError(f"暂不支持该平台: {url}")
+        platform = get_platform(url)
+        if platform == 'bilibili':
+            return await download_bilibili_audio(url, output_dir)
+        elif platform == 'youtube':
+            return await download_youtube_audio(url, output_dir)
+        else:
+            raise ValueError(f"暂不支持该平台: {url}")
 
 def download_audio(url: str, output_dir: str = "downloads") -> str:
     return asyncio.run(download_audio_from_url(url, output_dir)) 

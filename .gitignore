@@ -136,3 +136,30 @@ skill/
 config.json
 .env
 *.env
+
+# 测试和验证脚本
+test_*.py
+final_*.py
+simple_*.py
+validate_*.py
+
+# 临时文件
+*.tmp
+*.temp
+*.output
+*.log
+
+# 临时脚本
+*_modified.sh
+*_original.sh
+*_backup.*
+
+# 临时文档
+*_GUIDE.md
+*_FEATURE_GUIDE.md
+*_FEATURE_GUIDE.md.backup
+*_updated.md
+*_updated_final.md
+*_updated.md.backup
+*_updated_final.md.backup
+SKILL.md.backup

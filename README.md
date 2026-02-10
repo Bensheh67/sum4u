@@ -12,7 +12,7 @@
 <img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://github.com/user-attachments/assets/db0770a6-8dee-4c03-9319-553f69efd2e8" />
 ## ✨ 特性
 
-- **多平台支持**: 支持YouTube、Bilibili等平台视频下载
+- **多平台支持**: 支持YouTube、Bilibili、抖音、TikTok等平台视频下载
 - **本地音频处理**: 支持多种音频格式（MP3, WAV, M4A, MP4, AAC, FLAC, WMA, AMR等）
 - **智能音频提取**: 自动提取视频音频并转换为MP3格式
 - **高质量转录**: 使用OpenAI Whisper进行本地音频转录，支持99种语言自动检测
@@ -24,6 +24,8 @@
 - **批量处理**: 支持批量处理多个音频文件
 - **实时进度监控**: 提供处理进度可视化
 - **Docker支持**: 一键部署，无需复杂环境配置
+- **抖音/TikTok分享链接支持**: 直接粘贴抖音分享链接（如"6.39 03/26 14:06 [抖音] https://..."）即可处理
+- **TikHub API集成**: 使用专业的抖音/TikTok数据API，支持无水印视频下载
 
 ## 🚀 快速开始
 
@@ -34,11 +36,13 @@
   - macOS/Linux/Windows
   - 足够的磁盘空间用于音频文件存储
   - FFmpeg（用于音频处理）
+  - TikHub API密钥（用于处理抖音/TikTok视频）
 
 - **Docker方式**:
   - Docker Engine 19.03+
   - 至少 4GB RAM（推荐 8GB+）
   - 至少 2GB 可用磁盘空间
+  - TikHub API密钥（用于处理抖音/TikTok视频）
 
 ### 安装方式
 
@@ -119,6 +123,9 @@ python3 src/main.py --url "视频URL" --prompt_template "youtube_结构化提取
 # 使用自定义提示词
 python3 src/main.py --url "视频URL" --prompt "请总结主要观点和关键数据"
 
+# 处理抖音分享链接
+python3 src/main.py --url "6.39 03/26 14:06 [抖音] https://v.douyin.com/xxxxx/ 复制此链接..." --prompt_template "default课堂笔记"
+
 # 处理本地音频文件
 python3 src/main.py --audio-file "/path/to/audio.mp3" --prompt_template "default课堂笔记"
 ```
@@ -166,9 +173,8 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 
 Web界面功能包括：
 
-- API配置
-
-- 视频URL处理
+- API配置（支持TikHub API密钥配置）
+- 视频URL处理（支持抖音/TikTok分享链接）
 - 本地音频文件上传
 - 批量处理
 - 实时进度监控
@@ -224,7 +230,48 @@ docker build -f Dockerfile.beginner -t video-summarizer .
 
 这些数据卷确保即使容器重启或更新，你的处理结果也不会丢失。
 
+## 🎬 抖音/TikTok功能使用
+
+要使用抖音/TikTok视频处理功能：
+
+1. **获取TikHub API密钥**：
+   - 访问 https://user.tikhub.io/users/signin 注册账户
+   - 在用户面板中获取您的API密钥
+
+2. **配置API密钥**：
+   - 在Web界面的"API配置"标签页中配置
+   - 或在 `config.json` 文件中添加 `"tikhub": "your-tikhub-api-key"`
+
+3. **使用功能**：
+   - 支持直接粘贴抖音分享链接（如"6.39 03/26 14:06 [抖音] https://..."）
+   - 支持标准抖音/TikTok URL
+   - 在Docker和传统Python方式中均可用
+
 ## ⚙️ 配置选项
+
+### API密钥配置
+
+要使用本工具，您需要配置至少一个AI服务提供商的API密钥：
+
+1. **交互式配置**（推荐）：
+   ```bash
+   python3 setup_api_keys.py
+   ```
+
+2. **手动配置**：
+   编辑项目根目录的 `config.json` 文件，添加所需的API密钥。
+
+### TikHub API密钥配置（用于抖音/TikTok功能）
+
+要使用抖音/TikTok视频处理功能，您需要：
+
+1. **获取TikHub API密钥**：
+   - 访问 https://user.tikhub.io/users/signin 注册账户
+   - 在用户面板中获取您的API密钥
+
+2. **配置API密钥**：
+   - 使用交互式配置向导：`python3 setup_api_keys.py`
+   - 或手动编辑 `config.json` 文件，在 `api_keys` 部分添加 `"tikhub": "your-tikhub-api-key"`
 
 ### Whisper模型选项
 
@@ -281,7 +328,8 @@ docker build -f Dockerfile.beginner -t video-summarizer .
 │   ├── audio_handler.py   # 音频处理辅助函数
 │   ├── batch_processor.py # 批量处理模块
 │   ├── utils.py           # 工具函数模块
-│   └── webui.py           # Web界面后端
+│   ├── webui.py           # Web界面后端
+│   └── douyin_handler.py  # 抖音/TikTok视频处理模块
 ├── static/                # 静态资源
 ├── templates/             # HTML模板
 ├── downloads/             # 下载的音频文件
@@ -393,6 +441,23 @@ A:
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
+
+### 🛡️ 安全注意事项
+
+在贡献代码时，请注意以下安全事项：
+
+1. **绝不要提交包含真实API密钥的文件**
+   - 检查 `.gitignore` 文件确保 `config.json` 和 `.env` 被忽略
+   - 使用 `git status` 确认没有意外提交敏感文件
+   - 在推送前使用 `git log -p --all | grep -i "sk-"` 检查是否意外提交了API密钥
+
+2. **使用示例配置文件**
+   - 修改配置时参考 `config_example.json` 而非 `config.json`
+   - 在示例代码中使用占位符而非真实密钥
+
+3. **安全最佳实践**
+   - 定期轮换API密钥
+   - 使用环境变量而非配置文件存储密钥（特别是在服务器环境中）
 
 ## 📄 许可证
 

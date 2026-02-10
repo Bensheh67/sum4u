@@ -11,7 +11,7 @@ def get_platform(url: str) -> str:
     """
     判断视频链接平台类型。
     :param url: 视频链接
-    :return: 'bilibili'/'youtube'/'tencent'/'iqiyi'/'youku'/'other'
+    :return: 'bilibili'/'youtube'/'tencent'/'iqiyi'/'youku'/'douyin'/'tiktok'/'other'
     """
     url = url.lower()
     if 'bilibili.com' in url:
@@ -24,6 +24,10 @@ def get_platform(url: str) -> str:
         return 'iqiyi'
     elif 'youku.com' in url:
         return 'youku'
+    elif 'douyin.com' in url or 'v.douyin.com' in url:
+        return 'douyin'
+    elif 'tiktok.com' in url or 'vm.tiktok.com' in url or 'vt.tiktok.com' in url:
+        return 'tiktok'
     else:
         return 'other'
 

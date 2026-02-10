@@ -18,10 +18,14 @@ class ConfigManager:
             "api_keys": {
                 "deepseek": "",
                 "openai": "",
-                "anthropic": ""
+                "anthropic": "",
+                "tikhub": "TIKHUB_API_KEY_REMOVED=="  # TikHub API密钥
             },
             "default_model": "deepseek-chat",
             "default_language": "auto",
+            "external_apis": {
+                "douyin_api_endpoint": "https://api.douyin.wtf"
+            },
             "output_settings": {
                 "transcription_folder": "transcriptions",
                 "summary_folder": "summaries",
@@ -92,7 +96,22 @@ config_manager = ConfigManager()
 
 
 def get_api_key(provider: str) -> Optional[str]:
-    """获取API密钥的便捷函数"""
+    """获取API密钥的便捷函数，优先从环境变量获取"""
+    # 优先从环境变量获取
+    env_var_map = {
+        "tikhub": "TIKHUB_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
+        "openai": "OPENAI_API_KEY", 
+        "anthropic": "ANTHROPIC_API_KEY"
+    }
+    
+    env_var = env_var_map.get(provider)
+    if env_var:
+        api_key = os.getenv(env_var)
+        if api_key:
+            return api_key
+    
+    # 如果环境变量未设置，则从配置文件获取
     return config_manager.get_api_key(provider)
 
 
