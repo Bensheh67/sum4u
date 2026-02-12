@@ -163,3 +163,5 @@ validate_*.py
 *_updated.md.backup
 *_updated_final.md.backup
 SKILL.md.backup
+
+QWEN.md
