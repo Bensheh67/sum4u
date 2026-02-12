@@ -10,6 +10,7 @@ if __name__ == "__main__" and __package__ is None:
 
 import argparse
 from datetime import datetime
+import pytz
 from pathlib import Path
 from .audio import download_audio
 from .transcribe import transcribe_audio, transcribe_local_audio
@@ -24,8 +25,11 @@ from .config import config_manager, get_api_key, set_api_key
 
 def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool = False) -> str:
     """根据URL或文件路径和是否有总结生成文件名"""
-    # 生成时间戳
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 生成时间戳，使用UTC时间并转换为本地时区
+    utc_now = datetime.utcnow()
+    local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
+    local_time = utc_now.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    timestamp = local_time.strftime("%Y%m%d_%H%M%S")
 
     if is_local:
         # 本地文件处理

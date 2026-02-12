@@ -15,6 +15,7 @@ import asyncio
 import threading
 import time
 from datetime import datetime
+import pytz
 import uvicorn
 
 # 添加src目录到Python路径
@@ -48,8 +49,11 @@ task_history = []
 
 def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool = False) -> str:
     """根据URL或文件路径和是否有总结生成文件名"""
-    # 生成时间戳
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 生成时间戳，使用UTC时间并转换为本地时区
+    utc_now = datetime.utcnow()
+    local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
+    local_time = utc_now.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    timestamp = local_time.strftime("%Y%m%d_%H%M%S")
 
     if is_local:
         # 本地文件处理
@@ -1948,7 +1952,12 @@ async def get_results():
         try:
             # 获取文件修改时间
             mod_time = os.path.getmtime(file_path)
-            mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
+            mod_datetime = datetime.fromtimestamp(mod_time)
+            
+            # 转换为本地时区
+            local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
+            local_time = mod_datetime.replace(tzinfo=pytz.utc).astimezone(local_tz)
+            mod_date = local_time.strftime('%Y-%m-%d %H:%M:%S')
 
             # 获取文件大小
             size = os.path.getsize(file_path)
@@ -1972,11 +1981,17 @@ async def get_task_history():
     history = []
     for task in task_history:
         task_copy = task.copy()
-        # 转换时间为字符串格式
+        # 转换时间为字符串格式，确保使用本地时区
         if isinstance(task_copy["start_time"], datetime):
-            task_copy["start_time"] = task_copy["start_time"].strftime('%Y-%m-%d %H:%M:%S')
+            # 转换为本地时区
+            local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
+            local_start_time = task_copy["start_time"].replace(tzinfo=pytz.utc).astimezone(local_tz)
+            task_copy["start_time"] = local_start_time.strftime('%Y-%m-%d %H:%M:%S')
         if task_copy["end_time"] and isinstance(task_copy["end_time"], datetime):
-            task_copy["end_time"] = task_copy["end_time"].strftime('%Y-%m-%d %H:%M:%S')
+            # 转换为本地时区
+            local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
+            local_end_time = task_copy["end_time"].replace(tzinfo=pytz.utc).astimezone(local_tz)
+            task_copy["end_time"] = local_end_time.strftime('%Y-%m-%d %H:%M:%S')
         history.append(task_copy)
 
     # 按开始时间倒序排列

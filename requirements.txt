@@ -18,5 +18,7 @@ python-multipart>=0.0.6
 
 # 其他工具
 pathlib2>=2.3.7; python_version < "3.4"
+pytz>=2023.3
+
 # 推荐使用uv进行依赖和虚拟环境管理
 # 安装: pip install uv
