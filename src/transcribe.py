@@ -33,9 +33,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
 
         if file_size <= 100 * MB:
             # 设置转录参数
-            transcribe_kwargs = {
-                "verbose": False  # 添加verbose=False避免过多输出
-            }
+            transcribe_kwargs = {}
             if language:
                 transcribe_kwargs["language"] = language
 
@@ -65,7 +63,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
 
                     # 保存分段音频
                     try:
-                        segment.write_audiofile(tmp.name, codec='mp3', verbose=False, logger=None)
+                        segment.write_audiofile(tmp.name, codec='mp3', logger=None)
                     except Exception as e:
                         print(f"保存分段音频失败: {e}")
                         audio.close()
@@ -74,9 +72,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
                     # 转录分段音频
                     try:
                         # 设置转录参数
-                        transcribe_kwargs = {
-                            "verbose": False  # 添加verbose=False避免过多输出
-                        }
+                        transcribe_kwargs = {}
                         if language:
                             transcribe_kwargs["language"] = language
 

@@ -165,3 +165,6 @@ validate_*.py
 SKILL.md.backup
 
 QWEN.md
+
+#claude
+.claude/
