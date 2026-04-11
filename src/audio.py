@@ -38,7 +38,6 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             "--audio-format", "mp3",  # 转换为 mp3
             "--audio-quality", "0",  # 最高音质
             "--force-overwrites",  # 强制覆盖已存在的文件
-            "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
             "-o", str(audio_path),  # 输出文件
             decoded_url
         ]
@@ -77,7 +76,6 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
                 "--audio-format", "mp3",  # 转换为 mp3
                 "--audio-quality", "0",  # 最高音质
                 "--force-overwrites",  # 强制覆盖已存在的文件
-                "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
                 "-o", str(audio_path),  # 输出文件
                 decoded_url
             ]
@@ -120,7 +118,6 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         "--audio-format", "mp3",
         "--force-overwrites",  # 强制覆盖已存在的文件
         "--no-playlist",  # 只下载单个视频，不下载播放列表
-        "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
         "--cookies-from-browser", "chrome",  # 使用浏览器 cookie 避免机器人验证
         "-o", str(audio_path),
         decoded_url
