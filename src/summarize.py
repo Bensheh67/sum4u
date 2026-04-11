@@ -1,6 +1,6 @@
 """
 summarize.py
-AI 摘要模块 - 支持多种API提供商。
+AI 摘要模块 - 支持多种 API 提供商。
 """
 
 from typing import Optional
@@ -14,7 +14,7 @@ from .config import get_api_key
 API_URLS = {
     "deepseek": "https://api.deepseek.com/v1/chat/completions",
     "openai": "https://api.openai.com/v1/chat/completions",
-    "anthropic": "https://api.anthropic.com/v1/messages"  # 这里使用示例URL，实际需要根据Anthropic API格式调整
+    "anthropic": "https://api.anthropic.com/v1/messages"
 }
 
 
@@ -38,21 +38,41 @@ def split_text(text, max_len=15000):
 
 def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat", provider: str = "deepseek") -> str:
     """
-    调用AI API对转录文本进行结构化总结。
-    自动分段摘要，单段不超过15000字。
+    调用 AI API 对转录文本进行结构化总结。
+    自动分段摘要，单段不超过 15000 字，多段时自动整合。
     :param text: 需要总结的文本
     :param prompt: 自定义摘要提示词（可选）
-    :param model: AI模型名
-    :param provider: API提供商 ('deepseek', 'openai', 'anthropic')
+    :param model: AI 模型名
+    :param provider: API 提供商 ('deepseek', 'openai', 'anthropic')
     :return: 结构化摘要文本
     """
-    def call_api(chunk):
+    def call_api(chunk, is_merge=False):
         api_key = get_api_key(provider)
         if not api_key:
-            raise ValueError(f"未找到 {provider} 的API密钥，请在 config.json 中设置")
+            raise ValueError(f"未找到 {provider} 的 API 密钥，请在 config.json 中设置")
 
         p = prompt if prompt else prompt_default
-        p = p + "\n" + chunk
+
+        if is_merge:
+            # 整合多个分段总结
+            p = f"""你是内容整合专家，负责将多个分段总结整合为一个统一的结构化笔记。
+
+【任务要求】
+1. 阅读以下多个分段总结
+2. 识别并合并重复的内容（如多个"知识结构图"、多个"全文总结"等）
+3. 按时间轴或逻辑顺序重新组织分段总结
+4. 确保输出只有一个统一的标题、一个知识结构图、一个全文总结、一个术语表
+5. 保持原有的 Markdown 格式
+
+【输出格式】
+直接输出整合后的 Markdown 文档，不要包含任何说明性文字。
+
+---
+分段总结内容：
+{chunk}
+"""
+        else:
+            p = p + "\n" + chunk
 
         if provider == "deepseek" or provider == "openai":
             headers = {
@@ -72,9 +92,7 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
             data = response.json()
             return data["choices"][0]["message"]["content"].strip()
 
-        # 注意：Anthropic API 格式可能需要单独处理
         elif provider == "anthropic":
-            # Anthropic API 的调用方式不同，这里只是示例
             headers = {
                 "x-api-key": api_key,
                 "Content-Type": "application/json",
@@ -94,14 +112,26 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
             return data["content"][0]["text"].strip()
 
         else:
-            raise ValueError(f"不支持的API提供商: {provider}")
+            raise ValueError(f"不支持的 API 提供商：{provider}")
 
     # 分段处理
     chunks = split_text(text, 15000)
-    print(f"文本分为{len(chunks)}段，每段不超过15000字，使用 {provider} API")
-    summaries = [call_api(chunk) for chunk in chunks]
+    print(f"文本分为{len(chunks)}段，每段不超过 15000 字，使用 {provider} API")
+
+    if len(chunks) == 1:
+        # 只有一段，直接总结
+        summaries = [call_api(chunks[0])]
+    else:
+        # 多段：先分段总结，再整合
+        print("分段总结中...")
+        partial_summaries = [call_api(chunk) for chunk in chunks]
+        print("整合分段总结...")
+        # 将分段总结合并为一段文本进行整合
+        combined = '\n\n--- 分隔符 ---\n\n'.join(partial_summaries)
+        summaries = [call_api(combined, is_merge=True)]
+
     summary_text = '\n\n'.join(summaries)
-    # 如拼接后仍超长，递归摘要
+    # 如拼接后仍超长，递归再次摘要
     if len(summary_text) > 15000:
         print("摘要结果仍超长，递归再次摘要...")
         return summarize_text(summary_text, prompt, model, provider)
