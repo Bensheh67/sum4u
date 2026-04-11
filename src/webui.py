@@ -929,7 +929,7 @@ async def read_root():
                 <div class="form-group">
                     <label for="promptTemplate">摘要模板</label>
                     <select id="promptTemplate" name="promptTemplate">
-                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
+                        <option value="default 课堂笔记">default 课堂笔记 - 通用课堂笔记格式</option>
                         <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
                         <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
                         <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
@@ -996,7 +996,7 @@ async def read_root():
                 <div class="form-group">
                     <label for="audioPromptTemplate">摘要模板</label>
                     <select id="audioPromptTemplate" name="audioPromptTemplate">
-                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
+                        <option value="default 课堂笔记">default 课堂笔记 - 通用课堂笔记格式</option>
                         <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
                         <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
                         <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
@@ -1049,7 +1049,7 @@ async def read_root():
                 <div class="form-group">
                     <label for="batchPromptTemplate">摘要模板</label>
                     <select id="batchPromptTemplate" name="batchPromptTemplate">
-                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
+                        <option value="default 课堂笔记">default 课堂笔记 - 通用课堂笔记格式</option>
                         <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
                         <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
                         <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
@@ -1722,7 +1722,7 @@ async def read_root():
 async def process_video_url_endpoint(
     url: str = Form(None),
     model: str = Form(default="small"),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None),
     # 为支持JSON请求添加参数
     request: Request = None
@@ -1744,7 +1744,7 @@ async def process_video_url_endpoint(
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default 课堂笔记"])
     
     # 生成输出文件路径
     auto_filename = generate_filename(url, has_summary=True, is_local=False)
@@ -1768,13 +1768,13 @@ async def upload_audio_endpoint(
     file: UploadFile = File(...),
     model: str = Form(default="small"),
     language: Optional[str] = Form(default=None),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None)
 ):
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default 课堂笔记"])
     
     # 保存上传的文件
     file_location = os.path.join("downloads", file.filename)
@@ -1803,7 +1803,7 @@ async def upload_audio_endpoint(
 async def batch_process_endpoint(
     upload_dir: str = Form(None),
     model: str = Form(default="small"),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None),
     # 为支持JSON请求添加参数
     request: Request = None
@@ -1825,7 +1825,7 @@ async def batch_process_endpoint(
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default 课堂笔记"])
     
     # 初始化任务状态
     task_status[task_id] = {"status": "processing", "progress": 0, "message": "初始化批量处理..."}
@@ -1917,7 +1917,7 @@ async def download_result(file_path: str):
 async def get_prompt_templates():
     """获取所有可用的提示词模板"""
     return {"templates": [
-        {"name": "default课堂笔记", "description": "通用课堂笔记格式，适合大多数教学视频"},
+        {"name": "default 课堂笔记", "description": "通用课堂笔记格式，适合大多数教学视频"},
         {"name": "双语学习笔记", "description": "专门用于英文视频的双语笔记格式"},
         {"name": "结构化知识提取", "description": "以结构化方式提取要点"},
         {"name": "精炼摘要", "description": "提取核心要点和精华"},
