@@ -930,12 +930,12 @@ async def read_root():
                     <label for="promptTemplate">摘要模板</label>
                     <select id="promptTemplate" name="promptTemplate">
                         <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                        <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
-                        <option value="youtube_结构化提取">youtube_结构化提取 - 结构化提取要点</option>
-                        <option value="youtube_精炼提取">youtube_精炼提取 - 提取核心要点和精华</option>
-                        <option value="youtube_专业课笔记">youtube_专业课笔记 - 教学视频专业笔记格式</option>
-                        <option value="爆款短视频文案">爆款短视频文案 - 短视频内容文案风格</option>
-                        <option value="youtube_视频总结">youtube_视频总结 - 综合性视频总结模板</option>
+                        <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
+                        <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
+                        <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
+                        <option value="专业课程笔记">专业课程笔记 - 教学视频专业笔记格式</option>
+                        <option value="短视频素材包">短视频素材包 - 短视频内容文案风格</option>
+                        <option value="视频综合总结">视频综合总结 - 综合性视频总结模板</option>
                     </select>
                 </div>
 
@@ -997,12 +997,12 @@ async def read_root():
                     <label for="audioPromptTemplate">摘要模板</label>
                     <select id="audioPromptTemplate" name="audioPromptTemplate">
                         <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                        <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
-                        <option value="youtube_结构化提取">youtube_结构化提取 - 结构化提取要点</option>
-                        <option value="youtube_精炼提取">youtube_精炼提取 - 提取核心要点和精华</option>
-                        <option value="youtube_专业课笔记">youtube_专业课笔记 - 教学视频专业笔记格式</option>
-                        <option value="爆款短视频文案">爆款短视频文案 - 短视频内容文案风格</option>
-                        <option value="youtube_视频总结">youtube_视频总结 - 综合性视频总结模板</option>
+                        <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
+                        <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
+                        <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
+                        <option value="专业课程笔记">专业课程笔记 - 教学视频专业笔记格式</option>
+                        <option value="短视频素材包">短视频素材包 - 短视频内容文案风格</option>
+                        <option value="视频综合总结">视频综合总结 - 综合性视频总结模板</option>
                     </select>
                 </div>
 
@@ -1050,12 +1050,12 @@ async def read_root():
                     <label for="batchPromptTemplate">摘要模板</label>
                     <select id="batchPromptTemplate" name="batchPromptTemplate">
                         <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                        <option value="youtube_英文笔记">youtube_英文笔记 - 英文视频双语笔记格式</option>
-                        <option value="youtube_结构化提取">youtube_结构化提取 - 结构化提取要点</option>
-                        <option value="youtube_精炼提取">youtube_精炼提取 - 提取核心要点和精华</option>
-                        <option value="youtube_专业课笔记">youtube_专业课笔记 - 教学视频专业笔记格式</option>
-                        <option value="爆款短视频文案">爆款短视频文案 - 短视频内容文案风格</option>
-                        <option value="youtube_视频总结">youtube_视频总结 - 综合性视频总结模板</option>
+                        <option value="双语学习笔记">双语学习笔记 - 英文视频双语笔记格式</option>
+                        <option value="结构化知识提取">结构化知识提取 - 结构化提取要点</option>
+                        <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
+                        <option value="专业课程笔记">专业课程笔记 - 教学视频专业笔记格式</option>
+                        <option value="短视频素材包">短视频素材包 - 短视频内容文案风格</option>
+                        <option value="视频综合总结">视频综合总结 - 综合性视频总结模板</option>
                     </select>
                 </div>
 
@@ -1918,12 +1918,12 @@ async def get_prompt_templates():
     """获取所有可用的提示词模板"""
     return {"templates": [
         {"name": "default课堂笔记", "description": "通用课堂笔记格式，适合大多数教学视频"},
-        {"name": "youtube_英文笔记", "description": "专门用于英文视频的双语笔记格式"},
-        {"name": "youtube_结构化提取", "description": "以结构化方式提取要点"},
-        {"name": "youtube_精炼提取", "description": "提取核心要点和精华"},
-        {"name": "youtube_专业课笔记", "description": "适用于教学视频的专业笔记格式"},
-        {"name": "爆款短视频文案", "description": "适用于短视频内容的文案风格"},
-        {"name": "youtube_视频总结", "description": "综合性视频总结模板"}
+        {"name": "双语学习笔记", "description": "专门用于英文视频的双语笔记格式"},
+        {"name": "结构化知识提取", "description": "以结构化方式提取要点"},
+        {"name": "精炼摘要", "description": "提取核心要点和精华"},
+        {"name": "专业课程笔记", "description": "适用于教学视频的专业笔记格式"},
+        {"name": "短视频素材包", "description": "适用于短视频内容的文案风格"},
+        {"name": "视频综合总结", "description": "综合性视频总结模板"}
     ]}
 
 
