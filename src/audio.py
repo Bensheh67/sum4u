@@ -38,6 +38,8 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             "--audio-format", "mp3",  # 转换为 mp3
             "--audio-quality", "0",  # 最高音质
             "--force-overwrites",  # 强制覆盖已存在的文件
+            "--no-update",  # 不检查更新
+            "--extractor-retries", "5",  # 提取器重试次数
             "-o", str(audio_path),  # 输出文件
             decoded_url
         ]
@@ -76,6 +78,8 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
                 "--audio-format", "mp3",  # 转换为 mp3
                 "--audio-quality", "0",  # 最高音质
                 "--force-overwrites",  # 强制覆盖已存在的文件
+                "--no-update",  # 不检查更新
+                "--extractor-retries", "5",  # 提取器重试次数
                 "-o", str(audio_path),  # 输出文件
                 decoded_url
             ]
@@ -118,8 +122,11 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         "--audio-format", "mp3",
         "--force-overwrites",  # 强制覆盖已存在的文件
         "--no-playlist",  # 只下载单个视频，不下载播放列表
+        "--no-update",  # 不检查更新
         "--extractor-retries", "5",  # 提取器重试次数
         "--http-chunk-size", "10M",  # HTTP 分块大小
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",  # 模拟浏览器
+        "--referer", "https://www.youtube.com/",  # 设置 referer
         "-o", str(audio_path),
         decoded_url
     ]
