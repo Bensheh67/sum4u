@@ -163,7 +163,6 @@ def main():
     if args.setup_api:
         import subprocess
         import sys
-        from pathlib import Path
 
         setup_script = Path(__file__).parent.parent / "setup_api_keys.py"
         if setup_script.exists():

@@ -2,7 +2,8 @@
   "api_keys": {
     "deepseek": "sk-xxxxxxxxxxxxxxxx",
     "openai": "sk-xxxxxxxxxxxxxxxx",
-    "anthropic": "sk-ant-xxxxxxxxxxxxxxxx"
+    "anthropic": "sk-ant-xxxxxxxxxxxxxxxx",
+    "tikhub": "your-tikhub-api-key"
   },
   "default_model": "deepseek-chat",
   "default_language": "auto",
@@ -10,5 +11,8 @@
     "transcription_folder": "transcriptions",
     "summary_folder": "summaries",
     "download_folder": "downloads"
+  },
+  "external_apis": {
+    "douyin_api_endpoint": "https://api.tikhub.io"
   }
 }

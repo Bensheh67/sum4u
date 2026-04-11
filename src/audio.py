@@ -23,7 +23,7 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
 
     try:
         # 使用 yt-dlp 下载 Bilibili 视频并提取音频
-        # 修复URL中的转义字符
+        # 修复 URL 中的转义字符
         import urllib.parse
         decoded_url = urllib.parse.unquote(url)
 
@@ -38,14 +38,14 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             "--audio-format", "mp3",  # 转换为 mp3
             "--audio-quality", "0",  # 最高音质
             "--force-overwrites",  # 强制覆盖已存在的文件
+            "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
             "-o", str(audio_path),  # 输出文件
-            "--cookies-from-browser", "chrome",  # 使用浏览器cookies（如果需要）
             decoded_url
         ]
 
-        print(f"正在下载Bilibili视频: {decoded_url}")
+        print(f"正在下载 Bilibili 视频：{decoded_url}")
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print("Bilibili下载完成")
+        print("Bilibili 下载完成")
 
         # 检查文件是否存在
         if not audio_path.exists():
@@ -59,12 +59,12 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         return str(audio_path)
 
     except subprocess.CalledProcessError as e:
-        print(f"yt-dlp 下载失败: {e}")
-        print(f"错误输出: {e.stderr}")
-        # 尝试不使用cookies的方式下载
+        print(f"yt-dlp 下载失败：{e}")
+        print(f"错误输出：{e.stderr}")
+        # 尝试不使用 cookies 的方式下载
         try:
-            print("尝试不使用浏览器cookies下载...")
-            # 再次确保URL已解码
+            print("尝试不使用浏览器 cookies 下载...")
+            # 再次确保 URL 已解码
             import urllib.parse
             decoded_url = urllib.parse.unquote(url)
             import re
@@ -77,11 +77,12 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
                 "--audio-format", "mp3",  # 转换为 mp3
                 "--audio-quality", "0",  # 最高音质
                 "--force-overwrites",  # 强制覆盖已存在的文件
+                "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
                 "-o", str(audio_path),  # 输出文件
                 decoded_url
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            print("Bilibili下载完成（无cookies）")
+            print("Bilibili 下载完成（无 cookies）")
 
             # 检查文件是否存在
             if not audio_path.exists():
@@ -93,18 +94,18 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
 
             return str(audio_path)
         except subprocess.CalledProcessError as e2:
-            print(f"yt-dlp 下载失败（无cookies）: {e2}")
-            print(f"错误输出: {e2.stderr}")
-            raise RuntimeError(f"Bilibili视频下载失败: {e2}")
+            print(f"yt-dlp 下载失败（无 cookies）: {e2}")
+            print(f"错误输出：{e2.stderr}")
+            raise RuntimeError(f"Bilibili 视频下载失败：{e2}")
     except Exception as e:
-        print(f"Bilibili下载出错: {e}")
-        raise RuntimeError(f"Bilibili视频下载失败: {e}")
+        print(f"Bilibili 下载出错：{e}")
+        raise RuntimeError(f"Bilibili 视频下载失败：{e}")
 
 async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str:
     os.makedirs(output_dir, exist_ok=True)
     audio_path = Path(output_dir) / "youtube_output.mp3"
 
-    # 修复URL中的转义字符
+    # 修复 URL 中的转义字符
     import urllib.parse
     decoded_url = urllib.parse.unquote(url)
 
@@ -119,17 +120,26 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         "--audio-format", "mp3",
         "--force-overwrites",  # 强制覆盖已存在的文件
         "--no-playlist",  # 只下载单个视频，不下载播放列表
+        "--remote-components", "ejs:github",  # 下载 JS 挑战求解器脚本
+        "--cookies-from-browser", "chrome",  # 使用浏览器 cookie 避免机器人验证
         "-o", str(audio_path),
         decoded_url
     ]
-    subprocess.run(cmd, check=True)
+    print(f"正在下载 YouTube 视频：{decoded_url}")
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print("YouTube 下载完成")
+    except subprocess.CalledProcessError as e:
+        print(f"yt-dlp 下载失败：{e}")
+        print(f"错误输出：{e.stderr}")
+        raise RuntimeError(f"YouTube 视频下载失败：{e.stderr}")
     return str(audio_path)
 
 async def download_douyin_audio(url: str, output_dir: str = "downloads") -> str:
-    """使用TikHub API下载抖音视频音频"""
+    """使用 TikHub API 下载抖音视频音频"""
     os.makedirs(output_dir, exist_ok=True)
 
-    # 优先从环境变量获取API密钥，备用从配置获取
+    # 优先从环境变量获取 API 密钥，备用从配置获取
     api_key = os.getenv('TIKHUB_API_KEY')
     if not api_key:
         from .config import config_manager
@@ -150,7 +160,7 @@ async def download_audio_from_url(url: str, output_dir: str = "downloads") -> st
         elif platform == 'youtube':
             return await download_youtube_audio(url, output_dir)
         else:
-            raise ValueError(f"暂不支持该平台: {url}")
+            raise ValueError(f"暂不支持该平台：{url}")
 
 def download_audio(url: str, output_dir: str = "downloads") -> str:
-    return asyncio.run(download_audio_from_url(url, output_dir)) 
+    return asyncio.run(download_audio_from_url(url, output_dir))
