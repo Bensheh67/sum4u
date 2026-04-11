@@ -118,7 +118,8 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         "--audio-format", "mp3",
         "--force-overwrites",  # 强制覆盖已存在的文件
         "--no-playlist",  # 只下载单个视频，不下载播放列表
-        "--cookies-from-browser", "chrome",  # 使用浏览器 cookie 避免机器人验证
+        "--extractor-retries", "5",  # 提取器重试次数
+        "--http-chunk-size", "10M",  # HTTP 分块大小
         "-o", str(audio_path),
         decoded_url
     ]
