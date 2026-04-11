@@ -116,17 +116,18 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
     decoded_url = re.sub(r'\\\\', r'\\', decoded_url)  # 将双反斜杠替换为单反斜杠
     decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
 
+    # 使用 --cookies-from-browser chrome 通过 YouTube 机器人验证
+    # 使用 --remote-components ejs:github 下载 JS 挑战求解器
     cmd = [
         "yt-dlp",
         "-x",
         "--audio-format", "mp3",
-        "--force-overwrites",  # 强制覆盖已存在的文件
-        "--no-playlist",  # 只下载单个视频，不下载播放列表
-        "--no-update",  # 不检查更新
-        "--extractor-retries", "5",  # 提取器重试次数
-        "--http-chunk-size", "10M",  # HTTP 分块大小
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",  # 模拟浏览器
-        "--referer", "https://www.youtube.com/",  # 设置 referer
+        "--force-overwrites",
+        "--no-playlist",
+        "--no-update",
+        "--extractor-retries", "5",
+        "--remote-components", "ejs:github",
+        "--cookies-from-browser", "chrome",
         "-o", str(audio_path),
         decoded_url
     ]
