@@ -37,7 +37,7 @@ def process_single_audio(audio_file: str, model: str, prompt_to_use: str, langua
     processed_audio_path = handle_audio_upload(audio_file, output_dir="downloads")
 
     # 转录音频
-    transcript = transcribe_local_audio(processed_audio_path, model=model, language=language)
+    transcript = transcribe_local_audio(processed_audio_path, model=model, language=language, save_transcription=True)
 
     # 生成总结
     summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)

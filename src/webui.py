@@ -151,7 +151,7 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
 
         print(f"[{task_id}] 转录音频 (使用模型: {model})...")
         print(f"[{task_id}] 提示：转录过程可能需要几分钟时间，请耐心等待...")
-        transcript = transcribe_local_audio(processed_audio_path, model=model, language=language)
+        transcript = transcribe_local_audio(processed_audio_path, model=model, language=language, save_transcription=True)
         print(f"[{task_id}] 转录完成！")
         task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 
@@ -225,7 +225,7 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
 
         print(f"[{task_id}] 转录音频 (使用模型: {model})...")
         print(f"[{task_id}] 提示：转录过程可能需要几分钟时间，请耐心等待...")
-        transcript = transcribe_audio(audio_path, model=model)
+        transcript = transcribe_audio(audio_path, model=model, save_transcription=True)
         print(f"[{task_id}] 转录完成！")
         task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 

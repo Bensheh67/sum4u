@@ -672,7 +672,7 @@ prompt_templates = {
     "default 课堂笔记": prompt_default,
     "双语学习笔记": prompt_bilingual,
     "结构化知识提取": prompt_structure,
-    "精炼摘要": prompt_精华，
+    "精炼摘要": prompt_精华,
     "专业课程笔记": prompt_academic,
     "短视频素材包": prompt_shortvideo,
     "视频综合总结": prompt_comprehensive,

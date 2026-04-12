@@ -19,7 +19,15 @@ from .douyin_handler import is_douyin_url, process_douyin_url
 async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> str:
     """使用 yt-dlp 下载 Bilibili 视频音频"""
     os.makedirs(output_dir, exist_ok=True)
-    audio_path = Path(output_dir) / "bilibili_output.mp3"
+
+    # 从 URL 中提取视频 ID 用于生成唯一文件名
+    video_id = "unknown"
+    if "BV" in url:
+        video_id = url.split("BV")[1].split("?")[0][:12]
+    elif "/video/" in url:
+        video_id = url.split("/video/")[-1].split("?")[0][:12]
+
+    audio_path = Path(output_dir) / f"bilibili_{video_id}.mp3"
 
     try:
         # 使用 yt-dlp 下载 Bilibili 视频并提取音频
@@ -31,6 +39,11 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         import re
         decoded_url = re.sub(r'\\\\', r'\\', decoded_url)  # 将双反斜杠替换为单反斜杠
         decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+        # 下载前删除已存在的旧文件，确保不会复用旧内容
+        if audio_path.exists():
+            print(f"删除旧的音频文件：{audio_path}")
+            audio_path.unlink()
 
         cmd = [
             "yt-dlp",
@@ -48,12 +61,16 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("Bilibili 下载完成")
 
-        # 检查文件是否存在
-        if not audio_path.exists():
+        # 验证下载结果
+        if audio_path.exists():
+            file_size = audio_path.stat().st_size
+            print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
+        else:
             # 如果指定名称不存在，查找下载的文件
             downloaded_files = list(Path(output_dir).glob("*.mp3"))
             if downloaded_files:
                 audio_path = downloaded_files[0]
+                print(f"找到下载文件：{audio_path}")
             else:
                 raise RuntimeError("未找到下载的音频文件")
 
@@ -62,6 +79,10 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
     except subprocess.CalledProcessError as e:
         print(f"yt-dlp 下载失败：{e}")
         print(f"错误输出：{e.stderr}")
+        # 下载失败时清理可能产生的部分文件
+        if audio_path.exists():
+            print(f"清理下载失败的文件：{audio_path}")
+            audio_path.unlink()
         # 尝试不使用 cookies 的方式下载
         try:
             print("尝试不使用浏览器 cookies 下载...")
@@ -87,25 +108,36 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             print("Bilibili 下载完成（无 cookies）")
 
             # 检查文件是否存在
-            if not audio_path.exists():
+            if audio_path.exists():
+                file_size = audio_path.stat().st_size
+                print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
+                return str(audio_path)
+            else:
                 downloaded_files = list(Path(output_dir).glob("*.mp3"))
                 if downloaded_files:
                     audio_path = downloaded_files[0]
+                    print(f"找到下载文件：{audio_path}")
+                    return str(audio_path)
                 else:
                     raise RuntimeError("未找到下载的音频文件")
-
-            return str(audio_path)
         except subprocess.CalledProcessError as e2:
             print(f"yt-dlp 下载失败（无 cookies）: {e2}")
             print(f"错误输出：{e2.stderr}")
+            # 下载失败时清理可能产生的部分文件
+            if audio_path.exists():
+                print(f"清理下载失败的文件：{audio_path}")
+                audio_path.unlink()
             raise RuntimeError(f"Bilibili 视频下载失败：{e2}")
     except Exception as e:
         print(f"Bilibili 下载出错：{e}")
+        # 其他异常时也清理文件
+        if audio_path.exists():
+            print(f"清理异常文件：{audio_path}")
+            audio_path.unlink()
         raise RuntimeError(f"Bilibili 视频下载失败：{e}")
 
 async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str:
     os.makedirs(output_dir, exist_ok=True)
-    audio_path = Path(output_dir) / "youtube_output.mp3"
 
     # 修复 URL 中的转义字符
     import urllib.parse
@@ -115,6 +147,21 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
     import re
     decoded_url = re.sub(r'\\\\', r'\\', decoded_url)  # 将双反斜杠替换为单反斜杠
     decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+    # 从 URL 中提取视频 ID 用于生成唯一文件名
+    video_id = "unknown"
+    if "v=" in decoded_url:
+        video_id = decoded_url.split("v=")[1].split("&")[0][:11]
+    elif "youtu.be/" in decoded_url:
+        video_id = decoded_url.split("youtu.be/")[-1].split("?")[0][:11]
+
+    # 使用视频 ID 生成唯一文件名，避免文件复用问题
+    audio_path = Path(output_dir) / f"youtube_{video_id}.mp3"
+
+    # 下载前删除已存在的旧文件，确保不会复用旧内容
+    if audio_path.exists():
+        print(f"删除旧的音频文件：{audio_path}")
+        audio_path.unlink()
 
     # 使用 --cookies-from-browser chrome 通过 YouTube 机器人验证
     # 使用 --remote-components ejs:github 下载 JS 挑战求解器
@@ -132,13 +179,31 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         decoded_url
     ]
     print(f"正在下载 YouTube 视频：{decoded_url}")
+    print(f"输出文件：{audio_path}")
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("YouTube 下载完成")
+
+        # 验证下载结果
+        if audio_path.exists():
+            file_size = audio_path.stat().st_size
+            print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
+        else:
+            raise RuntimeError("下载完成后音频文件不存在")
     except subprocess.CalledProcessError as e:
         print(f"yt-dlp 下载失败：{e}")
         print(f"错误输出：{e.stderr}")
+        # 下载失败时清理可能产生的部分文件
+        if audio_path.exists():
+            print(f"清理下载失败的文件：{audio_path}")
+            audio_path.unlink()
         raise RuntimeError(f"YouTube 视频下载失败：{e.stderr}")
+    except Exception as e:
+        # 其他异常时也清理文件
+        if audio_path.exists():
+            print(f"清理异常文件：{audio_path}")
+            audio_path.unlink()
+        raise
     return str(audio_path)
 
 async def download_douyin_audio(url: str, output_dir: str = "downloads") -> str:

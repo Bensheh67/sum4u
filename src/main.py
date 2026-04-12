@@ -99,7 +99,7 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
 
     print(f"[2/3] 转录音频 (使用模型: {model})...")
     print("提示：转录过程可能需要几分钟时间，请耐心等待...")
-    transcript = transcribe_local_audio(processed_audio_path, model=model, language=language)
+    transcript = transcribe_local_audio(processed_audio_path, model=model, language=language, save_transcription=True)
     print("转录完成！")
 
     print("[3/4] 结构化总结...")
@@ -123,7 +123,7 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
 
     print(f"[2/3] 转录音频 (使用模型: {model})...")
     print("提示：转录过程可能需要几分钟时间，请耐心等待...")
-    transcript = transcribe_audio(audio_path, model=model)
+    transcript = transcribe_audio(audio_path, model=model, save_transcription=True)
     print("转录完成！")
 
     print("[3/4] 结构化总结...")
