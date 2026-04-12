@@ -123,16 +123,16 @@ if [ "$TEMPLATE_IDX" -eq 0 ]; then
     if [ -z "$CUSTOM_PROMPT" ]; then
         echo "⚠️  您没有输入自定义提示词，将使用默认模板"
         if [ -n "$LANGUAGE" ]; then
-            python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --language "$LANGUAGE"
+            python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --language "$LANGUAGE"
         else
-            python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE"
+            python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE"
         fi
     else
         echo "📝 使用自定义提示词: $CUSTOM_PROMPT"
         if [ -n "$LANGUAGE" ]; then
-            python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT" --language "$LANGUAGE"
+            python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT" --language "$LANGUAGE"
         else
-            python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT"
+            python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT"
         fi
     fi
 else
@@ -141,9 +141,9 @@ else
     TEMPLATE_NAME="${TEMPLATES[$TEMPLATE_INDEX]}"
     echo "📝 使用模板: $TEMPLATE_NAME"
     if [ -n "$LANGUAGE" ]; then
-        python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME" --language "$LANGUAGE"
+        python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME" --language "$LANGUAGE"
     else
-        python3 src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME"
+        python src/main.py --batch --upload-dir "$UPLOAD_DIR" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME"
     fi
 fi
 

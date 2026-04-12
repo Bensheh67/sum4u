@@ -9,7 +9,7 @@ echo "================================"
 # 检查配置文件是否存在
 if [ ! -f "config.json" ]; then
     echo "📝 检测到首次运行，正在创建默认配置文件..."
-    python3 -c "from src.config import initialize_config; initialize_config()"
+    python -c "from src.config import initialize_config; initialize_config()"
     echo "💡 请运行以下命令设置您的API密钥:"
     echo "   python3 setup_api_keys.py"
     read -p "是否现在运行配置向导？(y/N): " -n 1 -r
@@ -19,7 +19,7 @@ if [ ! -f "config.json" ]; then
     fi
 else
     # 检查API密钥是否已配置
-    deepseek_key=$(python3 -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
+    deepseek_key=$(python -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
     if [ "$deepseek_key" = "False" ]; then
         echo "⚠️  检测到API密钥未配置"
         echo "💡 提示：您可以运行 python3 setup_api_keys.py 来配置API密钥"
@@ -52,4 +52,4 @@ mkdir -p downloads summaries transcriptions uploads
 # 启动FastAPI服务器
 echo "🌐 启动Web服务器..."
 echo "访问地址: http://localhost:8000"
-python3 -c "import uvicorn; from src.webui import app; uvicorn.run(app, host='0.0.0.0', port=8000)"
+python -c "import uvicorn; from src.webui import app; uvicorn.run(app, host='0.0.0.0', port=8000)"

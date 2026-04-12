@@ -9,7 +9,7 @@ echo "================================"
 # 检查配置文件是否存在
 if [ ! -f "config.json" ]; then
     echo "📝 检测到首次运行，正在创建默认配置文件..."
-    python3 -c "from src.config import initialize_config; initialize_config()"
+    python -c "from src.config import initialize_config; initialize_config()"
     echo "💡 请运行以下命令设置您的API密钥:"
     echo "   python3 setup_api_keys.py"
     read -p "是否现在运行配置向导？(y/N): " -n 1 -r
@@ -19,7 +19,7 @@ if [ ! -f "config.json" ]; then
     fi
 else
     # 检查API密钥是否已配置
-    deepseek_key=$(python3 -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
+    deepseek_key=$(python -c "import json; c=json.load(open('config.json')); print(c['api_keys']['deepseek'] != '')" 2>/dev/null)
     if [ "$deepseek_key" = "False" ]; then
         echo "⚠️  检测到API密钥未配置"
         echo "💡 提示：您可以运行 python3 setup_api_keys.py 来配置API密钥"
@@ -118,17 +118,17 @@ if [ "$TEMPLATE_IDX" -eq 0 ]; then
 
     if [ -z "$CUSTOM_PROMPT" ]; then
         echo "⚠️  您没有输入自定义提示词，将使用默认模板"
-        python3 src/main.py --url "$URL" --model "$MODEL_SIZE"
+        python src/main.py --url "$URL" --model "$MODEL_SIZE"
     else
         echo "📝 使用自定义提示词: $CUSTOM_PROMPT"
-        python3 src/main.py --url "$URL" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT"
+        python src/main.py --url "$URL" --model "$MODEL_SIZE" --prompt "$CUSTOM_PROMPT"
     fi
 else
     # 用户选择了预设模板
     TEMPLATE_INDEX=$((TEMPLATE_IDX-1))
     TEMPLATE_NAME="${TEMPLATES[$TEMPLATE_INDEX]}"
     echo "📝 使用模板: $TEMPLATE_NAME"
-    python3 src/main.py --url "$URL" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME"
+    python src/main.py --url "$URL" --model "$MODEL_SIZE" --prompt_template "$TEMPLATE_NAME"
 fi
 
 echo ""
