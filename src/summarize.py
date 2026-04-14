@@ -1,21 +1,14 @@
 """
 summarize.py
-AI 摘要模块 - 支持多种 API 提供商。
+GPT 摘要模块。
 """
 
 from typing import Optional
 import requests
-import os
 
-from .prompts import prompt_default, prompt_templates
-from .config import get_api_key
+from .prompts import prompt_templates
 
-# API URL 配置
-API_URLS = {
-    "deepseek": "https://api.deepseek.com/v1/chat/completions",
-    "openai": "https://api.openai.com/v1/chat/completions",
-    "anthropic": "https://api.anthropic.com/v1/messages"
-}
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 
 def split_text(text, max_len=15000):
@@ -36,108 +29,43 @@ def split_text(text, max_len=15000):
     return parts
 
 
-def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat", provider: str = "deepseek") -> str:
+def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat") -> str:
     """
-    调用 AI API 对转录文本进行结构化总结。
-    自动分段摘要，单段不超过 15000 字，多段时自动整合。
+    调用 DeepSeek API 对转录文本进行结构化总结。
+    自动分段摘要，单段不超过15000字。
     :param text: 需要总结的文本
     :param prompt: 自定义摘要提示词（可选）
-    :param model: AI 模型名
-    :param provider: API 提供商 ('deepseek', 'openai', 'anthropic')
+    :param model: DeepSeek 模型名，默认 deepseek-chat
     :return: 结构化摘要文本
     """
-    def call_api(chunk, is_merge=False):
-        api_key = get_api_key(provider)
-        if not api_key:
-            raise ValueError(f"未找到 {provider} 的 API 密钥，请在 config.json 中设置")
-
-        p = prompt if prompt else prompt_default
-
-        if is_merge:
-            # 整合多个分段总结
-            p = f"""你是内容整合专家，负责将同一视频的多个分段总结整合为一个统一的结构化笔记。
-
-【重要说明】
-- 以下分段总结来自**同一个视频**的不同部分
-- 只整合内容，不要编造视频中不存在的信息
-- 如果某段总结包含与其他段完全不同的主题，说明该段可能出错，应丢弃该段
-
-【任务要求】
-1. 阅读以下分段总结（全部来自同一视频）
-2. 识别并合并重复的内容（如多个"知识结构图"、多个"全文总结"等）
-3. 按时间轴或逻辑顺序重新组织分段总结
-4. 确保输出只有一个统一的标题、一个知识结构图、一个全文总结、一个术语表
-5. 标题应反映视频的实际主题，不要合并两个不同主题的标题
-
-【输出格式】
-直接输出整合后的 Markdown 文档，不要包含任何说明性文字。
-
----
-分段总结内容：
-{chunk}
-"""
-        else:
-            p = p + "\n" + chunk
-
-        if provider == "deepseek" or provider == "openai":
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "user", "content": p}
-                ],
-                "temperature": 0.6,
-                "stream": False
-            }
-            response = requests.post(API_URLS[provider], headers=headers, json=payload, timeout=120)
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"].strip()
-
-        elif provider == "anthropic":
-            headers = {
-                "x-api-key": api_key,
-                "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01"
-            }
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "user", "content": p}
-                ],
-                "max_tokens": 4096,
-                "temperature": 0.6
-            }
-            response = requests.post(API_URLS[provider], headers=headers, json=payload, timeout=120)
-            response.raise_for_status()
-            data = response.json()
-            return data["content"][0]["text"].strip()
-
-        else:
-            raise ValueError(f"不支持的 API 提供商：{provider}")
+    def call_api(chunk):
+        api_key = "DEEPSEEK_API_KEY_REMOVED"
+        p = prompt if prompt else prompt_templates["短视频知识"]
+        p = p + "\n" + chunk
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "user", "content": p}
+            ],
+            "temperature": 0.6,
+            "stream": False
+        }
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
 
     # 分段处理
     chunks = split_text(text, 15000)
-    print(f"文本分为{len(chunks)}段，每段不超过 15000 字，使用 {provider} API")
-
-    if len(chunks) == 1:
-        # 只有一段，直接总结
-        summaries = [call_api(chunks[0])]
-    else:
-        # 多段：先分段总结，再整合
-        print("分段总结中...")
-        partial_summaries = [call_api(chunk) for chunk in chunks]
-        print("整合分段总结...")
-        # 将分段总结合并为一段文本进行整合
-        combined = '\n\n--- 分隔符 ---\n\n'.join(partial_summaries)
-        summaries = [call_api(combined, is_merge=True)]
-
+    print(f"文本分为{len(chunks)}段，每段不超过15000字")
+    summaries = [call_api(chunk) for chunk in chunks]
     summary_text = '\n\n'.join(summaries)
-    # 如拼接后仍超长，递归再次摘要
+    # 如拼接后仍超长，递归摘要
     if len(summary_text) > 15000:
         print("摘要结果仍超长，递归再次摘要...")
-        return summarize_text(summary_text, prompt, model, provider)
+        return summarize_text(summary_text, prompt, model)
     return summary_text

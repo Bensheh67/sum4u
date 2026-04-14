@@ -9,86 +9,16 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "src"
 
 import argparse
-from datetime import datetime
-import pytz
-from pathlib import Path
 from .audio import download_audio
 from .transcribe import transcribe_audio, transcribe_local_audio
 from .summarize import summarize_text
 from .prompts import prompt_templates
 from .audio_handler import handle_audio_upload
-from .utils import safe_filename
+from .utils import safe_filename, generate_filename
 from .batch_processor import process_batch
 from .config import config_manager
-from .config import config_manager, get_api_key, set_api_key
 
 
-def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool = False) -> str:
-    """根据URL或文件路径和是否有总结生成文件名"""
-    # 生成时间戳，使用UTC时间并转换为本地时区
-    utc_now = datetime.utcnow()
-    local_tz = pytz.timezone('Asia/Shanghai')  # 使用中国时区
-    local_time = utc_now.replace(tzinfo=pytz.utc).astimezone(local_tz)
-    timestamp = local_time.strftime("%Y%m%d_%H%M%S")
-
-    if is_local:
-        # 本地文件处理
-        file_stem = Path(url_or_path).stem
-        # 清理文件名中的特殊字符
-        safe_stem = safe_filename(file_stem)
-        platform = "local"
-        video_id = safe_stem[:10]  # 取前10个字符作为ID
-    else:
-        # 从URL中提取视频ID
-        if "bilibili.com" in url_or_path:
-            # B站视频ID格式：BV1xx411c7mu
-            if "BV" in url_or_path:
-                video_id = url_or_path.split("BV")[1].split("?")[0][:10]
-                platform = "bilibili"
-            else:
-                video_id = "unknown"
-                platform = "bilibili"
-        elif "youtube.com" in url_or_path:
-            # YouTube视频ID格式：dQw4w9WgXcQ
-            if "v=" in url_or_path:
-                video_id = url_or_path.split("v=")[1].split("&")[0][:11]
-                platform = "youtube"
-            else:
-                video_id = "unknown"
-                platform = "youtube"
-        elif "douyin.com" in url_or_path or "v.douyin.com" in url_or_path:
-            # 抖音视频ID提取
-            import re
-            # 尝试从URL中提取视频ID
-            match = re.search(r'/video/(\d+)', url_or_path)
-            if match:
-                video_id = match.group(1)[:10]
-            else:
-                # 尝试从短链接或其他格式提取
-                video_id = url_or_path.split('/')[-1].split('?')[0][:10]
-            platform = "douyin"
-        elif "tiktok.com" in url_or_path:
-            # TikTok视频ID提取
-            import re
-            # 尝试从URL中提取视频ID
-            match = re.search(r'/video/(\d+)', url_or_path)
-            if match:
-                video_id = match.group(1)[:11]
-            else:
-                # 尝试从短链接或其他格式提取
-                video_id = url_or_path.split('/')[-1].split('?')[0][:11]
-            platform = "tiktok"
-        else:
-            video_id = "unknown"
-            platform = "other"
-
-    # 生成文件名
-    if has_summary:
-        filename = f"{platform}_{video_id}_{timestamp}_总结.md"
-    else:
-        filename = f"{platform}_{video_id}_{timestamp}_转录.txt"
-
-    return filename
 
 
 def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None):

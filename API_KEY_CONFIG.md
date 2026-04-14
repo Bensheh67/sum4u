@@ -49,7 +49,6 @@ python3 src/main.py --setup-api
 
 - `./start.sh` - 处理视频URL
 - `./start_audio.sh` - 处理本地音频文件
-- `./start_webui.sh` - 启动Web界面
 
 如果检测到未配置API密钥，将提示您进行配置。
 
@@ -83,7 +82,6 @@ python3 src/main.py --setup-api
 
 ## Web界面中配置API密钥
 
-启动Web界面后 (`./start_webui.sh`)，您可以在界面上的"API配置"标签页中配置API密钥。
 
 ## 注意事项
 

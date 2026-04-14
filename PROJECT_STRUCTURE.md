@@ -22,7 +22,6 @@
 ## 启动脚本
 - `start.sh` - 视频处理启动脚本
 - `start_audio.sh` - 音频处理启动脚本
-- `start_webui.sh` - Web界面启动脚本
 - `batch_process.sh` - 批量处理启动脚本
 - `batch_process_douyin.py` - **新增** 抖音批量处理脚本
 

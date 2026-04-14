@@ -166,7 +166,6 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 
 #### 传统Python方式
 ```bash
-./start_webui.sh
 ```
 
 启动后访问 `http://localhost:8000` 即可使用Web界面。
@@ -344,7 +343,6 @@ docker build -f Dockerfile.beginner -t video-summarizer .
 │   └── uploads/           # Docker版上传的文件
 ├── start.sh               # 视频处理启动脚本
 ├── start_audio.sh         # 音频处理启动脚本
-├── start_webui.sh         # Web界面启动脚本
 ├── batch_process.sh       # 批量处理启动脚本
 ├── docker_setup_simple.sh # Docker简化部署脚本
 ├── Dockerfile             # 标准Docker配置文件
