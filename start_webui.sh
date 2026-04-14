@@ -59,9 +59,9 @@ fi
 echo ""
 echo "🌐 启动 Web 服务器..."
 echo "=================================="
-echo "访问地址：http://localhost:8000"
+echo "访问地址：http://localhost:8001"
 echo "按 Ctrl+C 停止服务器"
 echo "=================================="
 echo ""
 
-python -c "import uvicorn; from src.webui import app; uvicorn.run(app, host='0.0.0.0', port=8000)"
+python -c "import uvicorn; from src.webui import app; uvicorn.run(app, host='0.0.0.0', port=8001)"

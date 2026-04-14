@@ -216,9 +216,14 @@ async def download_douyin_audio(url: str, output_dir: str = "downloads") -> str:
         from .config import config_manager
         api_key = config_manager.config.get("api_keys", {}).get("tikhub")
 
+    # 清理抖音分享口令格式（如"6.39 03/26 14:06 [抖音] https://v.douyin.com/xxxxx/"）
+    from .douyin_handler import clean_douyin_url
+    cleaned_url = clean_douyin_url(url)
+    print(f"抖音分享口令清理后 URL: {cleaned_url}")
+
     # 使用抖音处理器下载音频
     from .douyin_handler import process_douyin_url
-    audio_path = process_douyin_url(url, output_dir, api_key)
+    audio_path = process_douyin_url(cleaned_url, output_dir, api_key)
     return audio_path
 
 async def download_audio_from_url(url: str, output_dir: str = "downloads") -> str:

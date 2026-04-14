@@ -26,8 +26,9 @@ from src.transcribe import transcribe_audio, transcribe_local_audio
 from src.summarize import summarize_text
 from src.prompts import prompt_templates
 from src.audio_handler import handle_audio_upload
-from src.utils import safe_filename
+from src.utils import safe_filename, generate_filename
 from src.batch_processor import process_batch
+from src.douyin_handler import is_douyin_url, clean_douyin_url
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
 
@@ -135,11 +136,19 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
     task_history.append(task_info)
 
     try:
-        task_status[task_id] = {"status": "processing", "progress": 5, "message": "正在验证视频URL..."}
+        task_status[task_id] = {"status": "processing", "progress": 5, "message": "正在验证视频 URL..."}
 
-        print(f"[{task_id}] 验证视频URL: {video_url}")
+        print(f"[{task_id}] 验证视频 URL: {video_url}")
+
+        # 处理抖音分享口令格式（如"6.39 03/26 14:06 [抖音] https://v.douyin.com/xxxxx/"）
+        if is_douyin_url(video_url):
+            cleaned_url = clean_douyin_url(video_url)
+            print(f"[{task_id}] 抖音分享口令，清理后 URL: {cleaned_url}")
+            video_url = cleaned_url
+
+        # 验证 URL 格式
         if not video_url or not (video_url.startswith('http://') or video_url.startswith('https://')):
-            raise ValueError("无效的视频URL")
+            raise ValueError("无效的视频 URL")
 
         task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
 
@@ -673,7 +682,7 @@ async def read_root():
             <form id="urlForm">
                 <div class="form-group">
                     <label for="videoUrl">视频URL:</label>
-                    <input type="url" id="videoUrl" name="videoUrl" placeholder="请输入YouTube或Bilibili视频链接" required>
+                    <input type="text" id="videoUrl" name="videoUrl" placeholder="请输入YouTube或Bilibili视频链接" required>
                 </div>
 
                 <div class="form-group">
@@ -1319,13 +1328,25 @@ async def process_video_url_endpoint(
         except:
             pass  # 如果JSON解析失败，使用表单参数
 
+
+    # 验证模型名称，确保是有效的 whisper 模型
+    valid_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en",
+                    "medium", "medium.en", "large", "large-v1", "large-v2",
+                    "large-v3", "large-v3-turbo", "turbo"]
+    if model not in valid_models:
+        print(f"[WARNING] 无效的模型名称：{model}，使用默认模型 small")
+        model = "small"
     # 确保URL不为空
     if not url:
         raise HTTPException(status_code=422, detail="URL是必需的")
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    # 安全的模板处理（避免 KeyError）
+    if prompt_template not in prompt_templates:
+        print(f"[WARNING] 未知的模板：{prompt_template}，使用默认模板")
+        prompt_template = "default 课堂笔记"
+    prompt_to_use = prompt if prompt else prompt_templates[prompt_template]
     
     # 生成输出文件路径
     auto_filename = generate_filename(url, has_summary=True, is_local=False)
@@ -1355,7 +1376,11 @@ async def upload_audio_endpoint(
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    # 安全的模板处理（避免 KeyError）
+    if prompt_template not in prompt_templates:
+        print(f"[WARNING] 未知的模板：{prompt_template}，使用默认模板")
+        prompt_template = "default 课堂笔记"
+    prompt_to_use = prompt if prompt else prompt_templates[prompt_template]
     
     # 保存上传的文件
     file_location = os.path.join("downloads", file.filename)
@@ -1406,7 +1431,11 @@ async def batch_process_endpoint(
     task_id = str(uuid.uuid4())
     
     # 确定使用哪个提示词
-    prompt_to_use = prompt if prompt else prompt_templates.get(prompt_template, prompt_templates["default课堂笔记"])
+    # 安全的模板处理（避免 KeyError）
+    if prompt_template not in prompt_templates:
+        print(f"[WARNING] 未知的模板：{prompt_template}，使用默认模板")
+        prompt_template = "default 课堂笔记"
+    prompt_to_use = prompt if prompt else prompt_templates[prompt_template]
     
     # 初始化任务状态
     task_status[task_id] = {"status": "processing", "progress": 0, "message": "初始化批量处理..."}

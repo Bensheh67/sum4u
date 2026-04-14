@@ -1031,6 +1031,9 @@ flowchart LR
 # 提示词模板字典
 # ================================================================
 prompt_templates = {
+    # === 默认模板 ===
+    "default 课堂笔记": prompt_classroom_lecture,   # 默认通用模板
+
     # === 5 个核心场景 ===
     "短视频知识": prompt_shortvideo_knowledge,      # 场景 1：短视频知识内容总结
     "课堂内容": prompt_classroom_lecture,           # 场景 2：课堂类内容总结

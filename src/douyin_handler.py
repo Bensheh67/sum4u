@@ -69,7 +69,7 @@ def get_douyin_video_data(video_url: str, api_key: str = None) -> dict:
         raise ValueError("未配置TikHub API密钥，请设置环境变量TIKHUB_API_KEY或在API配置中设置")
 
     # 使用TikHub抖音App V3 API端点 - 根据分享链接获取视频数据
-    api_url = "https://api.tikhub.io/api/v1/douyin/app/v3/fetch_one_video_by_share_url"
+    api_url = "https://api.tikhub.io/api/v1/douyin/web/fetch_one_video_by_share_url"
 
     # 准备请求头
     headers = {
@@ -120,8 +120,14 @@ def download_douyin_video(video_url: str, output_dir: str = "downloads", api_key
     # 提取视频下载链接
     video_url_direct = None
 
-    # 根据TikHub抖音App V3 API响应格式提取视频URL
-    if 'data' in video_data:
+    # Web API 响应格式：直接返回 original_video_url
+    # https://api.tikhub.io/api/v1/douyin/web/fetch_one_video_by_share_url
+    if 'original_video_url' in video_data:
+        video_url_direct = video_data['original_video_url']
+        print(f"Web API 返回原始高质量视频 URL: {video_url_direct[:50]}...")
+
+    # App V3 API 响应格式：data.aweme_detail.video
+    if not video_url_direct and 'data' in video_data:
         data = video_data['data']
 
         # TikHub抖音App V3 API响应格式通常在 data.aweme_detail.video 中
@@ -178,20 +184,58 @@ def download_douyin_video(video_url: str, output_dir: str = "downloads", api_key
         raise ValueError(f"未能从API响应中获取视频下载链接: {video_data}")
 
     # 下载视频
-    print(f"获取到视频下载链接，开始下载: {video_url_direct[:50]}...")
+    # 下载视频
+    print(f"获取到视频下载链接，开始下载：{video_url_direct[:50]}...")
+    print(f"完整链接：{video_url_direct}")
     temp_video_path = os.path.join(output_dir, f"douyin_temp_{abs(hash(video_url)) % 10000}.mp4")
 
-    # 下载视频
-    response = requests.get(video_url_direct, stream=True, timeout=60)
-    response.raise_for_status()
+    # 下载视频 - 禁用代理，直连抖音 CDN
+    print(f"尝试下载视频（禁用代理，超时 180 秒）...")
+    max_retries = 2
+    
+    for attempt in range(max_retries):
+        try:
+            # 使用抖音相关的完整 headers
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Referer": "https://www.douyin.com/",
+                "Accept": "*/*",
+                "Accept-Encoding": "identity",  # 不要 gzip
+                "Connection": "keep-alive"
+            }
+            
+            # 创建 session 并禁用代理
+            session = requests.Session()
+            session.trust_env = False  # 忽略环境变量代理
+            session.headers.update(headers)
+            
+            # 下载视频
+            response = session.get(video_url_direct, stream=True, timeout=180)
+            response.raise_for_status()
+            
+            # 获取文件大小
+            content_length = int(response.headers.get('Content-Length', 0))
+            print(f"文件大小：{content_length / 1024 / 1024:.2f} MB")
+            
+            downloaded = 0
+            with open(temp_video_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=512*1024):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+            
+            print(f"✅ 视频下载完成：{temp_video_path} ({downloaded / 1024 / 1024:.2f} MB)")
+            break
+            
+        except requests.exceptions.Timeout as e:
+            print(f"⚠️  下载超时（尝试 {attempt+1}/{max_retries}）")
+            if attempt == max_retries - 1:
+                raise RuntimeError(f"视频下载超时，已重试{max_retries}次。可能是网络问题或链接已过期。")
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️  下载失败（尝试 {attempt+1}/{max_retries}）: {str(e)[:200]}")
+            if attempt == max_retries - 1:
+                raise RuntimeError(f"视频下载失败：{e}")
 
-    with open(temp_video_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
-
-    print(f"视频下载完成: {temp_video_path}")
-
-    # 提取音频
     print("正在提取音频...")
     audio_path = os.path.join(output_dir, f"douyin_{abs(hash(video_url)) % 10000}.mp3")
 
