@@ -6,6 +6,7 @@ GPT 摘要模块。
 from typing import Optional
 import requests
 
+from .config import get_api_key
 from .prompts import prompt_templates
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -39,7 +40,7 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
     :return: 结构化摘要文本
     """
     def call_api(chunk):
-        api_key = "DEEPSEEK_API_KEY_REMOVED"
+        api_key = get_api_key("deepseek")
         p = prompt if prompt else prompt_templates["短视频知识"]
         p = p + "\n" + chunk
         headers = {

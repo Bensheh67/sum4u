@@ -19,7 +19,7 @@ class ConfigManager:
                 "deepseek": "",
                 "openai": "",
                 "anthropic": "",
-                "tikhub": "TIKHUB_API_KEY_REMOVED=="  # TikHub API密钥
+                "tikhub": ""
             },
             "default_model": "deepseek-chat",
             "default_language": "auto",

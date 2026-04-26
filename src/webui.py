@@ -29,6 +29,7 @@ from src.audio_handler import handle_audio_upload
 from src.utils import safe_filename, generate_filename
 from src.batch_processor import process_batch
 from src.douyin_handler import is_douyin_url, clean_douyin_url
+from src.config import config_manager
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
 
@@ -674,6 +675,7 @@ async def read_root():
             <button class="tablinks" onclick="openTab(event, 'batch')">批量处理</button>
             <button class="tablinks" onclick="openTab(event, 'results')">查看结果</button>
             <button class="tablinks" onclick="openTab(event, 'history')">任务历史</button>
+            <button class="tablinks" onclick="openTab(event, 'apiconfig')">API配置</button>
         </div>
 
         <!-- 视频URL处理标签页 -->
@@ -876,6 +878,41 @@ async def read_root():
             </div>
             <p id="noHistoryMessage">暂无任务历史记录。</p>
         </div>
+
+        <!-- API配置标签页 -->
+        <div id="apiconfig" class="tabcontent">
+            <h2>API 密钥配置</h2>
+            <p>在此配置 API 密钥，密钥将保存到 <code>config.json</code> 文件中。</p>
+
+            <div class="form-group">
+                <label for="apiKeyTikhub">TikHub API 密钥（用于抖音/TikTok 视频）
+                    <span class="tooltip">ⓘ
+                        <span class="tooltiptext">注册: https://user.tikhub.io/users/signin → 用户中心 → API密钥 → 创建</span>
+                    </span>
+                </label>
+                <input type="password" id="apiKeyTikhub" placeholder="输入 TikHub API 密钥">
+                <small>获取方式: 注册 <a href="https://user.tikhub.io/users/signin" target="_blank">TikHub</a> → 用户中心 → API密钥 → 创建</small>
+            </div>
+
+            <div class="form-group">
+                <label for="apiKeyDeepseek">DeepSeek API 密钥（用于 AI 摘要）</label>
+                <input type="password" id="apiKeyDeepseek" placeholder="输入 DeepSeek API 密钥">
+            </div>
+
+            <div class="form-group">
+                <label for="apiKeyOpenai">OpenAI API 密钥（可选）</label>
+                <input type="password" id="apiKeyOpenai" placeholder="输入 OpenAI API 密钥">
+            </div>
+
+            <div class="form-group">
+                <label for="apiKeyAnthropic">Anthropic API 密钥（可选）</label>
+                <input type="password" id="apiKeyAnthropic" placeholder="输入 Anthropic API 密钥">
+            </div>
+
+            <button onclick="saveApiConfig()">保存配置</button>
+            <div id="apiConfigMessage" class="status-message" style="margin-top:15px;display:none;"></div>
+        </div>
+
     </div>
 
     <script>
@@ -925,6 +962,11 @@ async def read_root():
             // 如果切换到结果标签页，加载结果
             if (tabName === 'results') {
                 loadResults();
+            }
+
+            // 如果切换到API配置标签页，加载当前配置
+            if (tabName === 'apiconfig') {
+                loadApiConfig();
             }
         }
 
@@ -1301,6 +1343,57 @@ async def read_root():
                 alert('清空历史记录失败: ' + error.message);
             }
         }
+
+        // 加载当前API密钥配置（已脱敏）
+        async function loadApiConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                document.getElementById('apiKeyTikhub').value = data.api_keys.tikhub || '';
+                document.getElementById('apiKeyDeepseek').value = data.api_keys.deepseek || '';
+                document.getElementById('apiKeyOpenai').value = data.api_keys.openai || '';
+                document.getElementById('apiKeyAnthropic').value = data.api_keys.anthropic || '';
+            } catch (error) {
+                console.error('加载API配置失败:', error);
+                showApiConfigMessage('加载API配置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 保存API密钥配置
+        async function saveApiConfig() {
+            const apiKeys = {
+                tikhub: document.getElementById('apiKeyTikhub').value.trim(),
+                deepseek: document.getElementById('apiKeyDeepseek').value.trim(),
+                openai: document.getElementById('apiKeyOpenai').value.trim(),
+                anthropic: document.getElementById('apiKeyAnthropic').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_keys: apiKeys })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showApiConfigMessage('API 密钥已保存成功！', 'success');
+                    // 重新加载以显示脱敏后的值
+                    loadApiConfig();
+                } else {
+                    showApiConfigMessage('保存失败: ' + (data.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showApiConfigMessage('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        function showApiConfigMessage(msg, type) {
+            const el = document.getElementById('apiConfigMessage');
+            el.textContent = msg;
+            el.className = 'status-message ' + type;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
     </script>
 </body>
 </html>
@@ -1608,6 +1701,29 @@ async def clear_task_history():
     global task_history
     task_history = []
     return {"message": "任务历史记录已清空"}
+
+
+@app.get("/api/config")
+async def get_api_config():
+    """获取当前API密钥配置（已脱敏）"""
+    config = config_manager.config
+    api_keys = config.get("api_keys", {})
+    masked = {}
+    for provider in ["tikhub", "deepseek", "openai", "anthropic"]:
+        key = api_keys.get(provider, "")
+        masked[provider] = key[-4:].rjust(len(key), "*") if key else ""
+    return {"api_keys": masked}
+
+
+@app.post("/api/config")
+async def save_api_config(data: dict):
+    """保存API密钥配置"""
+    api_keys = data.get("api_keys", {})
+    for provider in ["tikhub", "deepseek", "openai", "anthropic"]:
+        key = api_keys.get(provider, "")
+        if key:
+            config_manager.set_api_key(provider, key)
+    return {"status": "success"}
 
 
 if __name__ == "__main__":
