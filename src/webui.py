@@ -156,10 +156,24 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             # 带截图的流程
             task_status[task_id] = {"status": "processing", "progress": 5, "message": "下载视频..."}
 
-            print(f"[{task_id}] 下载视频...")
-            video_path, video_title = download_video(video_url)
-            print(f"[{task_id}] 视频已保存: {video_path}")
-            print(f"[{task_id}] 视频标题: {video_title}")
+            try:
+                print(f"[{task_id}] 下载视频...")
+                print(f"[DEBUG] 调用 download_video, URL: {video_url}")
+                video_path, video_title = download_video(video_url)
+                print(f"[DEBUG] download_video 返回: video_path={video_path}, video_title={video_title}")
+                print(f"[{task_id}] 视频已保存: {video_path}")
+                print(f"[{task_id}] 视频标题: {video_title}")
+
+                # 验证视频文件是否存在
+                import os
+                if os.path.exists(video_path):
+                    print(f"[DEBUG] 视频文件存在: {video_path}")
+                else:
+                    print(f"[ERROR] 视频文件不存在: {video_path}")
+            except Exception as e:
+                print(f"[ERROR] download_video 异常: {e}")
+                video_path = None
+                video_title = video_title if 'video_title' in locals() else "视频总结"
             task_status[task_id] = {"status": "processing", "progress": 15, "message": "提取音频..."}
 
             print(f"[{task_id}] 提取音频...")
@@ -174,18 +188,32 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 60, "message": "生成AI总结（含截图）..."}
 
             print(f"[{task_id}] 生成带截图的总结...")
-            summary, frames, summary_dir = summarize_with_screenshots(
+            summary_result = summarize_with_screenshots(
                 transcript_data={"text": transcript, "segments": segments},
                 video_path=video_path,
                 summary_name=video_title,
-                video_title=video_title,
-                prompt_key="短视频知识"
+                prompt=prompt_to_use,
+                video_title=video_title
             )
-            print(f"[{task_id}] 已提取 {len(frames)} 张截图")
-            print(f"[{task_id}] 摘要完成！")
-            # 保存到文件夹内的 summary.md
-            summary_file_path = summary_dir / "summary.md"
-            result_path = str(summary_dir)
+
+            # 处理视频文件不存在的情况
+            if summary_result[0] is None:
+                print(f"[{task_id}] 视频文件不存在，无法提取截图，回退到纯文本总结...")
+                # 回退到不带截图的总结
+                summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title)
+                frames = []
+                # 保存到文件夹内的 summary.md
+                summary_dir = Path("summaries") / video_title
+                summary_dir.mkdir(parents=True, exist_ok=True)
+                summary_file_path = summary_dir / "summary.md"
+                result_path = str(summary_dir)
+            else:
+                summary, frames, summary_dir = summary_result
+                print(f"[{task_id}] 已提取 {len(frames)} 张截图")
+                print(f"[{task_id}] 摘要完成！")
+                # 保存到文件夹内的 summary.md
+                summary_file_path = summary_dir / "summary.md"
+                result_path = str(summary_dir)
         else:
             # 不带截图的流程
             task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}

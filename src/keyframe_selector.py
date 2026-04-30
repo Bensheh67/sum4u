@@ -122,18 +122,40 @@ def select_keyframes(transcript: str, video_duration: float = None,
     data = response.json()
     content = data["choices"][0]["message"]["content"].strip()
 
+    print(f"[DEBUG] select_keyframes AI返回原始内容长度: {len(content)}")
+    print(f"[DEBUG] select_keyframes AI返回内容前200字符: {content[:200]}")
+
     try:
         result = json.loads(content)
+        print(f"[DEBUG] select_keyframes JSON解析成功, keyframes数量: {len(result.get('keyframes', []))}")
     except json.JSONDecodeError:
-        match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        print(f"[DEBUG] select_keyframes JSON解析失败，尝试正则提取...")
+        # 尝试从代码块中提取 JSON
+        match = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', content, re.DOTALL)
         if match:
-            result = json.loads(match.group(1))
-        else:
-            match = re.search(r'(\{[\s\S]*\})', content)
-            if match:
+            try:
                 result = json.loads(match.group(1))
-            else:
-                return []
+                print(f"[DEBUG] select_keyframes 从代码块中提取JSON成功")
+            except json.JSONDecodeError as e:
+                print(f"[DEBUG] 代码块JSON解析失败: {e}")
+                result = None
+        else:
+            # 尝试直接匹配 JSON 对象（处理嵌套括号）
+            try:
+                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content)
+                if json_match:
+                    result = json.loads(json_match.group(0))
+                    print(f"[DEBUG] select_keyframes 正则提取JSON成功")
+                else:
+                    print(f"[DEBUG] select_keyframes 未找到JSON对象")
+                    result = None
+            except Exception as e:
+                print(f"[DEBUG] select_keyframes 正则提取失败: {e}")
+                result = None
+
+        if result is None:
+            print(f"[ERROR] select_keyframes 无法解析AI返回内容，返回空列表")
+            return []
 
     keyframes = result.get("keyframes", [])
 

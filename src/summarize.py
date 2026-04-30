@@ -1,6 +1,6 @@
 """
 summarize.py
-GPT 摘要模块。
+摘要模块
 """
 
 from typing import Optional, List, Dict, Tuple
@@ -82,7 +82,7 @@ def summarize_with_screenshots(
     transcript_data: Dict,
     video_path: str,
     summary_name: str,
-    prompt_key: str = "短视频知识",
+    prompt: Optional[str] = None,
     model: str = "deepseek-chat",
     video_title: Optional[str] = None
 ) -> Tuple[str, List[Dict], Path]:
@@ -93,7 +93,7 @@ def summarize_with_screenshots(
         transcript_data: 转录数据，包含 "text" 和 "segments"
         video_path: 视频文件路径
         summary_name: 总结文件夹名称
-        prompt_key: 提示词模板key
+        prompt: 提示词（完整内容），默认使用短视频知识模板
         model: DeepSeek 模型名
         video_title: 视频标题（可选）
 
@@ -114,14 +114,25 @@ def summarize_with_screenshots(
     # 1. 创建总结文件夹
     summary_dir = ensure_summary_dir(summary_name)
 
-    # 2. 获取视频时长
+    # 2. 验证视频文件是否存在
+    import os
+    if not os.path.exists(video_path):
+        print(f"[ERROR] 视频文件不存在: {video_path}")
+        print(f"[ERROR] 无法提取截图，请确保视频下载成功")
+        return None, [], summary_dir
+
+    # 3. 获取视频时长
     video_duration = get_video_duration(video_path)
+    print(f"[DEBUG] 视频时长: {video_duration} 秒")
 
     # 3. AI 选择关键帧
     if segments:
         formatted_transcript = format_transcript_with_timestamps(segments)
+        print(f"[DEBUG] 转录片段数量: {len(segments)}")
         ai_keyframes = select_keyframes(formatted_transcript, video_duration, model)
+        print(f"[DEBUG] AI 选择的关键帧数量: {len(ai_keyframes)}")
     else:
+        print(f"[DEBUG] 无转录片段，使用默认关键帧")
         ai_keyframes = []
 
     # 4. 创建截图目录
@@ -135,13 +146,14 @@ def summarize_with_screenshots(
         video_duration=video_duration
     )
 
-    # 6. 生成带截图引用的总结
-    base_prompt = prompt_templates.get(prompt_key, prompt_templates["短视频知识"])
-    screenshot_prompt = prompt_with_screenshots(base_prompt)
+    # 6. 生成带截图引用的总结（AI 会智能插入截图）
+    # 使用传入的 prompt 或默认模板
+    base_prompt = prompt if prompt else prompt_templates.get("短视频知识", prompt_templates["default 课堂笔记"])
+    screenshot_prompt = prompt_with_screenshots(base_prompt, extracted_frames, video_duration)
 
     summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model, video_title=video_title)
 
-    # 7. 在总结中插入截图引用
+    # 7. 备用：如果 AI 没有插入截图，使用备用插入逻辑
     summary_with_refs = insert_screenshot_references(summary, extracted_frames)
 
     return summary_with_refs, extracted_frames, summary_dir
@@ -149,15 +161,23 @@ def summarize_with_screenshots(
 
 def insert_screenshot_references(summary: str, frames: List[Dict]) -> str:
     """
-    在总结中插入截图引用
+    在总结中插入截图引用（补救模式）
 
     策略：
-    1. 在每个主要章节（## 标题）后添加一张相关截图
-    2. 如果截图多余章节，在末尾添加截图章节
+    1. 如果 AI 已经插入了截图（检测到 screenshots/ 引用），不再重复插入
+    2. 只有在 AI 没有插入截图时，才做补救插入
+    3. 补救插入：在每个主要章节（## 标题）后添加一张相关截图
+    4. 如果截图多余章节，在末尾添加截图章节
     """
     if not frames:
         return summary
 
+    # 检查 AI 是否已经插入了截图引用
+    if "screenshots/" in summary:
+        # AI 已经插入了截图，不再做补救插入
+        return summary
+
+    # AI 没有插入截图，使用补救插入逻辑
     lines = summary.split('\n')
     result_lines = []
     frame_index = 0

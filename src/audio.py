@@ -250,9 +250,15 @@ def download_audio(url: str, output_dir: str = "downloads") -> tuple[str, str]:
     Returns:
         (音频文件路径, 视频标题)
     """
+    print(f"[DEBUG] download_audio 开始处理:")
+    print(f"  URL: {url}")
+    print(f"  output_dir: {output_dir}")
     result = asyncio.run(download_audio_from_url(url, output_dir))
+    print(f"[DEBUG] download_audio 返回:")
+    print(f"  音频路径: {result}")
     # 获取视频标题
     title = get_video_title(url)
+    print(f"  视频标题: {title}")
     return result, title
 
 
@@ -287,9 +293,12 @@ def get_video_title(url: str) -> str:
             # 清理标题中的非法字符
             title = re.sub(r'[<>:"/\\|?*]', '_', title)
             title = title[:100]  # 限制长度
+            print(f"[DEBUG] get_video_title 返回: {title}")
             return title if title else "视频总结"
+        else:
+            print(f"[ERROR] get_video_title 失败: returncode={result.returncode}, stderr={result.stderr[:200]}")
     except Exception as e:
-        print(f"获取视频标题失败: {e}")
+        print(f"[ERROR] 获取视频标题失败: {e}")
     return "视频总结"
 
 
@@ -397,13 +406,26 @@ async def _download_bilibili_video(url: str, output_dir: str) -> str:
         "--force-overwrites",
         "--no-update",
         "--extractor-retries", "5",
+        "--cookies-from-browser", "chrome",  # 使用浏览器 cookies 认证
         "-o", str(video_path),
         decoded_url
     ]
 
     print(f"正在下载 Bilibili 视频：{decoded_url}")
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print(f"[DEBUG] yt-dlp 命令: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    print(f"[DEBUG] yt-dlp 返回码: {result.returncode}")
+    if result.returncode != 0:
+        print(f"[ERROR] yt-dlp 失败 stderr: {result.stderr[:500]}")
+        print(f"[DEBUG] stdout: {result.stdout[:500] if result.stdout else 'None'}")
+        raise RuntimeError(f"Bilibili 视频下载失败: {result.stderr[:200]}")
     print("Bilibili 视频下载完成")
+
+    # 验证文件是否存在
+    if not video_path.exists():
+        print(f"[ERROR] 视频文件下载后不存在: {video_path}")
+        raise RuntimeError(f"视频文件下载失败: {video_path} 不存在")
+    print(f"[DEBUG] 视频文件已保存: {video_path}")
     return str(video_path)
 
 
