@@ -79,7 +79,7 @@ def summarize_with_screenshots(
     summary_name: str,
     prompt_key: str = "短视频知识",
     model: str = "deepseek-chat"
-) -> Tuple[str, List[Dict]]:
+) -> Tuple[str, List[Dict], Path]:
     """
     生成带截图引用的总结
 
@@ -91,9 +91,10 @@ def summarize_with_screenshots(
         model: DeepSeek 模型名
 
     Returns:
-        (markdown_summary, extracted_frames_info)
+        (markdown_summary, extracted_frames_info, summary_dir)
     """
     from .video import (
+        ensure_summary_dir,
         ensure_screenshots_dir,
         extract_multiple_frames,
         get_video_duration
@@ -103,20 +104,23 @@ def summarize_with_screenshots(
     transcript_text = transcript_data.get("text", "")
     segments = transcript_data.get("segments", [])
 
-    # 1. 获取视频时长
+    # 1. 创建总结文件夹
+    summary_dir = ensure_summary_dir(summary_name)
+
+    # 2. 获取视频时长
     video_duration = get_video_duration(video_path)
 
-    # 2. AI 选择关键帧
+    # 3. AI 选择关键帧
     if segments:
         formatted_transcript = format_transcript_with_timestamps(segments)
         ai_keyframes = select_keyframes(formatted_transcript, video_duration, model)
     else:
         ai_keyframes = []
 
-    # 3. 创建截图目录
+    # 4. 创建截图目录
     screenshots_dir = ensure_screenshots_dir(summary_name)
 
-    # 4. 提取截图
+    # 5. 提取截图
     extracted_frames = extract_multiple_frames(
         video_path=video_path,
         timestamps=ai_keyframes,
@@ -124,16 +128,16 @@ def summarize_with_screenshots(
         video_duration=video_duration
     )
 
-    # 5. 生成带截图引用的总结
+    # 6. 生成带截图引用的总结
     base_prompt = prompt_templates.get(prompt_key, prompt_templates["短视频知识"])
     screenshot_prompt = prompt_with_screenshots(base_prompt)
 
     summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model)
 
-    # 6. 在总结中插入截图引用
+    # 7. 在总结中插入截图引用
     summary_with_refs = insert_screenshot_references(summary, extracted_frames)
 
-    return summary_with_refs, extracted_frames
+    return summary_with_refs, extracted_frames, summary_dir
 
 
 def insert_screenshot_references(summary: str, frames: List[Dict]) -> str:

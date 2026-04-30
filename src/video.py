@@ -12,6 +12,13 @@ from typing import List, Dict, Optional
 SCREENSHOTS_DIR = "screenshots"
 
 
+def ensure_summary_dir(summary_name: str) -> Path:
+    """创建并返回总结文件夹（包含截图子目录）"""
+    dir_path = Path("summaries") / summary_name
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
+
+
 def ensure_screenshots_dir(summary_name: str) -> Path:
     """创建并返回截图保存目录"""
     dir_path = Path("summaries") / summary_name / SCREENSHOTS_DIR

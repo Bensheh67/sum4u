@@ -61,21 +61,24 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
     print("[4/4] 结构化总结...")
     if with_screenshots:
         summary_name = Path(output_path).stem
-        summary, frames = summarize_with_screenshots(
+        summary, frames, summary_dir = summarize_with_screenshots(
             transcript_data={"text": transcript, "segments": segments},
             video_path=video_path,
             summary_name=summary_name,
             prompt_key="短视频知识"
         )
         print(f"已提取 {len(frames)} 张截图")
+        # 保存到文件夹内的 summary.md
+        summary_file_path = summary_dir / "summary.md"
     else:
         summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
+        summary_file_path = output_path
     print("摘要完成！")
 
     print("[5/5] 保存结果...")
-    with open(output_path, "w", encoding="utf-8") as f:
+    with open(summary_file_path, "w", encoding="utf-8") as f:
         f.write(summary)
-    print(f"结果已保存到: {output_path}")
+    print(f"结果已保存到: {summary_file_path}")
 
 
 def main():

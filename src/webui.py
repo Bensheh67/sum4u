@@ -174,7 +174,7 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
 
             print(f"[{task_id}] 生成带截图的总结...")
             summary_name = Path(output_path).stem
-            summary, frames = summarize_with_screenshots(
+            summary, frames, summary_dir = summarize_with_screenshots(
                 transcript_data={"text": transcript, "segments": segments},
                 video_path=video_path,
                 summary_name=summary_name,
@@ -182,6 +182,9 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             )
             print(f"[{task_id}] 已提取 {len(frames)} 张截图")
             print(f"[{task_id}] 摘要完成！")
+            # 保存到文件夹内的 summary.md
+            summary_file_path = summary_dir / "summary.md"
+            result_path = str(summary_dir)
         else:
             # 不带截图的流程
             task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
@@ -200,23 +203,25 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             print(f"[{task_id}] 结构化总结...")
             summary = summarize_text(transcript, prompt=prompt_to_use)
             print(f"[{task_id}] 摘要完成！")
+            summary_file_path = output_path
+            result_path = output_path
 
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 
         # 确保输出目录存在
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        os.makedirs(os.path.dirname(summary_file_path) if os.path.dirname(summary_file_path) else ".", exist_ok=True)
 
-        # 保存到总结文件夹
-        with open(output_path, "w", encoding="utf-8") as f:
+        # 保存到总结文件
+        with open(summary_file_path, "w", encoding="utf-8") as f:
             f.write(summary)
-        print(f"[{task_id}] 结果已保存到: {output_path}")
+        print(f"[{task_id}] 结果已保存到: {summary_file_path}")
 
         # 更新任务历史记录
         task_info["end_time"] = datetime.now()
         task_info["status"] = "completed"
-        task_info["result_path"] = output_path
+        task_info["result_path"] = result_path
 
-        task_status[task_id] = {"status": "completed", "progress": 100, "message": "处理完成！", "result_path": output_path}
+        task_status[task_id] = {"status": "completed", "progress": 100, "message": "处理完成！", "result_path": result_path}
     except Exception as e:
         # 更新任务历史记录
         task_info["end_time"] = datetime.now()
