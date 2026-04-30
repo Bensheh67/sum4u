@@ -288,9 +288,10 @@ async def _download_youtube_video(url: str, output_dir: str) -> str:
 
     video_path = Path(output_dir) / f"youtube_{video_id}.mp4"
 
+    # 删除旧文件确保重新下载
     if video_path.exists():
-        print(f"视频已存在，复用文件：{video_path}")
-        return str(video_path)
+        print(f"删除旧视频文件：{video_path}")
+        video_path.unlink()
 
     cmd = [
         "yt-dlp",
@@ -327,9 +328,10 @@ async def _download_bilibili_video(url: str, output_dir: str) -> str:
 
     video_path = Path(output_dir) / f"bilibili_{video_id}.mp4"
 
+    # 删除旧文件确保重新下载
     if video_path.exists():
-        print(f"视频已存在，复用文件：{video_path}")
-        return str(video_path)
+        print(f"删除旧视频文件：{video_path}")
+        video_path.unlink()
 
     cmd = [
         "yt-dlp",
@@ -376,9 +378,10 @@ async def _download_douyin_video(url: str, output_dir: str) -> str:
     video_id = abs(hash(url)) % 10000
     video_path = Path(output_dir) / f"douyin_{video_id}.mp4"
 
+    # 删除旧文件确保重新下载
     if video_path.exists():
-        print(f"视频已存在，复用文件：{video_path}")
-        return str(video_path)
+        print(f"删除旧视频文件：{video_path}")
+        video_path.unlink()
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
