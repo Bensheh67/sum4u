@@ -14,7 +14,12 @@ SCREENSHOTS_DIR = "screenshots"
 
 def ensure_summary_dir(summary_name: str) -> Path:
     """创建并返回总结文件夹（包含截图子目录）"""
-    dir_path = Path("summaries") / summary_name
+    # 清理文件名中的非法字符
+    safe_name = summary_name.replace('/', '_').replace('\\', '_').replace(':', '_').replace('*', '_')
+    safe_name = safe_name.replace('?', '_').replace('"', '_').replace('<', '_').replace('>', '_')
+    safe_name = safe_name.replace('|', '_').rstrip('. ')  # 不能以点或空格结尾
+    safe_name = safe_name[:100] if len(safe_name) > 100 else safe_name
+    dir_path = Path("summaries") / safe_name
     dir_path.mkdir(parents=True, exist_ok=True)
     return dir_path
 

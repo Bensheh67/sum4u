@@ -31,13 +31,14 @@ def split_text(text, max_len=15000):
     return parts
 
 
-def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat") -> str:
+def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat", video_title: Optional[str] = None) -> str:
     """
     调用 DeepSeek API 对转录文本进行结构化总结。
     自动分段摘要，单段不超过15000字。
     :param text: 需要总结的文本
     :param prompt: 自定义摘要提示词（可选）
     :param model: DeepSeek 模型名，默认 deepseek-chat
+    :param video_title: 视频标题（可选），会作为总结的第一行标题
     :return: 结构化摘要文本
     """
     def call_api(chunk):
@@ -69,7 +70,11 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
     # 如拼接后仍超长，递归摘要
     if len(summary_text) > 15000:
         print("摘要结果仍超长，递归再次摘要...")
-        return summarize_text(summary_text, prompt, model)
+        return summarize_text(summary_text, prompt, model, video_title)
+
+    # 添加视频标题作为第一行
+    if video_title:
+        summary_text = f"# {video_title}\n\n{summary_text}"
     return summary_text
 
 
@@ -78,7 +83,8 @@ def summarize_with_screenshots(
     video_path: str,
     summary_name: str,
     prompt_key: str = "短视频知识",
-    model: str = "deepseek-chat"
+    model: str = "deepseek-chat",
+    video_title: Optional[str] = None
 ) -> Tuple[str, List[Dict], Path]:
     """
     生成带截图引用的总结
@@ -89,6 +95,7 @@ def summarize_with_screenshots(
         summary_name: 总结文件夹名称
         prompt_key: 提示词模板key
         model: DeepSeek 模型名
+        video_title: 视频标题（可选）
 
     Returns:
         (markdown_summary, extracted_frames_info, summary_dir)
@@ -132,7 +139,7 @@ def summarize_with_screenshots(
     base_prompt = prompt_templates.get(prompt_key, prompt_templates["短视频知识"])
     screenshot_prompt = prompt_with_screenshots(base_prompt)
 
-    summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model)
+    summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model, video_title=video_title)
 
     # 7. 在总结中插入截图引用
     summary_with_refs = insert_screenshot_references(summary, extracted_frames)

@@ -46,11 +46,12 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
 def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False):
     """处理视频URL的完整流程"""
     print("[1/4] 下载视频...")
-    video_path = download_video(video_url)
+    video_path, video_title = download_video(video_url)
     print(f"视频已保存: {video_path}")
+    print(f"视频标题: {video_title}")
 
     print("[2/4] 提取音频...")
-    audio_path = download_audio(video_url)
+    audio_path, _ = download_audio(video_url)
     print(f"音频已保存: {audio_path}")
 
     print(f"[3/4] 转录音频 (使用模型: {model})...")
@@ -60,19 +61,21 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
 
     print("[4/4] 结构化总结...")
     if with_screenshots:
-        summary_name = Path(output_path).stem
         summary, frames, summary_dir = summarize_with_screenshots(
             transcript_data={"text": transcript, "segments": segments},
             video_path=video_path,
-            summary_name=summary_name,
+            summary_name=video_title,
+            video_title=video_title,
             prompt_key="短视频知识"
         )
         print(f"已提取 {len(frames)} 张截图")
         # 保存到文件夹内的 summary.md
         summary_file_path = summary_dir / "summary.md"
     else:
-        summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
-        summary_file_path = output_path
+        summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), video_title=video_title)
+        # 使用视频标题命名
+        safe_title = video_title.replace('/', '_').replace('\\', '_')
+        summary_file_path = os.path.join("summaries", f"{safe_title}_总结.md")
     print("摘要完成！")
 
     print("[5/5] 保存结果...")

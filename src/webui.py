@@ -157,12 +157,13 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 5, "message": "下载视频..."}
 
             print(f"[{task_id}] 下载视频...")
-            video_path = download_video(video_url)
+            video_path, video_title = download_video(video_url)
             print(f"[{task_id}] 视频已保存: {video_path}")
+            print(f"[{task_id}] 视频标题: {video_title}")
             task_status[task_id] = {"status": "processing", "progress": 15, "message": "提取音频..."}
 
             print(f"[{task_id}] 提取音频...")
-            audio_path = download_audio(video_url)
+            audio_path, _ = download_audio(video_url)
             print(f"[{task_id}] 音频已保存: {audio_path}")
             task_status[task_id] = {"status": "processing", "progress": 25, "message": "开始转录..."}
 
@@ -173,11 +174,11 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 60, "message": "生成AI总结（含截图）..."}
 
             print(f"[{task_id}] 生成带截图的总结...")
-            summary_name = Path(output_path).stem
             summary, frames, summary_dir = summarize_with_screenshots(
                 transcript_data={"text": transcript, "segments": segments},
                 video_path=video_path,
-                summary_name=summary_name,
+                summary_name=video_title,
+                video_title=video_title,
                 prompt_key="短视频知识"
             )
             print(f"[{task_id}] 已提取 {len(frames)} 张截图")
@@ -190,8 +191,9 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
 
             print(f"[{task_id}] 下载并提取音频...")
-            audio_path = download_audio(video_url)
+            audio_path, video_title = download_audio(video_url)
             print(f"[{task_id}] 音频已保存: {audio_path}")
+            print(f"[{task_id}] 视频标题: {video_title}")
             task_status[task_id] = {"status": "processing", "progress": 20, "message": "开始转录..."}
 
             print(f"[{task_id}] 转录音频 (使用模型: {model})...")
@@ -201,10 +203,12 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 
             print(f"[{task_id}] 结构化总结...")
-            summary = summarize_text(transcript, prompt=prompt_to_use)
+            summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title)
             print(f"[{task_id}] 摘要完成！")
-            summary_file_path = output_path
-            result_path = output_path
+            # 使用视频标题命名
+            safe_title = video_title.replace('/', '_').replace('\\', '_')
+            summary_file_path = os.path.join("summaries", f"{safe_title}_总结.md")
+            result_path = summary_file_path
 
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 

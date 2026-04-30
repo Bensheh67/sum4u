@@ -238,24 +238,74 @@ async def download_audio_from_url(url: str, output_dir: str = "downloads") -> st
         else:
             raise ValueError(f"暂不支持该平台：{url}")
 
-def download_audio(url: str, output_dir: str = "downloads") -> str:
-    return asyncio.run(download_audio_from_url(url, output_dir))
+def download_audio(url: str, output_dir: str = "downloads") -> tuple[str, str]:
+    """
+    下载音频并返回 (音频路径, 视频标题)
+
+    Returns:
+        (音频文件路径, 视频标题)
+    """
+    result = asyncio.run(download_audio_from_url(url, output_dir))
+    # 获取视频标题
+    title = get_video_title(url)
+    return result, title
 
 
-def download_video(url: str, output_dir: str = "downloads") -> str:
+def get_video_title(url: str) -> str:
+    """
+    使用 yt-dlp 获取视频标题
+
+    Returns:
+        视频标题
+    """
+    import urllib.parse
+    import re
+    import subprocess
+
+    # 清理 URL
+    decoded_url = urllib.parse.unquote(url)
+    decoded_url = re.sub(r'\\\\', r'\\', decoded_url)
+    decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+    try:
+        cmd = [
+            "yt-dlp",
+            "--skip-download",
+            "--print", "%(title)s",
+            "--no-warnings",
+            "-o", "%(title)s",
+            decoded_url
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode == 0:
+            title = result.stdout.strip()
+            # 清理标题中的非法字符
+            title = re.sub(r'[<>:"/\\|?*]', '_', title)
+            title = title[:100]  # 限制长度
+            return title if title else "视频总结"
+    except Exception as e:
+        print(f"获取视频标题失败: {e}")
+    return "视频总结"
+
+
+def download_video(url: str, output_dir: str = "downloads") -> tuple[str, str]:
     """
     下载完整视频（不提取音频），用于截图提取
 
     Returns:
-        视频文件路径
+        (视频文件路径, 视频标题)
     """
     import urllib.parse
     import re
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # 获取视频标题
+    title = get_video_title(url)
+
     if is_douyin_url(url):
-        return asyncio.run(_download_douyin_video(url, output_dir))
+        video_path = asyncio.run(_download_douyin_video(url, output_dir))
+        return video_path, title
 
     decoded_url = urllib.parse.unquote(url)
     decoded_url = re.sub(r'\\\\', r'\\', decoded_url)
@@ -264,9 +314,11 @@ def download_video(url: str, output_dir: str = "downloads") -> str:
     platform = get_platform(url)
 
     if platform == 'youtube':
-        return asyncio.run(_download_youtube_video(url, output_dir))
+        video_path = asyncio.run(_download_youtube_video(url, output_dir))
+        return video_path, title
     elif platform == 'bilibili':
-        return asyncio.run(_download_bilibili_video(url, output_dir))
+        video_path = asyncio.run(_download_bilibili_video(url, output_dir))
+        return video_path, title
     else:
         raise ValueError(f"暂不支持该平台的视频下载：{url}")
 
