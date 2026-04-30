@@ -240,3 +240,163 @@ async def download_audio_from_url(url: str, output_dir: str = "downloads") -> st
 
 def download_audio(url: str, output_dir: str = "downloads") -> str:
     return asyncio.run(download_audio_from_url(url, output_dir))
+
+
+def download_video(url: str, output_dir: str = "downloads") -> str:
+    """
+    下载完整视频（不提取音频），用于截图提取
+
+    Returns:
+        视频文件路径
+    """
+    import urllib.parse
+    import re
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    if is_douyin_url(url):
+        return asyncio.run(_download_douyin_video(url, output_dir))
+
+    decoded_url = urllib.parse.unquote(url)
+    decoded_url = re.sub(r'\\\\', r'\\', decoded_url)
+    decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+    platform = get_platform(url)
+
+    if platform == 'youtube':
+        return asyncio.run(_download_youtube_video(url, output_dir))
+    elif platform == 'bilibili':
+        return asyncio.run(_download_bilibili_video(url, output_dir))
+    else:
+        raise ValueError(f"暂不支持该平台的视频下载：{url}")
+
+
+async def _download_youtube_video(url: str, output_dir: str) -> str:
+    """下载 YouTube 视频"""
+    import urllib.parse
+    import re
+
+    decoded_url = urllib.parse.unquote(url)
+    decoded_url = re.sub(r'\\\\', r'\\', decoded_url)
+    decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+    video_id = "unknown"
+    if "v=" in decoded_url:
+        video_id = decoded_url.split("v=")[1].split("&")[0][:11]
+    elif "youtu.be/" in decoded_url:
+        video_id = decoded_url.split("youtu.be/")[-1].split("?")[0][:11]
+
+    video_path = Path(output_dir) / f"youtube_{video_id}.mp4"
+
+    if video_path.exists():
+        print(f"视频已存在，复用文件：{video_path}")
+        return str(video_path)
+
+    cmd = [
+        "yt-dlp",
+        "-f", "bestvideo[ext=mp4]",
+        "--merge-output-format", "mp4",
+        "--force-overwrites",
+        "--no-update",
+        "--extractor-retries", "5",
+        "--cookies-from-browser", "chrome",
+        "-o", str(video_path),
+        decoded_url
+    ]
+
+    print(f"正在下载 YouTube 视频：{decoded_url}")
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print("YouTube 视频下载完成")
+    return str(video_path)
+
+
+async def _download_bilibili_video(url: str, output_dir: str) -> str:
+    """下载 Bilibili 视频"""
+    import urllib.parse
+    import re
+
+    decoded_url = urllib.parse.unquote(url)
+    decoded_url = re.sub(r'\\\\', r'\\', decoded_url)
+    decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
+
+    video_id = "unknown"
+    if "BV" in url:
+        video_id = url.split("BV")[1].split("?")[0][:12]
+    elif "/video/" in url:
+        video_id = url.split("/video/")[-1].split("?")[0][:12]
+
+    video_path = Path(output_dir) / f"bilibili_{video_id}.mp4"
+
+    if video_path.exists():
+        print(f"视频已存在，复用文件：{video_path}")
+        return str(video_path)
+
+    cmd = [
+        "yt-dlp",
+        "-f", "bestvideo[ext=mp4]",
+        "--merge-output-format", "mp4",
+        "--force-overwrites",
+        "--no-update",
+        "--extractor-retries", "5",
+        "-o", str(video_path),
+        decoded_url
+    ]
+
+    print(f"正在下载 Bilibili 视频：{decoded_url}")
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    print("Bilibili 视频下载完成")
+    return str(video_path)
+
+
+async def _download_douyin_video(url: str, output_dir: str) -> str:
+    """下载抖音视频"""
+    from .douyin_handler import get_douyin_video_data, clean_douyin_url
+
+    api_key = os.getenv('TIKHUB_API_KEY')
+    if not api_key:
+        from .config import config_manager
+        api_key = config_manager.config.get("api_keys", {}).get("tikhub")
+
+    cleaned_url = clean_douyin_url(url)
+    video_data = get_douyin_video_data(cleaned_url, api_key)
+
+    video_url = None
+    if 'original_video_url' in video_data:
+        video_url = video_data['original_video_url']
+    elif 'data' in video_data:
+        data = video_data['data']
+        if 'aweme_detail' in data:
+            video_info = data['aweme_detail'].get('video', {})
+            if 'play_addr' in video_info:
+                video_url = video_info['play_addr']['url_list'][0]
+
+    if not video_url:
+        raise ValueError("无法获取抖音视频下载链接")
+
+    video_id = abs(hash(url)) % 10000
+    video_path = Path(output_dir) / f"douyin_{video_id}.mp4"
+
+    if video_path.exists():
+        print(f"视频已存在，复用文件：{video_path}")
+        return str(video_path)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://www.douyin.com/",
+    }
+
+    session = __import__('requests').Session()
+    session.trust_env = False
+    session.headers.update(headers)
+
+    print("正在下载抖音视频...")
+    response = session.get(video_url, stream=True, timeout=180)
+    response.raise_for_status()
+
+    with open(video_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=512*1024):
+            if chunk:
+                f.write(chunk)
+
+    print(f"抖音视频下载完成：{video_path}")
+    return str(video_path)

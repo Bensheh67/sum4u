@@ -9,9 +9,9 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "src"
 
 import argparse
-from .audio import download_audio
+from .audio import download_audio, download_video
 from .transcribe import transcribe_audio, transcribe_local_audio
-from .summarize import summarize_text
+from .summarize import summarize_text, summarize_with_screenshots
 from .prompts import prompt_templates
 from .audio_handler import handle_audio_upload
 from .utils import safe_filename, generate_filename
@@ -33,9 +33,7 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     print("转录完成！")
 
     print("[3/4] 结构化总结...")
-    # 确定AI提供商
-    provider = "deepseek"  # 默认使用deepseek
-    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
     print("摘要完成！")
 
     print("[4/4] 保存结果...")
@@ -45,25 +43,36 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     print(f"结果已保存到: {output_path}")
 
 
-def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str):
+def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False):
     """处理视频URL的完整流程"""
-    print("[1/3] 下载并提取音频...")
+    print("[1/4] 下载视频...")
+    video_path = download_video(video_url)
+    print(f"视频已保存: {video_path}")
+
+    print("[2/4] 提取音频...")
     audio_path = download_audio(video_url)
     print(f"音频已保存: {audio_path}")
 
-    print(f"[2/3] 转录音频 (使用模型: {model})...")
+    print(f"[3/4] 转录音频 (使用模型: {model})...")
     print("提示：转录过程可能需要几分钟时间，请耐心等待...")
-    transcript = transcribe_audio(audio_path, model=model, save_transcription=True)
+    transcript, segments = transcribe_audio(audio_path, model=model, save_transcription=True, return_timestamps=True)
     print("转录完成！")
 
-    print("[3/4] 结构化总结...")
-    # 确定AI提供商
-    provider = "deepseek"  # 默认使用deepseek
-    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
+    print("[4/4] 结构化总结...")
+    if with_screenshots:
+        summary_name = Path(output_path).stem
+        summary, frames = summarize_with_screenshots(
+            transcript_data={"text": transcript, "segments": segments},
+            video_path=video_path,
+            summary_name=summary_name,
+            prompt_key="短视频知识"
+        )
+        print(f"已提取 {len(frames)} 张截图")
+    else:
+        summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
     print("摘要完成！")
 
-    print("[4/4] 保存结果...")
-    # 保存到总结文件夹
+    print("[5/5] 保存结果...")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(summary)
     print(f"结果已保存到: {output_path}")
@@ -86,6 +95,7 @@ def main():
     parser.add_argument("--prompt_template", required=False, default="default课堂笔记", help="选择摘要提示词模板，可选: default课堂笔记, youtube_英文笔记, youtube_结构化提取, youtube_精炼提取, youtube_专业课笔记, 爆款短视频文案, youtube_视频总结")
     parser.add_argument("--language", required=False, help="指定音频语言（如 zh, en），不指定则自动检测")
     parser.add_argument("--provider", required=False, help="AI服务提供商 (deepseek, openai, anthropic)")
+    parser.add_argument("--with-screenshots", action="store_true", help="生成带视频截图的总结")
 
     args = parser.parse_args()
 
@@ -138,7 +148,7 @@ def main():
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
 
-        process_video_url(args.url, model_to_use, prompt_to_use, output_path)
+        process_video_url(args.url, model_to_use, prompt_to_use, output_path, with_screenshots=args.with_screenshots)
 
     elif args.audio_file:
         # 处理本地音频文件

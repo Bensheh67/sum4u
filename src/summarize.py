@@ -3,11 +3,12 @@ summarize.py
 GPT 摘要模块。
 """
 
-from typing import Optional
+from typing import Optional, List, Dict, Tuple
 import requests
+from pathlib import Path
 
 from .config import get_api_key
-from .prompts import prompt_templates
+from .prompts import prompt_templates, prompt_with_screenshots
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
@@ -70,3 +71,99 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
         print("摘要结果仍超长，递归再次摘要...")
         return summarize_text(summary_text, prompt, model)
     return summary_text
+
+
+def summarize_with_screenshots(
+    transcript_data: Dict,
+    video_path: str,
+    summary_name: str,
+    prompt_key: str = "短视频知识",
+    model: str = "deepseek-chat"
+) -> Tuple[str, List[Dict]]:
+    """
+    生成带截图引用的总结
+
+    Args:
+        transcript_data: 转录数据，包含 "text" 和 "segments"
+        video_path: 视频文件路径
+        summary_name: 总结文件夹名称
+        prompt_key: 提示词模板key
+        model: DeepSeek 模型名
+
+    Returns:
+        (markdown_summary, extracted_frames_info)
+    """
+    from .video import (
+        ensure_screenshots_dir,
+        extract_multiple_frames,
+        get_video_duration
+    )
+    from .keyframe_selector import format_transcript_with_timestamps, select_keyframes
+
+    transcript_text = transcript_data.get("text", "")
+    segments = transcript_data.get("segments", [])
+
+    # 1. 获取视频时长
+    video_duration = get_video_duration(video_path)
+
+    # 2. AI 选择关键帧
+    if segments:
+        formatted_transcript = format_transcript_with_timestamps(segments)
+        ai_keyframes = select_keyframes(formatted_transcript, video_duration, model)
+    else:
+        ai_keyframes = []
+
+    # 3. 创建截图目录
+    screenshots_dir = ensure_screenshots_dir(summary_name)
+
+    # 4. 提取截图
+    extracted_frames = extract_multiple_frames(
+        video_path=video_path,
+        timestamps=ai_keyframes,
+        output_dir=screenshots_dir,
+        video_duration=video_duration
+    )
+
+    # 5. 生成带截图引用的总结
+    base_prompt = prompt_templates.get(prompt_key, prompt_templates["短视频知识"])
+    screenshot_prompt = prompt_with_screenshots(base_prompt)
+
+    summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model)
+
+    # 6. 在总结中插入截图引用
+    summary_with_refs = insert_screenshot_references(summary, extracted_frames)
+
+    return summary_with_refs, extracted_frames
+
+
+def insert_screenshot_references(summary: str, frames: List[Dict]) -> str:
+    """
+    在总结中插入截图引用
+
+    策略：
+    1. 在每个主要章节（## 标题）后添加一张相关截图
+    2. 如果截图多余章节，在末尾添加截图章节
+    """
+    if not frames:
+        return summary
+
+    lines = summary.split('\n')
+    result_lines = []
+    frame_index = 0
+
+    for line in lines:
+        result_lines.append(line)
+
+        if line.startswith('## ') and frame_index < len(frames):
+            frame = frames[frame_index]
+            img_ref = f'\n![{frame["reason"]}](screenshots/{frame["filename"]})\n'
+            result_lines.append(img_ref)
+            frame_index += 1
+
+    if frame_index < len(frames):
+        result_lines.append('\n\n## 视频截图\n')
+        for frame in frames[frame_index:]:
+            img_ref = f'![{frame["reason"]}](screenshots/{frame["filename"]})\n'
+            result_lines.append(img_ref)
+
+    return '\n'.join(result_lines)

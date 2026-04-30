@@ -4,7 +4,7 @@ Whisper 转录模块 - 使用本地 whisper 进行音频转录。
 """
 
 import os
-from typing import Optional
+from typing import Optional, List, Tuple, Union, Dict
 import tempfile
 from moviepy import AudioFileClip
 from pathlib import Path
@@ -31,7 +31,7 @@ def save_transcription_file(audio_path: str, transcript_text: str) -> None:
     print(f"转录文本长度：{len(transcript_text)} 字符")
 
 
-def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str = "small", language: Optional[str] = None, save_transcription: bool = True) -> str:
+def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str = "small", language: Optional[str] = None, save_transcription: bool = True, return_timestamps: bool = False) -> Union[str, Tuple[str, List[Dict]]]:
     """
     将音频文件转为文本，使用本地 whisper 进行转录。
     当文件大于 100M 时自动分段（每 600 秒一段）转录。
@@ -40,7 +40,8 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
     :param model: whisper 模型大小（tiny, base, small, medium, large），默认 small
     :param language: 指定音频语言（如 'zh', 'en'），None 表示自动检测
     :param save_transcription: 是否保存转录文本到文件
-    :return: 转录文本
+    :param return_timestamps: 是否返回带时间戳的 segments（用于截图选择）
+    :return: 如果 return_timestamps=True，返回 (transcript_text, segments_list)，否则只返回 transcript_text
     """
     try:
         import whisper
@@ -57,7 +58,6 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
         print("模型加载完成，开始转录...")
 
         if file_size <= 100 * MB:
-            # 设置转录参数
             transcribe_kwargs = {}
             if language:
                 transcribe_kwargs["language"] = language
@@ -65,11 +65,13 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
             result = whisper_model.transcribe(audio_path, **transcribe_kwargs)
             print("转录完成！")
             transcript_text = result["text"]
+            segments = result.get("segments", [])
 
-            # 保存转录文件
             if save_transcription:
                 save_transcription_file(audio_path, transcript_text)
 
+            if return_timestamps:
+                return transcript_text, segments
             return transcript_text
         else:
             print(f"音频文件较大，开始分段转录...")
@@ -77,6 +79,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
             duration = int(audio.duration)  # 秒
             chunk_sec = 600  # 每段 10 分钟
             texts = []
+            all_segments = []
 
             total_chunks = (duration + chunk_sec - 1) // chunk_sec  # 计算总段数
             print(f"总共需要处理 {total_chunks} 个分段")
@@ -109,6 +112,12 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
 
                         result = whisper_model.transcribe(tmp.name, **transcribe_kwargs)
                         texts.append(result["text"])
+                        # 调整 segments 的时间戳
+                        for seg in result.get("segments", []):
+                            adjusted_seg = seg.copy()
+                            adjusted_seg["start"] += start
+                            adjusted_seg["end"] += start
+                            all_segments.append(adjusted_seg)
                         print(f"分段 {i} 转录完成")
                     except Exception as e:
                         print(f"转录分段 {i} 失败：{e}")
@@ -119,10 +128,11 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
             print("所有分段转录完成！")
             transcript_text = '\n'.join(texts)
 
-            # 保存转录文件
             if save_transcription:
                 save_transcription_file(audio_path, transcript_text)
 
+            if return_timestamps:
+                return transcript_text, all_segments
             return transcript_text
     except ImportError:
         raise RuntimeError("未安装 whisper 库，请运行：pip install openai-whisper")
