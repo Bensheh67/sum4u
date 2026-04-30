@@ -21,9 +21,9 @@ src_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, src_dir)
 
 # 使用绝对导入
-from src.audio import download_audio
+from src.audio import download_audio, download_video
 from src.transcribe import transcribe_audio, transcribe_local_audio
-from src.summarize import summarize_text
+from src.summarize import summarize_text, summarize_with_screenshots
 from src.prompts import prompt_templates
 from src.audio_handler import handle_audio_upload
 from src.utils import safe_filename, generate_filename
@@ -116,7 +116,7 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
         print(f"[{task_id}] 处理失败: {str(e)}")
 
 
-def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str):
+def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False):
     """处理视频URL的后台任务"""
     # 记录任务开始时间
     start_time = datetime.now()
@@ -129,6 +129,7 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
         "model": model,
         "prompt_template_used": prompt_to_use[:50] + "..." if len(prompt_to_use) > 50 else prompt_to_use,  # 只保存前50个字符
         "language": None,
+        "with_screenshots": with_screenshots,
         "start_time": start_time,
         "end_time": None,
         "status": "processing",
@@ -151,22 +152,55 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
         if not video_url or not (video_url.startswith('http://') or video_url.startswith('https://')):
             raise ValueError("无效的视频 URL")
 
-        task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
+        if with_screenshots:
+            # 带截图的流程
+            task_status[task_id] = {"status": "processing", "progress": 5, "message": "下载视频..."}
 
-        print(f"[{task_id}] 下载并提取音频...")
-        audio_path = download_audio(video_url)
-        print(f"[{task_id}] 音频已保存: {audio_path}")
-        task_status[task_id] = {"status": "processing", "progress": 20, "message": "开始转录..."}
+            print(f"[{task_id}] 下载视频...")
+            video_path = download_video(video_url)
+            print(f"[{task_id}] 视频已保存: {video_path}")
+            task_status[task_id] = {"status": "processing", "progress": 15, "message": "提取音频..."}
 
-        print(f"[{task_id}] 转录音频 (使用模型: {model})...")
-        print(f"[{task_id}] 提示：转录过程可能需要几分钟时间，请耐心等待...")
-        transcript = transcribe_audio(audio_path, model=model)
-        print(f"[{task_id}] 转录完成！")
-        task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
+            print(f"[{task_id}] 提取音频...")
+            audio_path = download_audio(video_url)
+            print(f"[{task_id}] 音频已保存: {audio_path}")
+            task_status[task_id] = {"status": "processing", "progress": 25, "message": "开始转录..."}
 
-        print(f"[{task_id}] 结构化总结...")
-        summary = summarize_text(transcript, prompt=prompt_to_use)
-        print(f"[{task_id}] 摘要完成！")
+            print(f"[{task_id}] 转录音频 (使用模型: {model})...")
+            print(f"[{task_id}] 提示：转录过程可能需要几分钟时间，请耐心等待...")
+            transcript, segments = transcribe_audio(audio_path, model=model, return_timestamps=True)
+            print(f"[{task_id}] 转录完成！")
+            task_status[task_id] = {"status": "processing", "progress": 60, "message": "生成AI总结（含截图）..."}
+
+            print(f"[{task_id}] 生成带截图的总结...")
+            summary_name = Path(output_path).stem
+            summary, frames = summarize_with_screenshots(
+                transcript_data={"text": transcript, "segments": segments},
+                video_path=video_path,
+                summary_name=summary_name,
+                prompt_key="短视频知识"
+            )
+            print(f"[{task_id}] 已提取 {len(frames)} 张截图")
+            print(f"[{task_id}] 摘要完成！")
+        else:
+            # 不带截图的流程
+            task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
+
+            print(f"[{task_id}] 下载并提取音频...")
+            audio_path = download_audio(video_url)
+            print(f"[{task_id}] 音频已保存: {audio_path}")
+            task_status[task_id] = {"status": "processing", "progress": 20, "message": "开始转录..."}
+
+            print(f"[{task_id}] 转录音频 (使用模型: {model})...")
+            print(f"[{task_id}] 提示：转录过程可能需要几分钟时间，请耐心等待...")
+            transcript = transcribe_audio(audio_path, model=model)
+            print(f"[{task_id}] 转录完成！")
+            task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
+
+            print(f"[{task_id}] 结构化总结...")
+            summary = summarize_text(transcript, prompt=prompt_to_use)
+            print(f"[{task_id}] 摘要完成！")
+
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 
         # 确保输出目录存在
@@ -410,6 +444,13 @@ async def read_root():
 
         input[type="file"]:focus {
             border-color: var(--primary-color);
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
         }
 
         small {
@@ -720,6 +761,16 @@ async def read_root():
                     <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="withScreenshots" name="withScreenshots" style="width: auto; margin-right: 8px;">
+                        生成带视频截图的总结
+                        <span class="tooltip">ⓘ
+                            <span class="tooltiptext">AI 会分析视频内容，自动选择关键帧插入到总结中，提升总结质量。需要较长的处理时间。</span>
+                        </span>
+                    </label>
+                </div>
+
                 <button type="submit">开始处理</button>
             </form>
 
@@ -978,6 +1029,7 @@ async def read_root():
             const model = document.getElementById('whisperModel').value;
             const promptTemplate = document.getElementById('promptTemplate').value;
             const customPrompt = document.getElementById('customPrompt').value.trim();
+            const withScreenshots = document.getElementById('withScreenshots').checked;
 
             if (!videoUrl) {
                 alert('请输入视频URL');
@@ -1001,7 +1053,8 @@ async def read_root():
                         url: videoUrl,
                         model: model,
                         prompt_template: promptTemplate,
-                        prompt: customPrompt || null
+                        prompt: customPrompt || null,
+                        with_screenshots: withScreenshots
                     })
                 });
 
@@ -1407,6 +1460,7 @@ async def process_video_url_endpoint(
     model: str = Form(default="small"),
     prompt_template: str = Form(default="default课堂笔记"),
     prompt: Optional[str] = Form(default=None),
+    with_screenshots: bool = Form(default=False),
     # 为支持JSON请求添加参数
     request: Request = None
 ):
@@ -1418,6 +1472,7 @@ async def process_video_url_endpoint(
             model = body.get("model", model)
             prompt_template = body.get("prompt_template", prompt_template)
             prompt = body.get("prompt", prompt)
+            with_screenshots = body.get("with_screenshots", with_screenshots)
         except:
             pass  # 如果JSON解析失败，使用表单参数
 
@@ -1433,28 +1488,28 @@ async def process_video_url_endpoint(
     if not url:
         raise HTTPException(status_code=422, detail="URL是必需的")
     task_id = str(uuid.uuid4())
-    
+
     # 确定使用哪个提示词
     # 安全的模板处理（避免 KeyError）
     if prompt_template not in prompt_templates:
         print(f"[WARNING] 未知的模板：{prompt_template}，使用默认模板")
         prompt_template = "default 课堂笔记"
     prompt_to_use = prompt if prompt else prompt_templates[prompt_template]
-    
+
     # 生成输出文件路径
     auto_filename = generate_filename(url, has_summary=True, is_local=False)
     output_path = os.path.join("summaries", auto_filename)
-    
+
     # 初始化任务状态
     task_status[task_id] = {"status": "processing", "progress": 0, "message": "初始化..."}
-    
+
     # 在后台线程中运行处理任务
     thread = threading.Thread(
         target=process_video_url_task,
-        args=(task_id, url, model, prompt_to_use, output_path)
+        args=(task_id, url, model, prompt_to_use, output_path, with_screenshots)
     )
     thread.start()
-    
+
     return {"task_id": task_id}
 
 
