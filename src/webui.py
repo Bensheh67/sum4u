@@ -1660,20 +1660,42 @@ async def get_task_status(task_id: str):
 
 @app.get("/download-result/{file_path:path}")
 async def download_result(file_path: str):
-    from fastapi.responses import FileResponse
+    import urllib.parse
+    import zipfile
+    import tempfile
 
     # 解码文件路径
-    import urllib.parse
     decoded_path = urllib.parse.unquote(file_path)
 
     if not os.path.exists(decoded_path):
         raise HTTPException(status_code=404, detail="文件不存在")
 
-    return FileResponse(
-        path=decoded_path,
-        media_type='text/markdown',
-        filename=os.path.basename(decoded_path)
-    )
+    # 如果是目录，打包成 zip 文件
+    if os.path.isdir(decoded_path):
+        zip_filename = os.path.basename(decoded_path) + '.zip'
+        temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+        temp_zip.close()
+
+        with zipfile.ZipFile(temp_zip.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(decoded_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, os.path.dirname(decoded_path))
+                    zipf.write(file_path, arcname)
+
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=temp_zip.name,
+            media_type='application/zip',
+            filename=zip_filename
+        )
+    else:
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=decoded_path,
+            media_type='text/markdown',
+            filename=os.path.basename(decoded_path)
+        )
 
 
 @app.get("/api/prompt-templates")
