@@ -23,9 +23,9 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
     # 从 URL 中提取视频 ID 用于生成唯一文件名
     video_id = "unknown"
     if "BV" in url:
-        video_id = url.split("BV")[1].split("?")[0][:12]
+        video_id = url.split("BV")[1].split("?")[0].rstrip("/")[:12]
     elif "/video/" in url:
-        video_id = url.split("/video/")[-1].split("?")[0][:12]
+        video_id = url.split("/video/")[-1].split("?")[0].rstrip("/")[:12]
 
     audio_path = Path(output_dir) / f"bilibili_{video_id}.mp3"
 
@@ -322,9 +322,9 @@ async def _download_bilibili_video(url: str, output_dir: str) -> str:
 
     video_id = "unknown"
     if "BV" in url:
-        video_id = url.split("BV")[1].split("?")[0][:12]
+        video_id = url.split("BV")[1].split("?")[0].rstrip("/")[:12]
     elif "/video/" in url:
-        video_id = url.split("/video/")[-1].split("?")[0][:12]
+        video_id = url.split("/video/")[-1].split("?")[0].rstrip("/")[:12]
 
     video_path = Path(output_dir) / f"bilibili_{video_id}.mp4"
 
