@@ -41,10 +41,10 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         decoded_url = re.sub(r'\\\\', r'\\', decoded_url)  # 将双反斜杠替换为单反斜杠
         decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
 
-        # 删除该视频相关的旧文件
-        for old_file in Path(output_dir).glob(f"bilibili_{video_id}*"):
+        # 删除该视频相关的旧音频文件（只删除 mp3，不要删除 mp4 视频文件）
+        for old_file in Path(output_dir).glob(f"bilibili_{video_id}*.mp3"):
             if old_file.is_file():
-                print(f"删除旧文件：{old_file}")
+                print(f"删除旧音频文件：{old_file}")
                 old_file.unlink()
 
         cmd = [
