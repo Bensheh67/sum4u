@@ -27,7 +27,8 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
     elif "/video/" in url:
         video_id = url.split("/video/")[-1].split("?")[0].rstrip("/")[:12]
 
-    audio_path = Path(output_dir) / f"bilibili_{video_id}.mp3"
+    # 使用不含扩展名的模板，让 yt-dlp 自动处理扩展名
+    audio_template = Path(output_dir) / f"bilibili_{video_id}"
 
     try:
         # 使用 yt-dlp 下载 Bilibili 视频并提取音频
@@ -40,10 +41,11 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         decoded_url = re.sub(r'\\\\', r'\\', decoded_url)  # 将双反斜杠替换为单反斜杠
         decoded_url = decoded_url.replace('\\?', '?').replace('\\&', '&').replace('\\=', '=')
 
-        # 下载前删除已存在的旧文件，确保不会复用旧内容
-        if audio_path.exists():
-            print(f"删除旧的音频文件：{audio_path}")
-            audio_path.unlink()
+        # 删除该视频相关的旧文件
+        for old_file in Path(output_dir).glob(f"bilibili_{video_id}*"):
+            if old_file.is_file():
+                print(f"删除旧文件：{old_file}")
+                old_file.unlink()
 
         cmd = [
             "yt-dlp",
@@ -53,7 +55,7 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             "--force-overwrites",  # 强制覆盖已存在的文件
             "--no-update",  # 不检查更新
             "--extractor-retries", "5",  # 提取器重试次数
-            "-o", str(audio_path),  # 输出文件
+            "-o", str(audio_template) + ".%(ext)s",  # 输出模板
             decoded_url
         ]
 
@@ -61,15 +63,18 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("Bilibili 下载完成")
 
-        # 验证下载结果
-        if audio_path.exists():
+        # 验证下载结果 - 查找生成的文件
+        downloaded_files = list(Path(output_dir).glob(f"bilibili_{video_id}*.mp3"))
+        if downloaded_files:
+            # 选最新的文件
+            audio_path = max(downloaded_files, key=lambda p: p.stat().st_mtime)
             file_size = audio_path.stat().st_size
-            print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
+            print(f"音频文件：{audio_path} ({file_size / 1024 / 1024:.1f} MB)")
         else:
-            # 如果指定名称不存在，查找下载的文件
-            downloaded_files = list(Path(output_dir).glob("*.mp3"))
-            if downloaded_files:
-                audio_path = downloaded_files[0]
+            # 如果没找到 mp3，查找任何 bilibili_{video_id} 开头的文件
+            any_files = list(Path(output_dir).glob(f"bilibili_{video_id}*"))
+            if any_files:
+                audio_path = max(any_files, key=lambda p: p.stat().st_mtime)
                 print(f"找到下载文件：{audio_path}")
             else:
                 raise RuntimeError("未找到下载的音频文件")
