@@ -1147,7 +1147,10 @@ async def read_root():
             const template = document.getElementById('promptTemplate').value;
             const custom = document.getElementById('customPrompt').value.trim();
             const withScreenshots = document.getElementById('withScreenshots').checked;
-            if (!url) return;
+            if (!url) {
+                showProgress('url', '请输入视频URL', 'error');
+                return;
+            }
 
             showProgress('url', '正在发送请求...', 'info');
             try {
@@ -1171,7 +1174,10 @@ async def read_root():
             const lang = document.getElementById('audioLanguage').value;
             const template = document.getElementById('audioPromptTemplate').value;
             const custom = document.getElementById('audioCustomPrompt').value.trim();
-            if (!file) return;
+            if (!file) {
+                showProgress('audio', '请选择音频文件', 'error');
+                return;
+            }
 
             const fd = new FormData();
             fd.append('file', file);
