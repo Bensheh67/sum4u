@@ -937,7 +937,8 @@ async def read_root():
                     <div class="form-group">
                         <label for="promptTemplate">摘要模板</label>
                         <select id="promptTemplate">
-                            <option value="default课堂笔记">课堂笔记</option>
+                            <option value="default 课堂笔记">课堂笔记</option>
+                            <option value="短视频知识">短视频知识</option>
                             <option value="课堂内容">课堂内容</option>
                             <option value="双语总结">双语总结</option>
                             <option value="会议纪要">会议纪要</option>
@@ -1003,7 +1004,8 @@ async def read_root():
                     <div class="form-group">
                         <label for="audioPromptTemplate">摘要模板</label>
                         <select id="audioPromptTemplate">
-                            <option value="default课堂笔记">课堂笔记</option>
+                            <option value="default 课堂笔记">课堂笔记</option>
+                            <option value="短视频知识">短视频知识</option>
                             <option value="课堂内容">课堂内容</option>
                             <option value="双语总结">双语总结</option>
                             <option value="会议纪要">会议纪要</option>
