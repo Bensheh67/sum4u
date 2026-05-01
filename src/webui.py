@@ -272,1223 +272,1102 @@ async def read_root():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音频/视频总结工具 Web UI</title>
+    <title>Summary4U</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary-color: #f9fafb;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --success-color: #10b981;
-            --error-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
-            --background: #f8fafc;
-            --card-bg: #ffffff;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --radius: 8px;
-            --radius-lg: 12px;
-            --transition: all 0.2s ease;
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-2: #1a1a24;
+            --primary: #00ff9f;
+            --primary-dim: #00cc7f;
+            --secondary: #00d4ff;
+            --accent: #ff00aa;
+            --text: #e0e0e0;
+            --muted: #666680;
+            --border: #2a2a3a;
+            --glow: 0 0 20px rgba(0, 255, 159, 0.3);
+            --glow-strong: 0 0 30px rgba(0, 255, 159, 0.5), 0 0 60px rgba(0, 255, 159, 0.2);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--background);
-            color: var(--text-primary);
-            line-height: 1.6;
-            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 1000px;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(rgba(0, 255, 159, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 159, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        .app {
+            max-width: 720px;
             margin: 0 auto;
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
+            padding: 48px 20px 80px;
+            position: relative;
+            z-index: 2;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--primary-color), #6366f1);
-            color: white;
-            padding: 30px 40px;
+        .header {
             text-align: center;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.025em;
-        }
-
-        .header-info {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .tab {
-            display: flex;
-            background-color: var(--secondary-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .tab button {
-            flex: 1;
-            background-color: transparent;
-            color: var(--text-secondary);
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 18px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: var(--transition);
+            margin-bottom: 48px;
             position: relative;
         }
 
-        .tab button:hover {
-            color: var(--text-primary);
-            background-color: rgba(255, 255, 255, 0.5);
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
-        .tab button.active {
-            color: var(--primary-color);
-            background-color: white;
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            position: relative;
         }
 
-        .tab button.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
+        .logo-icon svg {
             width: 100%;
-            height: 3px;
-            background-color: var(--primary-color);
+            height: 100%;
+            stroke: var(--primary);
+            filter: drop-shadow(var(--glow));
         }
 
-        .tabcontent {
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: var(--glow-strong);
+            letter-spacing: 0.1em;
+        }
+
+        .tagline {
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 4px;
+            margin-bottom: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tab:hover {
+            color: var(--secondary);
+            border-color: var(--border);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: var(--bg);
+            font-weight: 700;
+            border-color: var(--primary);
+            box-shadow: var(--glow);
+        }
+
+        .panel {
             display: none;
-            padding: 40px;
         }
 
-        .tabcontent.active {
+        .panel.active {
             display: block;
             animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+        .card {
+            background: var(--surface);
+            border-radius: 4px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            font-size: 0.75rem;
             font-weight: 500;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            margin-left: 6px;
-            cursor: help;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 280px;
-            background-color: rgba(0, 0, 0, 0.85);
-            color: white;
-            text-align: center;
-            border-radius: 6px;
-            padding: 10px;
-            position: absolute;
-            z-index: 100;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.85rem;
-            line-height: 1.4;
-            font-weight: 400;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         input[type="text"],
         input[type="url"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            font-size: 1rem;
-            transition: var(--transition);
-            background-color: white;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text);
+            background: var(--bg);
+            transition: all 0.2s ease;
         }
 
-        input[type="text"]:focus,
-        input[type="url"]:focus,
-        select:focus,
-        textarea:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary), var(--glow);
         }
 
-        input[type="file"] {
-            width: 100%;
-            padding: 14px;
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius);
-            background-color: var(--secondary-color);
-            font-size: 1rem;
-            transition: var(--transition);
+        input::placeholder, textarea::placeholder {
+            color: var(--muted);
         }
 
-        input[type="file"]:focus {
-            border-color: var(--primary-color);
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text);
         }
 
         input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
             cursor: pointer;
-            accent-color: var(--primary-color);
+            border: 1px solid var(--border);
+            border-radius: 2px;
         }
 
         small {
             display: block;
             margin-top: 6px;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.7rem;
+            color: var(--muted);
         }
 
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 14px 28px;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-size: 1rem;
+        a {
+            color: var(--secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: 1px solid;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
             font-weight: 500;
-            transition: var(--transition);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
-        button:hover:not(:disabled) {
-            background-color: var(--primary-hover);
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg);
+            border-color: var(--primary);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dim);
+            box-shadow: var(--glow);
             transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
         }
 
-        button:disabled {
-            background-color: #d1d5db;
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--muted);
+            border-color: var(--muted);
+            color: var(--bg);
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
-        .progress-container {
-            margin-top: 30px;
+        .btn-secondary {
+            background: transparent;
+            color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            color: var(--bg);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-danger:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.7rem;
+        }
+
+        .progress-area {
             display: none;
+            margin-top: 20px;
+        }
+
+        .progress-area.show {
+            display: block;
         }
 
         .progress-bar {
-            width: 100%;
-            height: 12px;
-            background-color: #e5e7eb;
-            border-radius: 6px;
+            height: 4px;
+            background: var(--bg);
+            border-radius: 2px;
             overflow: hidden;
             margin-bottom: 12px;
+            border: 1px solid var(--border);
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), #6366f1);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             width: 0%;
             transition: width 0.4s ease;
-            border-radius: 6px;
+            box-shadow: var(--glow);
         }
 
-        .status-message {
-            padding: 16px;
-            border-radius: var(--radius);
+        .status-msg {
+            padding: 12px 14px;
+            border-radius: 2px;
+            font-size: 0.8rem;
             display: none;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            border: 1px solid;
         }
 
-        .status-message a {
-            color: white;
-            text-decoration: underline;
-            margin-top: 8px;
-            display: inline-block;
+        .status-msg.show {
+            display: block;
         }
 
-        .success {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        .status-msg a {
+            color: inherit;
+            font-weight: 500;
         }
 
-        .error {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+        .status-success {
+            background: rgba(0, 255, 159, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
         }
 
-        .info {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+        .status-error {
+            background: rgba(255, 0, 170, 0.1);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .status-info {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--secondary);
+            border-color: var(--secondary);
         }
 
         .results-section {
-            margin-top: 30px;
-            border-radius: var(--radius);
-            background-color: var(--secondary-color);
+            background: var(--surface);
+            border-radius: 4px;
+            overflow: hidden;
             display: none;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
+        }
+
+        .results-section.show {
+            display: block;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
         }
 
         .results-header h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .results-list {
-            max-height: 400px;
+            max-height: 320px;
             overflow-y: auto;
-            padding: 10px;
         }
 
         .result-item {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            background: white;
-            border-radius: var(--radius);
-            margin-bottom: 10px;
-            transition: var(--transition);
-        }
-
-        .result-item:hover {
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
+            align-items: center;
+            transition: background 0.15s ease;
         }
 
         .result-item:last-child {
             border-bottom: none;
         }
 
+        .result-item:hover {
+            background: var(--surface-2);
+        }
+
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .result-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
         .result-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-shrink: 0;
-            margin-left: 15px;
+            margin-left: 16px;
         }
 
-        .result-actions button {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-        }
-
-        #noResultsMessage, #noHistoryMessage {
+        .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            padding: 48px 24px;
+            color: var(--muted);
+            font-size: 0.875rem;
         }
 
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
+        .history-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
         }
 
-        .status-completed {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
+        .history-item:last-child {
+            border-bottom: none;
         }
 
-        .status-error {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
+        .history-item:hover {
+            background: var(--surface-2);
         }
 
-        .status-processing {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-        }
-
-        .task-type {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .task-details {
-            margin-top: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .task-input {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-            word-break: break-all;
-        }
-
-        .task-meta {
+        .history-header {
             display: flex;
-            gap: 15px;
-            margin-top: 6px;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .history-type {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .history-badge {
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: rgba(0, 255, 159, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .badge-error {
+            background: rgba(255, 0, 170, 0.15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .badge-processing {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+
+        .history-input {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: var(--muted);
+            word-break: break-all;
+            margin-bottom: 8px;
         }
 
-        .clear-history-btn {
-            background-color: #ef4444 !important;
+        .history-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.7rem;
+            color: var(--muted);
         }
 
-        .clear-history-btn:hover {
-            background-color: #dc2626 !important;
+        .config-grid {
+            display: grid;
+            gap: 16px;
         }
 
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
+        @media (max-width: 640px) {
+            .app {
+                padding: 24px 16px 60px;
             }
 
-            .container {
-                border-radius: var(--radius);
+            .header {
+                margin-bottom: 32px;
             }
 
-            header {
-                padding: 20px;
+            .logo-text {
+                font-size: 1.5rem;
             }
 
-            h1 {
-                font-size: 1.8rem;
+            .tabs {
+                grid-template-columns: repeat(3, 1fr);
             }
 
-            .tabcontent {
-                padding: 25px 20px;
+            .tab {
+                padding: 10px 8px;
+                font-size: 0.65rem;
             }
 
-            .tab button {
-                padding: 14px 10px;
-                font-size: 0.9rem;
+            .card {
+                padding: 16px;
             }
 
             .result-actions {
                 flex-direction: column;
             }
 
-            .result-actions button {
+            .result-actions .btn {
                 width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎵 音频/视频总结工具 Web UI</h1>
-            <div class="header-info">
-                <p>支持视频URL处理、本地音频上传和批量处理，提供实时进度监控和结果下载</p>
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" x2="12" y1="19" y2="22"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Summary4U</span>
             </div>
+            <p class="tagline">Audio/Video Summarization Engine</p>
         </header>
 
-        <div class="tab">
-            <button class="tablinks active" onclick="openTab(event, 'url')">视频URL处理</button>
-            <button class="tablinks" onclick="openTab(event, 'audio')">本地音频处理</button>
-            <button class="tablinks" onclick="openTab(event, 'batch')">批量处理</button>
-            <button class="tablinks" onclick="openTab(event, 'results')">查看结果</button>
-            <button class="tablinks" onclick="openTab(event, 'history')">任务历史</button>
-            <button class="tablinks" onclick="openTab(event, 'apiconfig')">API配置</button>
-        </div>
+        <nav class="tabs">
+            <button class="tab active" data-tab="url">URL处理</button>
+            <button class="tab" data-tab="audio">本地文件</button>
+            <button class="tab" data-tab="batch">批量处理</button>
+            <button class="tab" data-tab="results">输出</button>
+            <button class="tab" data-tab="history">日志</button>
+            <button class="tab" data-tab="config">配置</button>
+        </nav>
 
-        <!-- 视频URL处理标签页 -->
-        <div id="url" class="tabcontent active">
-            <h2>处理视频URL</h2>
-            <form id="urlForm">
-                <div class="form-group">
-                    <label for="videoUrl">视频URL:</label>
-                    <input type="text" id="videoUrl" name="videoUrl" placeholder="请输入YouTube或Bilibili视频链接" required>
+        <!-- URL Panel -->
+        <div id="url" class="panel active">
+            <div class="card">
+                <h2 class="card-title">视频链接处理</h2>
+                <form id="urlForm">
+                    <div class="form-group">
+                        <label for="videoUrl">视频URL</label>
+                        <input type="url" id="videoUrl" placeholder="https://youtube.com/..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="whisperModel">转录模型</label>
+                        <select id="whisperModel">
+                            <option value="tiny">Tiny</option>
+                            <option value="base">Base</option>
+                            <option value="small" selected>Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="promptTemplate">摘要模板</label>
+                        <select id="promptTemplate">
+                            <option value="default课堂笔记">课堂笔记</option>
+                            <option value="课堂内容">课堂内容</option>
+                            <option value="双语总结">双语总结</option>
+                            <option value="会议纪要">会议纪要</option>
+                            <option value="业务复盘">业务复盘</option>
+                            <option value="精炼摘要">精炼摘要</option>
+                            <option value="专业课程">专业课程</option>
+                            <option value="短视频素材">短视频素材</option>
+                            <option value="综合总结">综合总结</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customPrompt">自定义提示词</label>
+                        <textarea id="customPrompt" placeholder="可选，覆盖模板设置"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="withScreenshots">
+                            生成截图
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">开始处理</button>
+                </form>
+                <div id="urlProgress" class="progress-area">
+                    <div class="progress-bar"><div id="urlProgressFill" class="progress-fill"></div></div>
+                    <div id="urlStatusMsg" class="status-msg"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="whisperModel">Whisper模型大小:
-                        <span class="tooltip">ⓘ
-                            <span class="tooltiptext">tiny: 最快但准确性最低 | small: 平衡速度和准确性（默认）| large: 最准确但最慢</span>
-                        </span>
-                    </label>
-                    <select id="whisperModel" name="whisperModel">
-                        <option value="tiny">Tiny (最快，准确性最低)</option>
-                        <option value="base">Base (快速且准确)</option>
-                        <option value="small" selected>Small (平衡速度和准确性)</option>
-                        <option value="medium">Medium (较慢但更准确)</option>
-                        <option value="large">Large (最准确但最慢)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="promptTemplate">摘要模板:</label>
-                    <select id="promptTemplate" name="promptTemplate">
-                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                        <option value="课堂内容">课堂内容 - 课堂类内容总结</option>
-                        <option value="双语总结">双语总结 - 双语总结内容</option>
-                        <option value="会议纪要">会议纪要 - 会议纪要和核心要点提炼</option>
-                        <option value="业务复盘">业务复盘 - 业务复盘 SOP 和错误总结</option>
-                        <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
-                        <option value="专业课程">专业课程 - 学术笔记</option>\n                        <option value="短视频素材">短视频素材 - 短视频创作素材包</option>\n                        <option value="综合总结">综合总结 - 综合性视频总结模板</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="customPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
-                    <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="withScreenshots" name="withScreenshots" style="width: auto; margin-right: 8px;">
-                        生成带视频截图的总结
-                        <span class="tooltip">ⓘ
-                            <span class="tooltiptext">AI 会分析视频内容，自动选择关键帧插入到总结中，提升总结质量。需要较长的处理时间。</span>
-                        </span>
-                    </label>
-                </div>
-
-                <button type="submit">开始处理</button>
-            </form>
-
-            <div id="urlProgress" class="progress-container">
-                <div class="progress-bar">
-                    <div id="urlProgressFill" class="progress-fill"></div>
-                </div>
-                <div id="urlStatusMessage" class="status-message info"></div>
             </div>
         </div>
 
-        <!-- 本地音频处理标签页 -->
-        <div id="audio" class="tabcontent">
-            <h2>处理本地音频文件</h2>
-            <form id="audioForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="audioFile">选择音频文件:</label>
-                    <input type="file" id="audioFile" name="audioFile" accept=".mp3,.wav,.m4a,.mp4,.aac,.flac,.wma,.amr" required>
-                    <small>支持格式：MP3, WAV, M4A, MP4, AAC, FLAC, WMA, AMR</small>
+        <!-- Audio Panel -->
+        <div id="audio" class="panel">
+            <div class="card">
+                <h2 class="card-title">本地文件处理</h2>
+                <form id="audioForm">
+                    <div class="form-group">
+                        <label for="audioFile">选择文件</label>
+                        <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.mp4,.aac,.flac,.wma,.amr" required>
+                        <small>MP3, WAV, M4A, AAC, FLAC</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioWhisperModel">转录模型</label>
+                        <select id="audioWhisperModel">
+                            <option value="tiny">Tiny</option>
+                            <option value="base">Base</option>
+                            <option value="small" selected>Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioLanguage">音频语言</label>
+                        <select id="audioLanguage">
+                            <option value="">自动检测</option>
+                            <option value="zh">中文</option>
+                            <option value="en">英语</option>
+                            <option value="ja">日语</option>
+                            <option value="ko">韩语</option>
+                            <option value="fr">法语</option>
+                            <option value="de">德语</option>
+                            <option value="es">西班牙语</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioPromptTemplate">摘要模板</label>
+                        <select id="audioPromptTemplate">
+                            <option value="default课堂笔记">课堂笔记</option>
+                            <option value="课堂内容">课堂内容</option>
+                            <option value="双语总结">双语总结</option>
+                            <option value="会议纪要">会议纪要</option>
+                            <option value="业务复盘">业务复盘</option>
+                            <option value="精炼摘要">精炼摘要</option>
+                            <option value="专业课程">专业课程</option>
+                            <option value="短视频素材">短视频素材</option>
+                            <option value="综合总结">综合总结</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="audioCustomPrompt">自定义提示词</label>
+                        <textarea id="audioCustomPrompt" placeholder="可选，覆盖模板设置"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">上传处理</button>
+                </form>
+                <div id="audioProgress" class="progress-area">
+                    <div class="progress-bar"><div id="audioProgressFill" class="progress-fill"></div></div>
+                    <div id="audioStatusMsg" class="status-msg"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="audioWhisperModel">Whisper模型大小:</label>
-                    <select id="audioWhisperModel" name="audioWhisperModel">
-                        <option value="tiny">Tiny (最快，准确性最低)</option>
-                        <option value="base">Base (快速且准确)</option>
-                        <option value="small" selected>Small (平衡速度和准确性)</option>
-                        <option value="medium">Medium (较慢但更准确)</option>
-                        <option value="large">Large (最准确但最慢)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="audioLanguage">音频语言 (可选，留空自动检测):</label>
-                    <select id="audioLanguage" name="audioLanguage">
-                        <option value="">自动检测</option>
-                        <option value="zh">中文 (zh)</option>
-                        <option value="en">英语 (en)</option>
-                        <option value="ja">日语 (ja)</option>
-                        <option value="ko">韩语 (ko)</option>
-                        <option value="fr">法语 (fr)</option>
-                        <option value="de">德语 (de)</option>
-                        <option value="es">西班牙语 (es)</option>
-                        <option value="ru">俄语 (ru)</option>
-                        <option value="ar">阿拉伯语 (ar)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="audioPromptTemplate">摘要模板:</label>
-                    <select id="audioPromptTemplate" name="audioPromptTemplate">
-                        <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                        <option value="课堂内容">课堂内容 - 课堂类内容总结</option>
-                        <option value="双语总结">双语总结 - 双语总结内容</option>
-                        <option value="会议纪要">会议纪要 - 会议纪要和核心要点提炼</option>
-                        <option value="业务复盘">业务复盘 - 业务复盘 SOP 和错误总结</option>
-                        <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
-                        <option value="专业课程">专业课程 - 学术笔记</option>\n                        <option value="短视频素材">短视频素材 - 短视频创作素材包</option>\n                        <option value="综合总结">综合总结 - 综合性视频总结模板</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="audioCustomPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
-                    <textarea id="audioCustomPrompt" name="audioCustomPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
-                </div>
-
-                <button type="submit">上传并处理</button>
-            </form>
-
-            <div id="audioProgress" class="progress-container">
-                <div class="progress-bar">
-                    <div id="audioProgressFill" class="progress-fill"></div>
-                </div>
-                <div id="audioStatusMessage" class="status-message info"></div>
             </div>
         </div>
 
-        <!-- 批量处理标签页 -->
-        <div id="batch" class="tabcontent">
-            <h2>批量处理音频文件</h2>
-            <p>批量处理功能允许您处理上传文件夹中的所有音频文件。</p>
-
-            <div class="form-group">
-                <label for="batchUploadDir">上传文件夹路径:</label>
-                <input type="text" id="batchUploadDir" name="batchUploadDir" value="uploads" placeholder="默认为 uploads 文件夹">
-            </div>
-
-            <div class="form-group">
-                <label for="batchWhisperModel">Whisper模型大小:</label>
-                <select id="batchWhisperModel" name="batchWhisperModel">
-                    <option value="tiny">Tiny (最快，准确性最低)</option>
-                    <option value="base">Base (快速且准确)</option>
-                    <option value="small" selected>Small (平衡速度和准确性)</option>
-                    <option value="medium">Medium (较慢但更准确)</option>
-                    <option value="large">Large (最准确但最慢)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="batchPromptTemplate">摘要模板:</label>
-                <select id="batchPromptTemplate" name="batchPromptTemplate">
-                    <option value="default课堂笔记">default课堂笔记 - 通用课堂笔记格式</option>
-                    <option value="课堂内容">课堂内容 - 课堂类内容总结</option>
-                    <option value="双语总结">双语总结 - 双语总结内容</option>
-                    <option value="会议纪要">会议纪要 - 会议纪要和核心要点提炼</option>
-                    <option value="业务复盘">业务复盘 - 业务复盘 SOP 和错误总结</option>
-                    <option value="精炼摘要">精炼摘要 - 提取核心要点和精华</option>
-                    <option value="专业课程">专业课程 - 学术笔记</option>\n                        <option value="短视频素材">短视频素材 - 短视频创作素材包</option>\n                        <option value="综合总结">综合总结 - 综合性视频总结模板</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="batchCustomPrompt">自定义提示词 (可选，如果填写将覆盖模板):</label>
-                <textarea id="batchCustomPrompt" name="batchCustomPrompt" rows="4" placeholder="输入自定义的摘要提示词..."></textarea>
-            </div>
-
-            <button onclick="startBatchProcess()">开始批量处理</button>
-
-            <div id="batchProgress" class="progress-container">
-                <div class="progress-bar">
-                    <div id="batchProgressFill" class="progress-fill"></div>
+        <!-- Batch Panel -->
+        <div id="batch" class="panel">
+            <div class="card">
+                <h2 class="card-title">批量处理</h2>
+                <div class="form-group">
+                    <label for="batchUploadDir">文件夹路径</label>
+                    <input type="text" id="batchUploadDir" value="uploads" placeholder="uploads">
                 </div>
-                <div id="batchStatusMessage" class="status-message info"></div>
+                <div class="form-group">
+                    <label for="batchWhisperModel">转录模型</label>
+                    <select id="batchWhisperModel">
+                        <option value="tiny">Tiny</option>
+                        <option value="base">Base</option>
+                        <option value="small" selected>Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="batchPromptTemplate">摘要模板</label>
+                    <select id="batchPromptTemplate">
+                        <option value="default课堂笔记">课堂笔记</option>
+                        <option value="课堂内容">课堂内容</option>
+                        <option value="双语总结">双语总结</option>
+                        <option value="会议纪要">会议纪要</option>
+                        <option value="业务复盘">业务复盘</option>
+                        <option value="精炼摘要">精炼摘要</option>
+                        <option value="专业课程">专业课程</option>
+                        <option value="短视频素材">短视频素材</option>
+                        <option value="综合总结">综合总结</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="batchCustomPrompt">自定义提示词</label>
+                    <textarea id="batchCustomPrompt" placeholder="可选，覆盖模板设置"></textarea>
+                </div>
+                <button type="button" onclick="startBatchProcess()" class="btn btn-primary">开始批量</button>
+                <div id="batchProgress" class="progress-area">
+                    <div class="progress-bar"><div id="batchProgressFill" class="progress-fill"></div></div>
+                    <div id="batchStatusMsg" class="status-msg"></div>
+                </div>
             </div>
         </div>
 
-        <!-- 查看结果标签页 -->
-        <div id="results" class="tabcontent">
-            <h2>处理结果</h2>
+        <!-- Results Panel -->
+        <div id="results" class="panel">
             <div class="results-section" id="resultsSection">
                 <div class="results-header">
-                    <h3>生成的总结文件</h3>
-                    <button onclick="loadResults()">刷新列表</button>
+                    <h3>生成文件</h3>
+                    <button onclick="loadResults()" class="btn btn-secondary btn-sm">刷新</button>
                 </div>
-                <div class="results-list" id="resultsList">
-                    <!-- 结果将通过JavaScript动态加载 -->
-                </div>
+                <div class="results-list" id="resultsList"></div>
             </div>
-            <p id="noResultsMessage">暂无处理结果，处理完成后文件将显示在此处。</p>
+            <div class="empty-state" id="noResultsMsg">暂无处理结果</div>
         </div>
 
-        <!-- 任务历史标签页 -->
-        <div id="history" class="tabcontent">
-            <h2>任务历史记录</h2>
+        <!-- History Panel -->
+        <div id="history" class="panel">
             <div class="results-section" id="historySection">
                 <div class="results-header">
-                    <h3>处理任务历史</h3>
-                    <div>
-                        <button onclick="loadTaskHistory()">刷新列表</button>
-                        <button onclick="clearTaskHistory()" class="clear-history-btn">清空历史</button>
+                    <h3>处理日志</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="loadTaskHistory()" class="btn btn-secondary btn-sm">刷新</button>
+                        <button onclick="clearTaskHistory()" class="btn btn-danger btn-sm">清空</button>
                     </div>
                 </div>
-                <div class="results-list" id="historyList">
-                    <!-- 历史记录将通过JavaScript动态加载 -->
+                <div class="results-list" id="historyList"></div>
+            </div>
+            <div class="empty-state" id="noHistoryMsg">暂无历史记录</div>
+        </div>
+
+        <!-- Config Panel -->
+        <div id="config" class="panel">
+            <div class="card">
+                <h2 class="card-title">API配置</h2>
+                <div class="config-grid">
+                    <div class="form-group">
+                        <label for="apiKeyTikhub">TikHub API</label>
+                        <input type="password" id="apiKeyTikhub" placeholder="抖音/TikTok下载">
+                        <small><a href="https://user.tikhub.io/users/signin" target="_blank">tikhub.io</a></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKeyDeepseek">DeepSeek API</label>
+                        <input type="password" id="apiKeyDeepseek" placeholder="AI摘要">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKeyOpenai">OpenAI API</label>
+                        <input type="password" id="apiKeyOpenai" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKeyAnthropic">Anthropic API</label>
+                        <input type="password" id="apiKeyAnthropic" placeholder="可选">
+                    </div>
                 </div>
+                <button onclick="saveApiConfig()" class="btn btn-primary" style="margin-top:20px;">保存</button>
+                <div id="apiConfigMsg" class="status-msg" style="margin-top:16px;"></div>
             </div>
-            <p id="noHistoryMessage">暂无任务历史记录。</p>
         </div>
-
-        <!-- API配置标签页 -->
-        <div id="apiconfig" class="tabcontent">
-            <h2>API 密钥配置</h2>
-            <p>在此配置 API 密钥，密钥将保存到 <code>config.json</code> 文件中。</p>
-
-            <div class="form-group">
-                <label for="apiKeyTikhub">TikHub API 密钥（用于抖音/TikTok 视频）
-                    <span class="tooltip">ⓘ
-                        <span class="tooltiptext">注册: https://user.tikhub.io/users/signin → 用户中心 → API密钥 → 创建</span>
-                    </span>
-                </label>
-                <input type="password" id="apiKeyTikhub" placeholder="输入 TikHub API 密钥">
-                <small>获取方式: 注册 <a href="https://user.tikhub.io/users/signin" target="_blank">TikHub</a> → 用户中心 → API密钥 → 创建</small>
-            </div>
-
-            <div class="form-group">
-                <label for="apiKeyDeepseek">DeepSeek API 密钥（用于 AI 摘要）</label>
-                <input type="password" id="apiKeyDeepseek" placeholder="输入 DeepSeek API 密钥">
-            </div>
-
-            <div class="form-group">
-                <label for="apiKeyOpenai">OpenAI API 密钥（可选）</label>
-                <input type="password" id="apiKeyOpenai" placeholder="输入 OpenAI API 密钥">
-            </div>
-
-            <div class="form-group">
-                <label for="apiKeyAnthropic">Anthropic API 密钥（可选）</label>
-                <input type="password" id="apiKeyAnthropic" placeholder="输入 Anthropic API 密钥">
-            </div>
-
-            <button onclick="saveApiConfig()">保存配置</button>
-            <div id="apiConfigMessage" class="status-message" style="margin-top:15px;display:none;"></div>
-        </div>
-
     </div>
 
     <script>
-        // 页面加载时获取结果列表
-        document.addEventListener('DOMContentLoaded', function() {
-            // 加载可用的模型和模板（如果需要动态加载）
-            loadModels();
-            loadTemplates();
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'results') loadResults();
+                if (tab.dataset.tab === 'history') loadTaskHistory();
+                if (tab.dataset.tab === 'config') loadApiConfig();
+            });
         });
 
-        // 加载可用的Whisper模型
-        async function loadModels() {
-            try {
-                const response = await fetch('/api/models');
-                const data = await response.json();
-                // 这里可以动态更新模型选择器，但目前使用静态选项
-            } catch (error) {
-                console.error('加载模型列表失败:', error);
-            }
-        }
-
-        // 加载可用的提示词模板
-        async function loadTemplates() {
-            try {
-                const response = await fetch('/api/prompt-templates');
-                const data = await response.json();
-                // 这里可以动态更新模板选择器，但目前使用静态选项
-            } catch (error) {
-                console.error('加载模板列表失败:', error);
-            }
-        }
-
-        // 标签页切换功能
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].className = tabcontent[i].className.replace(" active", "");
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).className += " active";
-            evt.currentTarget.className += " active";
-
-            // 如果切换到结果标签页，加载结果
-            if (tabName === 'results') {
-                loadResults();
-            }
-
-            // 如果切换到API配置标签页，加载当前配置
-            if (tabName === 'apiconfig') {
-                loadApiConfig();
-            }
-        }
-
-        // 处理视频URL表单提交
-        document.getElementById('urlForm').addEventListener('submit', async function(e) {
+        document.getElementById('urlForm').addEventListener('submit', async e => {
             e.preventDefault();
-
-            const videoUrl = document.getElementById('videoUrl').value.trim();
+            const url = document.getElementById('videoUrl').value.trim();
             const model = document.getElementById('whisperModel').value;
-            const promptTemplate = document.getElementById('promptTemplate').value;
-            const customPrompt = document.getElementById('customPrompt').value.trim();
+            const template = document.getElementById('promptTemplate').value;
+            const custom = document.getElementById('customPrompt').value.trim();
             const withScreenshots = document.getElementById('withScreenshots').checked;
+            if (!url) return;
 
-            if (!videoUrl) {
-                alert('请输入视频URL');
-                return;
-            }
-
-            // 显示进度条
-            document.getElementById('urlProgress').style.display = 'block';
-            document.getElementById('urlProgressFill').style.width = '5%';
-            document.getElementById('urlStatusMessage').textContent = '正在发送请求...';
-            document.getElementById('urlStatusMessage').className = 'status-message info';
-            document.getElementById('urlStatusMessage').style.display = 'block';
-
+            showProgress('url', '正在发送请求...', 'info');
             try {
-                const response = await fetch('/process-url', {
+                const res = await fetch('/process-url', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        url: videoUrl,
-                        model: model,
-                        prompt_template: promptTemplate,
-                        prompt: customPrompt || null,
-                        with_screenshots: withScreenshots
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots })
                 });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.detail || '请求失败');
-                }
-
-                const taskId = data.task_id;
-
-                // 开始轮询任务状态
-                await pollTaskStatus(taskId, 'url');
-            } catch (error) {
-                document.getElementById('urlStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('urlStatusMessage').className = 'status-message error';
-                document.getElementById('urlStatusMessage').style.display = 'block';
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || '请求失败');
+                await pollTaskStatus(data.task_id, 'url');
+            } catch (err) {
+                showProgress('url', '错误: ' + err.message, 'error');
             }
         });
 
-        // 处理音频文件上传表单提交
-        document.getElementById('audioForm').addEventListener('submit', async function(e) {
+        document.getElementById('audioForm').addEventListener('submit', async e => {
             e.preventDefault();
-
-            const formData = new FormData();
-            const audioFile = document.getElementById('audioFile').files[0];
+            const file = document.getElementById('audioFile').files[0];
             const model = document.getElementById('audioWhisperModel').value;
-            const language = document.getElementById('audioLanguage').value;
-            const promptTemplate = document.getElementById('audioPromptTemplate').value;
-            const customPrompt = document.getElementById('audioCustomPrompt').value.trim();
+            const lang = document.getElementById('audioLanguage').value;
+            const template = document.getElementById('audioPromptTemplate').value;
+            const custom = document.getElementById('audioCustomPrompt').value.trim();
+            if (!file) return;
 
-            if (!audioFile) {
-                alert('请选择音频文件');
-                return;
-            }
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('model', model);
+            if (lang) fd.append('language', lang);
+            fd.append('prompt_template', template);
+            if (custom) fd.append('prompt', custom);
 
-            formData.append('file', audioFile);
-            formData.append('model', model);
-            if (language) formData.append('language', language);
-            formData.append('prompt_template', promptTemplate);
-            if (customPrompt) formData.append('prompt', customPrompt);
-
-            // 显示进度条
-            document.getElementById('audioProgress').style.display = 'block';
-            document.getElementById('audioProgressFill').style.width = '5%';
-            document.getElementById('audioStatusMessage').textContent = '正在上传文件...';
-            document.getElementById('audioStatusMessage').className = 'status-message info';
-            document.getElementById('audioStatusMessage').style.display = 'block';
-
+            showProgress('audio', '正在上传文件...', 'info');
             try {
-                const response = await fetch('/upload-audio', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.detail || '上传失败');
-                }
-
-                const taskId = data.task_id;
-
-                // 开始轮询任务状态
-                await pollTaskStatus(taskId, 'audio');
-            } catch (error) {
-                document.getElementById('audioStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('audioStatusMessage').className = 'status-message error';
-                document.getElementById('audioStatusMessage').style.display = 'block';
+                const res = await fetch('/upload-audio', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || '上传失败');
+                await pollTaskStatus(data.task_id, 'audio');
+            } catch (err) {
+                showProgress('audio', '错误: ' + err.message, 'error');
             }
         });
 
-        // 轮询任务状态
+        async function startBatchProcess() {
+            const dir = document.getElementById('batchUploadDir').value.trim() || 'uploads';
+            const model = document.getElementById('batchWhisperModel').value;
+            const template = document.getElementById('batchPromptTemplate').value;
+            const custom = document.getElementById('batchCustomPrompt').value.trim();
+
+            showProgress('batch', '正在开始批量处理...', 'info');
+            try {
+                const res = await fetch('/batch-process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ upload_dir: dir, model, prompt_template: template, prompt: custom || null })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || '批量处理请求失败');
+                await pollTaskStatus(data.task_id, 'batch');
+            } catch (err) {
+                showProgress('batch', '错误: ' + err.message, 'error');
+            }
+        }
+
         async function pollTaskStatus(taskId, prefix) {
             let status;
             do {
-                await new Promise(resolve => setTimeout(resolve, 2000)); // 每2秒查询一次
-
+                await new Promise(r => setTimeout(r, 2000));
                 try {
-                    const response = await fetch(`/task-status/${taskId}`);
-                    if (!response.ok) {
-                        throw new Error(`获取任务状态失败: ${response.status}`);
-                    }
-                    status = await response.json();
-                } catch (error) {
-                    document.getElementById(prefix + 'StatusMessage').textContent = '错误: 无法获取任务状态 - ' + error.message;
-                    document.getElementById(prefix + 'StatusMessage').className = 'status-message error';
-                    document.getElementById(prefix + 'StatusMessage').style.display = 'block';
+                    const res = await fetch(`/task-status/${taskId}`);
+                    status = await res.json();
+                } catch (err) {
+                    showProgress(prefix, '无法获取任务状态', 'error');
                     return;
                 }
-
-                const progressFill = document.getElementById(prefix + 'ProgressFill');
-                const statusMessage = document.getElementById(prefix + 'StatusMessage');
-
-                if (progressFill) {
-                    progressFill.style.width = status.progress + '%';
-                }
-
-                if (statusMessage) {
-                    statusMessage.textContent = status.message;
-
+                const fill = document.getElementById(prefix + 'ProgressFill');
+                const msg = document.getElementById(prefix + 'StatusMsg');
+                if (fill) fill.style.width = status.progress + '%';
+                if (msg) {
                     if (status.status === 'completed') {
-                        statusMessage.className = 'status-message success';
-                        statusMessage.innerHTML = status.message + '<br><a href="/download-result/' + encodeURIComponent(status.result_path) + '" target="_blank">点击下载结果</a>';
+                        msg.className = 'status-msg status-success show';
+                        msg.innerHTML = status.message + (status.result_path ? '<br><a href="/download-result/' + encodeURIComponent(status.result_path) + '" target="_blank">点击下载结果</a>' : '');
                     } else if (status.status === 'error') {
-                        statusMessage.className = 'status-message error';
+                        msg.className = 'status-msg status-error show';
+                        msg.textContent = status.message;
                     } else {
-                        statusMessage.className = 'status-message info';
+                        msg.className = 'status-msg status-info show';
+                        msg.textContent = status.message;
                     }
-
-                    statusMessage.style.display = 'block';
                 }
             } while (status.status === 'processing');
         }
 
-        // 开始批量处理
-        async function startBatchProcess() {
-            const uploadDir = document.getElementById('batchUploadDir').value.trim() || 'uploads';
-            const model = document.getElementById('batchWhisperModel').value;
-            const promptTemplate = document.getElementById('batchPromptTemplate').value;
-            const customPrompt = document.getElementById('batchCustomPrompt').value.trim();
-
-            if (!uploadDir) {
-                alert('请输入上传文件夹路径');
-                return;
-            }
-
-            // 显示进度条
-            document.getElementById('batchProgress').style.display = 'block';
-            document.getElementById('batchProgressFill').style.width = '5%';
-            document.getElementById('batchStatusMessage').textContent = '正在开始批量处理...';
-            document.getElementById('batchStatusMessage').className = 'status-message info';
-            document.getElementById('batchStatusMessage').style.display = 'block';
-
-            try {
-                const response = await fetch('/batch-process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        upload_dir: uploadDir,
-                        model: model,
-                        prompt_template: promptTemplate,
-                        prompt: customPrompt || null
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.detail || '批量处理请求失败');
-                }
-
-                const taskId = data.task_id;
-
-                // 开始轮询任务状态
-                await pollTaskStatus(taskId, 'batch');
-            } catch (error) {
-                document.getElementById('batchStatusMessage').textContent = '错误: ' + error.message;
-                document.getElementById('batchStatusMessage').className = 'status-message error';
-                document.getElementById('batchStatusMessage').style.display = 'block';
-            }
+        function showProgress(prefix, msg, type) {
+            document.getElementById(prefix + 'Progress').classList.add('show');
+            document.getElementById(prefix + 'ProgressFill').style.width = '5%';
+            const el = document.getElementById(prefix + 'StatusMsg');
+            el.className = 'status-msg status-' + type + ' show';
+            el.textContent = msg;
         }
 
-        // 加载处理结果
         async function loadResults() {
             try {
-                const response = await fetch('/api/results');
-                const data = await response.json();
-
-                const resultsList = document.getElementById('resultsList');
-                const resultsSection = document.getElementById('resultsSection');
-                const noResultsMessage = document.getElementById('noResultsMessage');
+                const res = await fetch('/api/results');
+                const data = await res.json();
+                const list = document.getElementById('resultsList');
+                const section = document.getElementById('resultsSection');
+                const empty = document.getElementById('noResultsMsg');
 
                 if (data.results && data.results.length > 0) {
-                    resultsList.innerHTML = '';
-                    data.results.forEach(result => {
-                        const resultItem = document.createElement('div');
-                        resultItem.className = 'result-item';
-
-                        // 格式化文件大小
-                        const sizeInMB = (result.size / (1024 * 1024)).toFixed(2);
-
-                        resultItem.innerHTML = `
-                            <div>
-                                <strong>${result.filename}</strong>
-                                <br>
-                                <small>修改时间: ${result.modified} | 大小: ${sizeInMB} MB</small>
+                    list.innerHTML = data.results.map(r => `
+                        <div class="result-item">
+                            <div class="result-info">
+                                <div class="result-name">${r.filename}</div>
+                                <div class="result-meta">${r.modified} · ${(r.size / 1024 / 1024).toFixed(2)} MB</div>
                             </div>
                             <div class="result-actions">
-                                <a href="/download-result/${encodeURIComponent(result.path)}" target="_blank">
-                                    <button>下载</button>
-                                </a>
+                                <a href="/download-result/${encodeURIComponent(r.path)}" target="_blank"><button class="btn btn-secondary btn-sm">下载</button></a>
                             </div>
-                        `;
-
-                        resultsList.appendChild(resultItem);
-                    });
-
-                    resultsSection.style.display = 'block';
-                    noResultsMessage.style.display = 'none';
+                        </div>
+                    `).join('');
+                    section.classList.add('show');
+                    empty.style.display = 'none';
                 } else {
-                    resultsSection.style.display = 'none';
-                    noResultsMessage.style.display = 'block';
+                    section.classList.remove('show');
+                    empty.style.display = 'block';
                 }
-            } catch (error) {
-                console.error('加载结果列表失败:', error);
-                document.getElementById('resultsList').innerHTML = '<div class="error">加载结果失败: ' + error.message + '</div>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // 加载任务历史记录
         async function loadTaskHistory() {
             try {
-                const response = await fetch('/api/task-history');
-                const data = await response.json();
-
-                const historyList = document.getElementById('historyList');
-                const historySection = document.getElementById('historySection');
-                const noHistoryMessage = document.getElementById('noHistoryMessage');
+                const res = await fetch('/api/task-history');
+                const data = await res.json();
+                const list = document.getElementById('historyList');
+                const section = document.getElementById('historySection');
+                const empty = document.getElementById('noHistoryMsg');
 
                 if (data.history && data.history.length > 0) {
-                    historyList.innerHTML = '';
-                    data.history.forEach(task => {
-                        const taskItem = document.createElement('div');
-                        taskItem.className = 'result-item';
-
-                        // 格式化任务类型
-                        let taskTypeText = '';
-                        switch(task.type) {
-                            case 'video_url':
-                                taskTypeText = '视频URL处理';
-                                break;
-                            case 'local_audio':
-                                taskTypeText = '本地音频处理';
-                                break;
-                            case 'batch_process':
-                                taskTypeText = '批量处理';
-                                break;
-                            default:
-                                taskTypeText = task.type;
-                        }
-
-                        // 格式化状态
-                        let statusText = '';
-                        let statusClass = '';
-                        switch(task.status) {
-                            case 'completed':
-                                statusText = '已完成';
-                                statusClass = 'success';
-                                break;
-                            case 'error':
-                                statusText = '失败';
-                                statusClass = 'error';
-                                break;
-                            case 'processing':
-                                statusText = '处理中';
-                                statusClass = 'info';
-                                break;
-                            default:
-                                statusText = task.status;
-                                statusClass = 'info';
-                        }
-
-                        // 计算处理时长
-                        let duration = 'N/A';
-                        if (task.start_time && task.end_time) {
-                            const start = new Date(task.start_time);
-                            const end = new Date(task.end_time);
-                            const diffSeconds = Math.round((end - start) / 1000);
-                            if (diffSeconds < 60) {
-                                duration = diffSeconds + '秒';
-                            } else {
-                                const diffMinutes = Math.round(diffSeconds / 60);
-                                duration = diffMinutes + '分钟';
-                            }
-                        }
-
-                        taskItem.innerHTML = `
-                            <div style="flex: 1;">
-                                <div class="task-type">${taskTypeText}</div>
-                                <div class="task-details">
-                                    <span class="status-badge status-${task.status}">${statusText}</span>
+                    const typeMap = { video_url: '视频链接', local_audio: '本地音频', batch_process: '批量处理' };
+                    const statusMap = { completed: ['已完成', 'badge-success'], error: ['失败', 'badge-error'], processing: ['处理中', 'badge-processing'] };
+                    list.innerHTML = data.history.map(t => {
+                        const [tText, tClass] = (statusMap[t.status] || ['未知', 'badge-processing']);
+                        const input = t.input.length > 60 ? t.input.substring(0, 60) + '...' : t.input;
+                        const start = new Date(t.start_time).toLocaleString('zh-CN');
+                        return `
+                            <div class="history-item">
+                                <div class="history-header">
+                                    <span class="history-type">${typeMap[t.type] || t.type}</span>
+                                    <span class="history-badge ${tClass[1]}">${tClass[0]}</span>
                                 </div>
-                                <div class="task-input">
-                                    输入: ${task.input.length > 50 ? task.input.substring(0, 50) + '...' : task.input}
+                                <div class="history-input">${input}</div>
+                                <div class="history-meta">
+                                    <span>模型: ${t.model}</span>
+                                    <span>${start}</span>
                                 </div>
-                                <div class="task-meta">
-                                    <span>模型: ${task.model}</span>
-                                    <span>时间: ${task.start_time}</span>
-                                    <span>时长: ${duration}</span>
-                                </div>
-                            </div>
-                            <div class="result-actions">
-                                ${task.result_path ?
-                                    `<a href="/download-result/${encodeURIComponent(task.result_path)}" target="_blank">
-                                        <button>下载结果</button>
-                                    </a>` :
-                                    '<button disabled>无结果</button>'
-                                }
                             </div>
                         `;
-
-                        historyList.appendChild(taskItem);
-                    });
-
-                    historySection.style.display = 'block';
-                    noHistoryMessage.style.display = 'none';
+                    }).join('');
+                    section.classList.add('show');
+                    empty.style.display = 'none';
                 } else {
-                    historySection.style.display = 'none';
-                    noHistoryMessage.style.display = 'block';
+                    section.classList.remove('show');
+                    empty.style.display = 'block';
                 }
-            } catch (error) {
-                console.error('加载任务历史失败:', error);
-                document.getElementById('historyList').innerHTML = '<div class="error">加载任务历史失败: ' + error.message + '</div>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // 清空任务历史记录
         async function clearTaskHistory() {
-            if (!confirm('确定要清空所有任务历史记录吗？此操作不可撤销。')) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/task-history', {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    loadTaskHistory(); // 重新加载历史记录
-                    alert('任务历史记录已清空');
-                } else {
-                    const data = await response.json();
-                    alert('清空历史记录失败: ' + (data.detail || '未知错误'));
-                }
-            } catch (error) {
-                alert('清空历史记录失败: ' + error.message);
-            }
+            if (!confirm('确定要清空所有历史记录吗？')) return;
+            await fetch('/api/task-history', { method: 'DELETE' });
+            loadTaskHistory();
         }
 
-        // 加载当前API密钥配置（已脱敏）
         async function loadApiConfig() {
             try {
-                const response = await fetch('/api/config');
-                const data = await response.json();
+                const res = await fetch('/api/config');
+                const data = await res.json();
                 document.getElementById('apiKeyTikhub').value = data.api_keys.tikhub || '';
                 document.getElementById('apiKeyDeepseek').value = data.api_keys.deepseek || '';
                 document.getElementById('apiKeyOpenai').value = data.api_keys.openai || '';
                 document.getElementById('apiKeyAnthropic').value = data.api_keys.anthropic || '';
-            } catch (error) {
-                console.error('加载API配置失败:', error);
-                showApiConfigMessage('加载API配置失败: ' + error.message, 'error');
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // 保存API密钥配置
         async function saveApiConfig() {
-            const apiKeys = {
+            const keys = {
                 tikhub: document.getElementById('apiKeyTikhub').value.trim(),
                 deepseek: document.getElementById('apiKeyDeepseek').value.trim(),
                 openai: document.getElementById('apiKeyOpenai').value.trim(),
                 anthropic: document.getElementById('apiKeyAnthropic').value.trim()
             };
-
             try {
-                const response = await fetch('/api/config', {
+                const res = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ api_keys: apiKeys })
+                    body: JSON.stringify({ api_keys: keys })
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    showApiConfigMessage('API 密钥已保存成功！', 'success');
-                    // 重新加载以显示脱敏后的值
+                const el = document.getElementById('apiConfigMsg');
+                if (res.ok) {
+                    el.className = 'status-msg status-success show';
+                    el.textContent = '配置已保存';
                     loadApiConfig();
                 } else {
-                    showApiConfigMessage('保存失败: ' + (data.detail || '未知错误'), 'error');
+                    el.className = 'status-msg status-error show';
+                    el.textContent = '保存失败';
                 }
-            } catch (error) {
-                showApiConfigMessage('保存失败: ' + error.message, 'error');
+                setTimeout(() => el.classList.remove('show'), 4000);
+            } catch (err) {
+                const el = document.getElementById('apiConfigMsg');
+                el.className = 'status-msg status-error show';
+                el.textContent = '保存失败: ' + err.message;
             }
-        }
-
-        function showApiConfigMessage(msg, type) {
-            const el = document.getElementById('apiConfigMessage');
-            el.textContent = msg;
-            el.className = 'status-message ' + type;
-            el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 5000);
         }
     </script>
 </body>
 </html>
     """
     return HTMLResponse(content=html_content)
+
 
 
 @app.post("/process-url")
