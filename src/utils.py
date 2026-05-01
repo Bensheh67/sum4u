@@ -24,10 +24,18 @@ def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool
         video_id = safe_stem[:10]  # 取前 10 个字符作为 ID
     else:
         # 从 URL 中提取视频 ID
-        if "bilibili.com" in url_or_path:
-            # B 站视频 ID 格式：BV1xx411c7mu
+        if "bilibili.com" in url_or_path or "b23.tv" in url_or_path:
+            # B 站视频 ID 格式：BV1xx411c7mu (12个字符) 或 b23.tv/xxx (短链接)
             if "BV" in url_or_path:
-                video_id = url_or_path.split("BV")[1].split("?")[0][:10]
+                video_id = url_or_path.split("BV")[1].split("?")[0][:12]
+                platform = "bilibili"
+            elif "/video/" in url_or_path:
+                # 处理 b23.tv 短链接或标准链接 /video/BVxxx
+                match = re.search(r'/video/([A-Za-z0-9]+)', url_or_path)
+                if match:
+                    video_id = match.group(1)[:12]
+                else:
+                    video_id = "unknown"
                 platform = "bilibili"
             else:
                 video_id = "unknown"

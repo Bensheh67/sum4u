@@ -40,7 +40,7 @@ def process_single_audio(audio_file: str, model: str, prompt_to_use: str, langua
     transcript = transcribe_local_audio(processed_audio_path, model=model, language=language, save_transcription=True)
 
     # 生成总结
-    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), provider=provider)
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
 
     return {
         "transcript": transcript,

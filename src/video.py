@@ -44,6 +44,12 @@ def extract_frame(video_path: str, timestamp: float, output_path: str, quality: 
     Returns:
         是否成功提取
     """
+    print(f"[DEBUG] extract_frame: timestamp={timestamp}, output={output_path}")
+
+    if not os.path.exists(video_path):
+        print(f"[ERROR] 视频文件不存在: {video_path}")
+        return False
+
     cmd = [
         "ffmpeg",
         "-ss", str(timestamp),
@@ -61,8 +67,14 @@ def extract_frame(video_path: str, timestamp: float, output_path: str, quality: 
             text=True,
             timeout=30
         )
-        return result.returncode == 0 and os.path.exists(output_path)
-    except Exception:
+        if result.returncode != 0:
+            print(f"[ERROR] ffmpeg失败: returncode={result.returncode}")
+            print(f"[ERROR] stderr: {result.stderr[:200]}")
+        success = result.returncode == 0 and os.path.exists(output_path)
+        print(f"[DEBUG] extract_frame结果: {success}")
+        return success
+    except Exception as e:
+        print(f"[ERROR] extract_frame异常: {e}")
         return False
 
 
@@ -85,6 +97,12 @@ def extract_multiple_frames(
     Returns:
         成功提取的帧信息列表
     """
+    print(f"[DEBUG] extract_multiple_frames:")
+    print(f"  video_path: {video_path}")
+    print(f"  timestamps数量: {len(timestamps)}")
+    print(f"  output_dir: {output_dir}")
+    print(f"  video_duration: {video_duration}")
+
     extracted = []
 
     for i, ts_info in enumerate(timestamps):

@@ -24,8 +24,21 @@ def save_transcription_file(audio_path: str, transcript_text: str) -> None:
     # 生成转录文件名：原文件名_transcription.txt
     transcription_path = transcriptions_dir / f"{audio_file.stem}_transcription.txt"
 
+    print(f"[DEBUG] 保存转录文件:")
+    print(f"  音频路径: {audio_path}")
+    print(f"  音频文件stem: {audio_file.stem}")
+    print(f"  转录文件路径: {transcription_path}")
+    print(f"  转录文本长度: {len(transcript_text)} 字符")
+
     with open(transcription_path, "w", encoding="utf-8") as f:
         f.write(transcript_text)
+
+    # 验证文件已创建
+    if transcription_path.exists():
+        actual_size = transcription_path.stat().st_size
+        print(f"[DEBUG] 转录文件验证: 存在, 大小={actual_size} bytes")
+    else:
+        print(f"[ERROR] 转录文件未创建: {transcription_path}")
 
     print(f"转录文本已保存到：{transcription_path}")
     print(f"转录文本长度：{len(transcript_text)} 字符")
@@ -45,11 +58,22 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
     """
     try:
         import whisper
+
+        # 检查音频文件是否存在
+        if not os.path.exists(audio_path):
+            raise FileNotFoundError(f"音频文件不存在: {audio_path}")
+
         file_size = os.path.getsize(audio_path)
         MB = 1024 * 1024
 
-        print(f"音频文件路径：{audio_path}")
-        print(f"音频文件大小：{file_size/MB:.1f}MB")
+        if file_size == 0:
+            raise ValueError(f"音频文件为空: {audio_path}")
+
+        print(f"[DEBUG] transcribe_audio 开始处理:")
+        print(f"  音频文件路径: {audio_path}")
+        print(f"  音频文件大小: {file_size/MB:.1f}MB")
+        print(f"  保存转录: {save_transcription}")
+        print(f"  返回时间戳: {return_timestamps}")
         print(f"使用本地 whisper ({model}) 进行转录...")
         print("正在加载模型...")
 
@@ -62,10 +86,16 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
             if language:
                 transcribe_kwargs["language"] = language
 
+            print(f"[DEBUG] 开始 whisper 转录...")
             result = whisper_model.transcribe(audio_path, **transcribe_kwargs)
             print("转录完成！")
             transcript_text = result["text"]
             segments = result.get("segments", [])
+
+            print(f"[DEBUG] 转录结果:")
+            print(f"  转录文本长度: {len(transcript_text)} 字符")
+            print(f"  segments数量: {len(segments)}")
+            print(f"  转录文本前100字符: {transcript_text[:100]}")
 
             if save_transcription:
                 save_transcription_file(audio_path, transcript_text)
