@@ -1154,7 +1154,7 @@ async def read_root():
                 const res = await fetch('/process-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots })
+                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots: withScreenshots })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || '请求失败');
