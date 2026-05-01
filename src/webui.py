@@ -1050,7 +1050,8 @@ async def read_root():
                 <div class="form-group">
                     <label for="batchPromptTemplate">摘要模板</label>
                     <select id="batchPromptTemplate">
-                        <option value="default课堂笔记">课堂笔记</option>
+                        <option value="default 课堂笔记">课堂笔记</option>
+                        <option value="短视频知识">短视频知识</option>
                         <option value="课堂内容">课堂内容</option>
                         <option value="双语总结">双语总结</option>
                         <option value="会议纪要">会议纪要</option>
@@ -1382,7 +1383,7 @@ async def read_root():
 async def process_video_url_endpoint(
     url: str = Form(None),
     model: str = Form(default="small"),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None),
     with_screenshots: bool = Form(default=False),
     # 为支持JSON请求添加参数
@@ -1442,7 +1443,7 @@ async def upload_audio_endpoint(
     file: UploadFile = File(...),
     model: str = Form(default="small"),
     language: Optional[str] = Form(default=None),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None)
 ):
     task_id = str(uuid.uuid4())
@@ -1481,7 +1482,7 @@ async def upload_audio_endpoint(
 async def batch_process_endpoint(
     upload_dir: str = Form(None),
     model: str = Form(default="small"),
-    prompt_template: str = Form(default="default课堂笔记"),
+    prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None),
     # 为支持JSON请求添加参数
     request: Request = None
