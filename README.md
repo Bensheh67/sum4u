@@ -9,7 +9,7 @@
 </p>
 1. 一个强大的Python命令行工具及Web界面，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
 2. /skill 符合claude skill规范，可以直接使用
-<img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://github.com/user-attachments/assets/db0770a6-8dee-4c03-9319-553f69efd2e8" />
+<img width="1028" height="870" alt="截屏2026-02-06 13 49 01" src="https://private-user-images.githubusercontent.com/48580107/586399172-a9186282-9797-4c85-9c99-fae0ebf9a042.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Nzc2MTQzMDgsIm5iZiI6MTc3NzYxNDAwOCwicGF0aCI6Ii80ODU4MDEwNy81ODYzOTkxNzItYTkxODYyODItOTc5Ny00Yzg1LTljOTktZmFlMGViZjlhMDQyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNjA1MDElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYwNTAxVDA1NDAwOFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTBiYzg4YjUzMzgwODBhMDFlNjkyODhhY2ZmZjQwNmUzMDQ2MTVkMWUyZGY5YzM3NzJmMDY0YWM3NjI4Mjc2Y2YmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JnJlc3BvbnNlLWNvbnRlbnQtdHlwZT1pbWFnZSUyRnBuZyJ9.G8LRepSry5xWoQZ4dWm7Ns1YIXB5_6GBPSS2kLFVy2c" />
 ## ✨ 特性
 
 - **多平台支持**: 支持YouTube、Bilibili、抖音、TikTok等平台视频下载
