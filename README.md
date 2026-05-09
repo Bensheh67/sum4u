@@ -4,7 +4,6 @@
   <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python" alt="Python Version">
   <img src="https://img.shields.io/badge/OpenAI-Whisper-green?logo=openai" alt="OpenAI Whisper">
   <img src="https://img.shields.io/badge/FastAPI-WebUI-orange?logo=fastapi" alt="FastAPI WebUI">
-  <img src="https://img.shields.io/badge/Docker-Supported-blueviolet?logo=docker" alt="Docker Support">
   <img src="https://img.shields.io/badge/MIT-License-yellow" alt="License">
 </p>
 1. 一个强大的Python命令行工具及Web界面，用于自动处理视频和本地音频文件、转录音频内容并生成结构化总结。
@@ -24,7 +23,6 @@
 - **Web界面支持**: 提供直观的Web界面进行操作
 - **批量处理**: 支持批量处理多个音频文件
 - **实时进度监控**: 提供处理进度可视化
-- **Docker支持**: 一键部署，无需复杂环境配置
 - **抖音/TikTok分享链接支持**: 直接粘贴抖音分享链接（如"6.39 03/26 14:06 [抖音] https://..."）即可处理
 - **TikHub API集成**: 使用专业的抖音/TikTok数据API，支持无水印视频下载
 
@@ -39,44 +37,7 @@
   - FFmpeg（用于音频处理）
   - TikHub API密钥（用于处理抖音/TikTok视频）
 
-- **Docker方式**:
-  - Docker Engine 19.03+
-  - 至少 4GB RAM（推荐 8GB+）
-  - 至少 2GB 可用磁盘空间
-  - TikHub API密钥（用于处理抖音/TikTok视频）
-
 ### 安装方式
-
-#### 方式一：Docker部署（推荐新手）
-
-Docker方式无需安装Python环境和各种依赖，一键即可运行完整工具。
-
-1. **安装Docker**：
-   - Windows/Mac: 下载并安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-   - Linux: 安装 Docker Engine
-
-2. **克隆项目**：
-   ```bash
-   git clone <项目地址>
-   cd 音频视频总结工具
-   ```
-
-3. **启动工具**：
-   ```bash
-   # 给启动脚本添加执行权限
-   chmod +x docker_setup_simple.sh
-   
-   # 启动工具（首次运行会自动构建镜像）
-   ./docker_setup_simple.sh
-   ```
-
-4. **访问工具**：
-   打开浏览器，访问 `http://localhost:8000`
-
-5. **首次配置**：
-   首次访问时，按照网页提示配置API密钥即可开始使用。
-
-#### 方式二：传统Python方式
 
 1. **克隆项目**：
    ```bash
@@ -162,13 +123,6 @@ python3 src/main.py --batch --upload-dir "uploads" --model "small" --prompt_temp
 
 启动Web界面，支持视频URL处理、本地音频上传、批量处理等功能：
 
-#### Docker方式（推荐新手）
-```bash
-# 启动工具（已在后台运行）
-./docker_setup_simple.sh
-```
-
-#### 传统Python方式
 ```bash
 # 启动 Web UI
 ./start_webui.sh
@@ -190,55 +144,6 @@ Web界面功能包括：
 - 任务历史记录
 - 视频截图功能（可选，开启后AI自动选择关键帧）
 
-### 4. Docker高级操作
-
-如果你对Docker比较熟悉，可以使用以下高级操作：
-
-**查看容器日志**：
-```bash
-./docker_setup_simple.sh logs
-```
-
-**停止工具**：
-```bash
-./docker_setup_simple.sh stop
-```
-
-**重启工具**：
-```bash
-./docker_setup_simple.sh restart
-```
-
-**使用docker-compose直接操作**：
-```bash
-# 启动（使用简化配置）
-docker-compose -f docker-compose-simple.yml up -d
-
-# 停止
-docker-compose -f docker-compose-simple.yml down
-
-# 查看状态
-docker-compose -f docker-compose-simple.yml ps
-```
-
-**手动构建镜像**：
-```bash
-# 使用简化版Dockerfile（构建更快）
-docker build -f Dockerfile.beginner -t video-summarizer .
-```
-
-## 📁 Docker数据存储
-
-使用Docker部署时，所有数据都保存在本地的 `data/` 目录中：
-
-- `./data/downloads/` - 下载的视频/音频文件
-- `./data/summaries/` - 生成的总结文件
-- `./data/transcriptions/` - 转录文本文件
-- `./data/uploads/` - 上传的文件
-- `./config.json` - API密钥配置文件
-
-这些数据卷确保即使容器重启或更新，你的处理结果也不会丢失。
-
 ## 🎬 抖音/TikTok功能使用
 
 要使用抖音/TikTok视频处理功能：
@@ -254,7 +159,6 @@ docker build -f Dockerfile.beginner -t video-summarizer .
 3. **使用功能**：
    - 支持直接粘贴抖音分享链接（如"6.39 03/26 14:06 [抖音] https://..."）
    - 支持标准抖音/TikTok URL
-   - 在Docker和传统Python方式中均可用
 
 ## ⚙️ 配置选项
 
@@ -325,15 +229,6 @@ summaries/
         └── ...
 ```
 
-### Docker方式
-使用Docker部署时，所有数据都保存在本地的 `data/` 目录中：
-
-- `./data/downloads/` - 下载的视频/音频文件
-- `./data/summaries/` - 生成的总结文件
-- `./data/transcriptions/` - 转录文本文件
-- `./data/uploads/` - 上传的文件
-- `./config.json` - API密钥配置文件
-
 ## 🛠️ 开发
 
 ### 项目结构
@@ -360,33 +255,13 @@ summaries/
 ├── transcriptions/        # 转录文本文件
 ├── reports/               # 批量处理报告
 ├── uploads/               # 批量处理上传文件夹
-├── data/                  # Docker数据卷目录
-│   ├── downloads/         # Docker版下载的音频文件
-│   ├── summaries/         # Docker版生成的总结文件
-│   ├── transcriptions/    # Docker版转录文本文件
-│   └── uploads/           # Docker版上传的文件
 ├── start.sh               # 视频处理启动脚本
 ├── start_audio.sh         # 音频处理启动脚本
+├── start_webui.sh         # Web界面启动脚本
 ├── batch_process.sh       # 批量处理启动脚本
-├── docker_setup_simple.sh # Docker简化部署脚本
-├── Dockerfile             # 标准Docker配置文件
-├── Dockerfile.beginner    # 新手友好Docker配置文件
-├── Dockerfile.simple      # 简化版Docker配置文件
-├── docker-compose.yml     # 标准Docker Compose配置
-├── docker-compose-simple.yml # 简化版Docker Compose配置
 ├── requirements.txt       # 依赖包列表
 └── README.md              # 项目说明文档
 ```
-
-### Docker开发
-
-项目提供了多种Docker配置以适应不同需求：
-
-- `Dockerfile`: 标准配置，预加载Whisper模型
-- `Dockerfile.simple`: 简化配置，不预加载模型，构建更快
-- `Dockerfile.beginner`: 专为新手优化的配置
-- `docker-compose.yml`: 标准Compose配置
-- `docker-compose-simple.yml`: 简化版Compose配置，使用更直观的数据卷结构
 
 ### 添加新提示词模板
 
@@ -403,55 +278,6 @@ prompt_templates = {
     "你的模板名称": new_template,
 }
 ```
-
-## 🐳 Docker常见问题与解决方案
-
-### 1. 启动问题
-
-**Q: 运行 `./docker_setup_simple.sh` 时报权限错误**
-
-A: 给脚本添加执行权限：
-```bash
-chmod +x docker_setup_simple.sh
-```
-
-**Q: 访问 http://localhost:8000 显示连接被拒绝**
-
-A: 检查以下几点：
-- 确认服务正在运行
-- 确认端口8000未被其他程序占用
-- 查看启动日志确认服务启动成功
-
-### 2. 性能问题
-
-**Q: 处理音频文件时非常缓慢**
-
-A: 
-- 确认有足够的内存分配给Docker（至少4GB）
-- 在Docker Desktop设置中增加内存分配
-- 尝试使用较小的Whisper模型（如 tiny 或 base）
-
-**Q: 出现内存不足错误**
-
-A: 
-- 在Docker Desktop设置中增加内存分配
-- 关闭其他占用内存的应用程序
-- 使用较小的Whisper模型
-
-### 3. 数据存储问题
-
-**Q: 重启容器后处理结果丢失**
-
-A: 确认使用的是正确的Docker配置，数据应保存在 `./data/` 目录中，该目录被挂载为数据卷。
-
-### 4. 构建问题
-
-**Q: 构建Docker镜像时失败**
-
-A: 
-- 确认Docker守护进程正在运行
-- 检查是否有足够的磁盘空间
-- 尝试清理Docker构建缓存：`docker builder prune`
 
 ## 🤝 贡献
 
