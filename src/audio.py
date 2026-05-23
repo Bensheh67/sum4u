@@ -203,7 +203,7 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
             print(f"清理下载失败的文件：{audio_path}")
             audio_path.unlink()
         raise RuntimeError(f"YouTube 视频下载失败：{e.stderr}")
-    except Exception as e:
+    except Exception:
         # 其他异常时也清理文件
         if audio_path.exists():
             print(f"清理异常文件：{audio_path}")
@@ -227,7 +227,6 @@ async def download_douyin_audio(url: str, output_dir: str = "downloads") -> str:
     print(f"抖音分享口令清理后 URL: {cleaned_url}")
 
     # 使用抖音处理器下载音频
-    from .douyin_handler import process_douyin_url
     audio_path = process_douyin_url(cleaned_url, output_dir, api_key)
     return audio_path
 
@@ -250,11 +249,11 @@ def download_audio(url: str, output_dir: str = "downloads") -> tuple[str, str]:
     Returns:
         (音频文件路径, 视频标题)
     """
-    print(f"[DEBUG] download_audio 开始处理:")
+    print("[DEBUG] download_audio 开始处理:")
     print(f"  URL: {url}")
     print(f"  output_dir: {output_dir}")
     result = asyncio.run(download_audio_from_url(url, output_dir))
-    print(f"[DEBUG] download_audio 返回:")
+    print("[DEBUG] download_audio 返回:")
     print(f"  音频路径: {result}")
     # 获取视频标题
     title = get_video_title(url)

@@ -21,9 +21,9 @@ jobs:
         run: |
           pip install ruff
 
-      - name: Run ruff check
+      - name: Run ruff check with auto-fix
         run: |
-          ruff check src/
+          ruff check src/ --fix --exit-non-zero-on-fix
 
       - name: Install dependencies
         run: |

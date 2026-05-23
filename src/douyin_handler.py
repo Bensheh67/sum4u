@@ -6,11 +6,7 @@ douyin_handler.py
 import os
 import re
 import requests
-import tempfile
-from pathlib import Path
-from urllib.parse import urlparse
 import subprocess
-from .utils import safe_filename
 from .config import config_manager
 
 
@@ -190,7 +186,7 @@ def download_douyin_video(video_url: str, output_dir: str = "downloads", api_key
     temp_video_path = os.path.join(output_dir, f"douyin_temp_{abs(hash(video_url)) % 10000}.mp4")
 
     # 下载视频 - 禁用代理，直连抖音 CDN
-    print(f"尝试下载视频（禁用代理，超时 180 秒）...")
+    print("尝试下载视频（禁用代理，超时 180 秒）...")
     max_retries = 2
     
     for attempt in range(max_retries):
@@ -227,7 +223,7 @@ def download_douyin_video(video_url: str, output_dir: str = "downloads", api_key
             print(f"✅ 视频下载完成：{temp_video_path} ({downloaded / 1024 / 1024:.2f} MB)")
             break
             
-        except requests.exceptions.Timeout as e:
+        except requests.exceptions.Timeout:
             print(f"⚠️  下载超时（尝试 {attempt+1}/{max_retries}）")
             if attempt == max_retries - 1:
                 raise RuntimeError(f"视频下载超时，已重试{max_retries}次。可能是网络问题或链接已过期。")

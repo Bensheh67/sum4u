@@ -178,7 +178,7 @@ def generate_batch_report(results: List[Dict[str, Any]], upload_dir: str,
                 f.write(f"   错误: {result['error']}\n")
             f.write("\n")
     
-    print(f"\n📊 批量处理完成!")
+    print("\n📊 批量处理完成!")
     print(f"📈 成功: {success_count}/{total} 个文件")
     if error_count > 0:
         print(f"⚠️  失败: {error_count} 个文件")

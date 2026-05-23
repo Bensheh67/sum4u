@@ -4,7 +4,6 @@ video_classifier.py
 选择对应的总结模板。
 """
 
-import re
 from dataclasses import dataclass
 from typing import Literal, Optional
 

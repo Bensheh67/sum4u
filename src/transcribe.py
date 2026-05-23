@@ -24,7 +24,7 @@ def save_transcription_file(audio_path: str, transcript_text: str) -> None:
     # 生成转录文件名：原文件名_transcription.txt
     transcription_path = transcriptions_dir / f"{audio_file.stem}_transcription.txt"
 
-    print(f"[DEBUG] 保存转录文件:")
+    print("[DEBUG] 保存转录文件:")
     print(f"  音频路径: {audio_path}")
     print(f"  音频文件stem: {audio_file.stem}")
     print(f"  转录文件路径: {transcription_path}")
@@ -69,7 +69,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
         if file_size == 0:
             raise ValueError(f"音频文件为空: {audio_path}")
 
-        print(f"[DEBUG] transcribe_audio 开始处理:")
+        print("[DEBUG] transcribe_audio 开始处理:")
         print(f"  音频文件路径: {audio_path}")
         print(f"  音频文件大小: {file_size/MB:.1f}MB")
         print(f"  保存转录: {save_transcription}")
@@ -86,13 +86,13 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
             if language:
                 transcribe_kwargs["language"] = language
 
-            print(f"[DEBUG] 开始 whisper 转录...")
+            print("[DEBUG] 开始 whisper 转录...")
             result = whisper_model.transcribe(audio_path, **transcribe_kwargs)
             print("转录完成！")
             transcript_text = result["text"]
             segments = result.get("segments", [])
 
-            print(f"[DEBUG] 转录结果:")
+            print("[DEBUG] 转录结果:")
             print(f"  转录文本长度: {len(transcript_text)} 字符")
             print(f"  segments数量: {len(segments)}")
             print(f"  转录文本前100字符: {transcript_text[:100]}")
@@ -104,7 +104,7 @@ def transcribe_audio(audio_path: str, api_key: Optional[str] = None, model: str 
                 return transcript_text, segments
             return transcript_text
         else:
-            print(f"音频文件较大，开始分段转录...")
+            print("音频文件较大，开始分段转录...")
             audio = AudioFileClip(audio_path)
             duration = int(audio.duration)  # 秒
             chunk_sec = 600  # 每段 10 分钟
