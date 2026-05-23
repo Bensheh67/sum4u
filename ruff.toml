@@ -1,0 +1,6 @@
+[lint]
+select = ["F", "E5", "E7"]
+ignore = ["E402", "E722"]
+
+[lint.extend-contextual-ignore]
+src/webui.py = ["E402"]
