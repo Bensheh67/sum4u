@@ -30,6 +30,7 @@ from src.utils import safe_filename, generate_filename
 from src.batch_processor import process_batch
 from src.douyin_handler import is_douyin_url, clean_douyin_url
 from src.config import config_manager
+from src.video_classifier import classify_video
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
 
@@ -116,8 +117,12 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
         print(f"[{task_id}] 处理失败: {str(e)}")
 
 
-def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False):
-    """处理视频URL的后台任务"""
+def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: bool = False):
+    """处理视频URL的后台任务
+
+    Args:
+        auto_template: 如果为 True，自动根据视频类型选择最合适的模板
+    """
     # 记录任务开始时间
     start_time = datetime.now()
 
@@ -163,6 +168,18 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
                 print(f"[DEBUG] download_video 返回: video_path={video_path}, video_title={video_title}")
                 print(f"[{task_id}] 视频已保存: {video_path}")
                 print(f"[{task_id}] 视频标题: {video_title}")
+
+                # 自动视频类型分类
+                if auto_template:
+                    print(f"[{task_id}] 视频类型分析...")
+                    classification = classify_video(video_title, "")
+                    print(f"[{task_id}]    检测类型: {classification.video_type} (置信度: {classification.confidence})")
+                    print(f"[{task_id}]    推理: {classification.reasoning}")
+                    auto_prompt_key = classification.suggested_prompt_key
+                    if auto_prompt_key in prompt_templates:
+                        prompt_to_use = prompt_templates[auto_prompt_key]
+                        print(f"[{task_id}]    使用模板: {auto_prompt_key}")
+                    task_status[task_id] = {"status": "processing", "progress": 5, "message": f"视频类型: {classification.video_type}，使用模板: {auto_prompt_key}"}
 
                 # 验证视频文件是否存在
                 import os
@@ -222,6 +239,19 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             audio_path, video_title = download_audio(video_url)
             print(f"[{task_id}] 音频已保存: {audio_path}")
             print(f"[{task_id}] 视频标题: {video_title}")
+
+            # 自动视频类型分类
+            if auto_template:
+                print(f"[{task_id}] 视频类型分析...")
+                classification = classify_video(video_title, "")
+                print(f"[{task_id}]    检测类型: {classification.video_type} (置信度: {classification.confidence})")
+                print(f"[{task_id}]    推理: {classification.reasoning}")
+                auto_prompt_key = classification.suggested_prompt_key
+                if auto_prompt_key in prompt_templates:
+                    prompt_to_use = prompt_templates[auto_prompt_key]
+                    print(f"[{task_id}]    使用模板: {auto_prompt_key}")
+                task_status[task_id] = {"status": "processing", "progress": 12, "message": f"视频类型: {classification.video_type}，使用模板: {auto_prompt_key}"}
+
             task_status[task_id] = {"status": "processing", "progress": 20, "message": "开始转录..."}
 
             print(f"[{task_id}] 转录音频 (使用模型: {model})...")
@@ -959,6 +989,12 @@ async def read_root():
                             生成截图
                         </label>
                     </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoTemplate">
+                            自动选择模板（根据视频类型）
+                        </label>
+                    </div>
                     <button type="submit" class="btn btn-primary">开始处理</button>
                 </form>
                 <div id="urlProgress" class="progress-area">
@@ -1150,6 +1186,7 @@ async def read_root():
             const template = document.getElementById('promptTemplate').value;
             const custom = document.getElementById('customPrompt').value.trim();
             const withScreenshots = document.getElementById('withScreenshots').checked;
+            const autoTemplate = document.getElementById('autoTemplate').checked;
             if (!url) {
                 showProgress('url', '请输入视频URL', 'error');
                 return;
@@ -1160,7 +1197,7 @@ async def read_root():
                 const res = await fetch('/process-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots: withScreenshots })
+                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots: withScreenshots, auto_template: autoTemplate })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || '请求失败');
@@ -1386,6 +1423,7 @@ async def process_video_url_endpoint(
     prompt_template: str = Form(default="default 课堂笔记"),
     prompt: Optional[str] = Form(default=None),
     with_screenshots: bool = Form(default=False),
+    auto_template: bool = Form(default=False),
     # 为支持JSON请求添加参数
     request: Request = None
 ):
@@ -1398,6 +1436,7 @@ async def process_video_url_endpoint(
             prompt_template = body.get("prompt_template", prompt_template)
             prompt = body.get("prompt", prompt)
             with_screenshots = body.get("with_screenshots", with_screenshots)
+            auto_template = body.get("auto_template", auto_template)
         except:
             pass  # 如果JSON解析失败，使用表单参数
 
@@ -1431,7 +1470,7 @@ async def process_video_url_endpoint(
     # 在后台线程中运行处理任务
     thread = threading.Thread(
         target=process_video_url_task,
-        args=(task_id, url, model, prompt_to_use, output_path, with_screenshots)
+        args=(task_id, url, model, prompt_to_use, output_path, with_screenshots, auto_template)
     )
     thread.start()
 
