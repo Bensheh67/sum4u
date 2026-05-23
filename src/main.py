@@ -17,6 +17,7 @@ from .audio_handler import handle_audio_upload
 from .utils import safe_filename, generate_filename
 from .batch_processor import process_batch
 from .config import config_manager
+from .video_classifier import classify_video, PROMPT_KEY_MAP
 
 
 
@@ -43,8 +44,12 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     print(f"结果已保存到: {output_path}")
 
 
-def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False):
-    """处理视频URL的完整流程"""
+def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: str = None):
+    """处理视频URL的完整流程
+
+    Args:
+        auto_template: 如果不为 None，则自动使用该模板（忽略 prompt_to_use）
+    """
     print("[1/4] 下载视频...")
     video_path, video_title = download_video(video_url)
     print(f"视频已保存: {video_path}")
@@ -53,6 +58,19 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
     print("[2/4] 提取音频...")
     audio_path, _ = download_audio(video_url)
     print(f"音频已保存: {audio_path}")
+
+    # 自动视频类型分类
+    print("[*] 视频类型分析...")
+    classification = classify_video(video_title, "")
+    print(f"    检测类型: {classification.video_type} (置信度: {classification.confidence})")
+    print(f"    推理: {classification.reasoning}")
+
+    # 如果指定了 auto_template，自动选择分类对应的模板
+    if auto_template:
+        auto_prompt_key = classification.suggested_prompt_key
+        if auto_prompt_key in prompt_templates:
+            prompt_to_use = prompt_templates[auto_prompt_key]
+            print(f"    使用模板: {auto_prompt_key}")
 
     print(f"[3/4] 转录音频 (使用模型: {model})...")
     print("提示：转录过程可能需要几分钟时间，请耐心等待...")
@@ -99,6 +117,7 @@ def main():
     parser.add_argument("--output", required=False, help="自定义输出文件名（单文件处理时有效）")
     parser.add_argument("--prompt", required=False, help="自定义摘要提示词")
     parser.add_argument("--prompt_template", required=False, default="default课堂笔记", help="选择摘要提示词模板，可选: default课堂笔记, youtube_英文笔记, youtube_结构化提取, youtube_精炼提取, youtube_专业课笔记, 爆款短视频文案, youtube_视频总结")
+    parser.add_argument("--auto-template", action="store_true", help="自动根据视频类型选择最合适的模板（忽略 --prompt_template）")
     parser.add_argument("--language", required=False, help="指定音频语言（如 zh, en），不指定则自动检测")
     parser.add_argument("--provider", required=False, help="AI服务提供商 (deepseek, openai, anthropic)")
     parser.add_argument("--with-screenshots", action="store_true", help="生成带视频截图的总结")
@@ -154,7 +173,14 @@ def main():
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
 
-        process_video_url(args.url, model_to_use, prompt_to_use, output_path, with_screenshots=args.with_screenshots)
+        process_video_url(
+            args.url,
+            model_to_use,
+            prompt_to_use,
+            output_path,
+            with_screenshots=args.with_screenshots,
+            auto_template=args.auto_template
+        )
 
     elif args.audio_file:
         # 处理本地音频文件
