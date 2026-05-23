@@ -118,7 +118,7 @@ def summarize_with_screenshots(
     import os
     if not os.path.exists(video_path):
         print(f"[ERROR] 视频文件不存在: {video_path}")
-        print(f"[ERROR] 无法提取截图，请确保视频下载成功")
+        print("[ERROR] 无法提取截图，请确保视频下载成功")
         return None, [], summary_dir
 
     # 3. 获取视频时长
@@ -132,7 +132,7 @@ def summarize_with_screenshots(
         ai_keyframes = select_keyframes(formatted_transcript, video_duration, model)
         print(f"[DEBUG] AI 选择的关键帧数量: {len(ai_keyframes)}")
     else:
-        print(f"[DEBUG] 无转录片段，使用默认关键帧")
+        print("[DEBUG] 无转录片段，使用默认关键帧")
         ai_keyframes = []
 
     # 4. 创建截图目录

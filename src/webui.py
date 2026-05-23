@@ -8,12 +8,8 @@ from pathlib import Path
 import uuid
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import asyncio
+from fastapi.responses import HTMLResponse
 import threading
-import time
 from datetime import datetime
 
 # 添加src目录到Python路径
@@ -26,7 +22,7 @@ from src.transcribe import transcribe_audio, transcribe_local_audio
 from src.summarize import summarize_text, summarize_with_screenshots
 from src.prompts import prompt_templates
 from src.audio_handler import handle_audio_upload
-from src.utils import safe_filename, generate_filename
+from src.utils import generate_filename
 from src.batch_processor import process_batch
 from src.douyin_handler import is_douyin_url, clean_douyin_url
 from src.config import config_manager

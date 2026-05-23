@@ -4,10 +4,8 @@ utils.py
 """
 
 import re
-import os
 from pathlib import Path
 from datetime import datetime
-from urllib.parse import urlparse
 
 
 def generate_filename(url_or_path: str, has_summary: bool = True, is_local: bool = False) -> str:

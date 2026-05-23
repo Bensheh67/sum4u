@@ -6,7 +6,6 @@ audio_handler.py
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
 from .utils import safe_filename
 
 

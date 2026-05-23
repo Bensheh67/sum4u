@@ -97,7 +97,7 @@ def extract_multiple_frames(
     Returns:
         成功提取的帧信息列表
     """
-    print(f"[DEBUG] extract_multiple_frames:")
+    print("[DEBUG] extract_multiple_frames:")
     print(f"  video_path: {video_path}")
     print(f"  timestamps数量: {len(timestamps)}")
     print(f"  output_dir: {output_dir}")

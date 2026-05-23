@@ -4,6 +4,7 @@ main.py
 """
 import sys
 import os
+from pathlib import Path
 if __name__ == "__main__" and __package__ is None:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     __package__ = "src"
@@ -14,10 +15,10 @@ from .transcribe import transcribe_audio, transcribe_local_audio
 from .summarize import summarize_text, summarize_with_screenshots
 from .prompts import prompt_templates
 from .audio_handler import handle_audio_upload
-from .utils import safe_filename, generate_filename
+from .utils import generate_filename
 from .batch_processor import process_batch
 from .config import config_manager
-from .video_classifier import classify_video, PROMPT_KEY_MAP
+from .video_classifier import classify_video
 
 
 
@@ -168,7 +169,6 @@ def main():
 
         # 使用用户指定的模型，否则使用默认模型
         model_to_use = config_manager.get_default_model() if not args.model else args.model
-        provider_to_use = args.provider if args.provider else "deepseek"
 
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
@@ -202,7 +202,6 @@ def main():
 
         # 使用用户指定的模型，否则使用默认模型
         model_to_use = config_manager.get_default_model() if not args.model else args.model
-        provider_to_use = args.provider if args.provider else "deepseek"
 
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
@@ -214,7 +213,6 @@ def main():
         print(f"批量处理模式: 处理 {args.upload_dir} 文件夹中的所有音频文件")
         # 使用用户指定的模型，否则使用默认模型
         model_to_use = config_manager.get_default_model() if not args.model else args.model
-        provider_to_use = args.provider if args.provider else "deepseek"
 
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
