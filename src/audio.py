@@ -372,7 +372,12 @@ async def _download_youtube_video(url: str, output_dir: str) -> str:
     ]
 
     print(f"正在下载 YouTube 视频：{decoded_url}")
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    # 设置超时防止 cookie 提取卡住
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    except subprocess.TimeoutExpired:
+        print("[WARNING] YouTube 视频下载超时（5分钟），可能是网络问题或视频较大")
+        raise RuntimeError("YouTube 视频下载超时，请检查网络或尝试其他视频")
     print("YouTube 视频下载完成")
     return str(video_path)
 
