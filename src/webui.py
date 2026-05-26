@@ -178,7 +178,6 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
                     task_status[task_id] = {"status": "processing", "progress": 5, "message": f"视频类型: {classification.video_type}，使用模板: {auto_prompt_key}"}
 
                 # 验证视频文件是否存在
-                import os
                 if os.path.exists(video_path):
                     print(f"[DEBUG] 视频文件存在: {video_path}")
                 else:
@@ -267,7 +266,8 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 
         # 确保输出目录存在
-        os.makedirs(os.path.dirname(summary_file_path) if os.path.dirname(summary_file_path) else ".", exist_ok=True)
+        summary_dir = os.path.dirname(summary_file_path) or "summaries"
+        os.makedirs(summary_dir, exist_ok=True)
 
         # 保存到总结文件
         with open(summary_file_path, "w", encoding="utf-8") as f:
