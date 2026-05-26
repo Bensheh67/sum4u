@@ -14,7 +14,7 @@ VideoType = Literal["learning", "tutorial", "review", "interview"]
 PROMPT_KEY_MAP: dict[VideoType, str] = {
     "learning": "课堂内容",
     "tutorial": "短视频素材",
-    "review": "精华摘要",
+    "review": "精炼摘要",
     "interview": "精炼摘要",
 }
 
