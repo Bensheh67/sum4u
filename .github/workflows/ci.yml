@@ -42,3 +42,11 @@ jobs:
           import src.config
           print('All imports successful')
           "
+
+      - name: Install pytest
+        run: |
+          pip install pytest
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/ -v
