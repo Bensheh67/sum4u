@@ -1,9 +1,9 @@
 [project]
-name = "video-summarizer-cli"
+name = "summary4u"
 version = "0.1.0"
 description = "自动下载视频、提取音频、转录并AI总结的命令行工具"
 authors = [
-    { name = "Your Name", email = "your@email.com" }
+    { name = "Bensheh67", email = "shegengbin@foxmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.8"
@@ -16,15 +16,21 @@ dependencies = [
     "fastapi>=0.104.1",
     "uvicorn>=0.24.0",
     "python-multipart>=0.0.6",
-    "pathlib2>=2.3.7; python_version < '3.4'"
+    "pathlib2>=2.3.7; python_version < '3.4'",
+    "pytz>=2023.3",
 ]
 
 [project.urls]
-Homepage = "https://github.com/your/repo"
+Homepage = "https://github.com/Bensheh67/summary4u"
 
 [project.optional-dependencies]
 test = [
-    "pytest"
+    "pytest",
+]
+dev = [
+    "pytest",
+    "ruff",
+    "httpx",
 ]
 
 [tool.setuptools.packages.find]
@@ -34,6 +40,26 @@ where = ["src"]
 video-summarizer = "src.main:main"
 audio-summarizer = "src.main:main"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+ignore = [
+    "E402",  # module level import not at top of file
+]
+
 [build-system]
 requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta" 
+build-backend = "setuptools.build_meta"

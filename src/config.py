@@ -21,7 +21,7 @@ class ConfigManager:
                 "anthropic": "",
                 "tikhub": ""
             },
-            "default_model": "deepseek-chat",
+            "default_model": "deepseek-v4-flash",
             "default_language": "auto",
             "external_apis": {
                 "douyin_api_endpoint": "https://api.douyin.wtf"
