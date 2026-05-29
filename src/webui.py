@@ -741,6 +741,11 @@ async def read_root():
       box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
     }
 
+    .input.error {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
     .input::placeholder {
       color: var(--color-text-muted);
     }
@@ -2024,7 +2029,14 @@ async def read_root():
       if (!path) { alert('请先输入 Obsidian vault 路径'); return; }
       try {
         const res = await fetch('/api/config/obsidian', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ obsidian_vault_path: path }) });
-        if (res.ok) alert('路径有效'); else alert('路径无效');
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('obsidianVault').classList.remove('error');
+          alert('路径有效，已保存');
+        } else {
+          document.getElementById('obsidianVault').classList.add('error');
+          alert('路径无效: ' + (data.detail || '无法访问此路径'));
+        }
       } catch (e) { alert('测试失败: ' + e.message); }
     }
 
@@ -2550,7 +2562,12 @@ async def get_obsidian_config():
     """获取 Obsidian 配置"""
     config = config_manager.config
     vault_path = config.get(OBSIDIAN_VAULT_PATH_KEY, "")
-    return {"obsidian_vault_path": vault_path}
+    # 如果已配置，验证路径是否有效
+    if vault_path and os.path.exists(vault_path):
+        return {"obsidian_vault_path": vault_path, "valid": True}
+    elif vault_path:
+        return {"obsidian_vault_path": vault_path, "valid": False}
+    return {"obsidian_vault_path": "", "valid": False}
 
 
 @app.post("/api/config/obsidian")
@@ -2558,6 +2575,11 @@ async def save_obsidian_config(data: dict):
     """保存 Obsidian 配置"""
     vault_path = data.get("obsidian_vault_path", "").strip()
     if vault_path:
+        # 验证路径是否存在
+        if not os.path.exists(vault_path):
+            raise HTTPException(status_code=400, detail="路径不存在或无法访问")
+        if not os.path.isdir(vault_path):
+            raise HTTPException(status_code=400, detail="路径不是有效的文件夹")
         config_manager.config[OBSIDIAN_VAULT_PATH_KEY] = vault_path
         config_manager.save()
     return {"status": "success"}
