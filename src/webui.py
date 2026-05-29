@@ -296,1118 +296,1680 @@ async def read_root():
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary4U</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0a0a0f;
-            --surface: #12121a;
-            --surface-2: #1a1a24;
-            --primary: #00ff9f;
-            --primary-dim: #00cc7f;
-            --secondary: #00d4ff;
-            --accent: #ff00aa;
-            --text: #e0e0e0;
-            --muted: #666680;
-            --border: #2a2a3a;
-            --glow: 0 0 20px rgba(0, 255, 159, 0.3);
-            --glow-strong: 0 0 30px rgba(0, 255, 159, 0.5), 0 0 60px rgba(0, 255, 159, 0.2);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background:
-                linear-gradient(rgba(0, 255, 159, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 159, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 0, 0, 0.1) 2px,
-                rgba(0, 0, 0, 0.1) 4px
-            );
-            pointer-events: none;
-            z-index: 1;
-            animation: scanlines 8s linear infinite;
-        }
-
-        @keyframes scanlines {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(4px); }
-        }
-
-        .app {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 48px 20px 80px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-            position: relative;
-        }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            position: relative;
-        }
-
-        .logo-icon svg {
-            width: 100%;
-            height: 100%;
-            stroke: var(--primary);
-            filter: drop-shadow(var(--glow));
-        }
-
-        .logo-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--primary);
-            text-shadow: var(--glow-strong);
-            letter-spacing: 0.1em;
-        }
-
-        .tagline {
-            font-size: 0.75rem;
-            color: var(--muted);
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-        }
-
-        .tabs {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 4px;
-            background: var(--surface);
-            padding: 4px;
-            border-radius: 4px;
-            margin-bottom: 32px;
-            border: 1px solid var(--border);
-        }
-
-        .tab {
-            padding: 12px 8px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 2px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--muted);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .tab:hover {
-            color: var(--secondary);
-            border-color: var(--border);
-        }
-
-        .tab.active {
-            background: var(--primary);
-            color: var(--bg);
-            font-weight: 700;
-            border-color: var(--primary);
-            box-shadow: var(--glow);
-        }
-
-        .panel {
-            display: none;
-        }
-
-        .panel.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card {
-            background: var(--surface);
-            border-radius: 4px;
-            padding: 24px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .card-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--secondary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        input[type="text"],
-        input[type="url"],
-        input[type="password"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 2px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            color: var(--text);
-            background: var(--bg);
-            transition: all 0.2s ease;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 1px var(--primary), var(--glow);
-        }
-
-        input::placeholder, textarea::placeholder {
-            color: var(--muted);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 36px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            color: var(--text);
-        }
-
-        input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary);
-            cursor: pointer;
-            border: 1px solid var(--border);
-            border-radius: 2px;
-        }
-
-        small {
-            display: block;
-            margin-top: 6px;
-            font-size: 0.7rem;
-            color: var(--muted);
-        }
-
-        a {
-            color: var(--secondary);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        a:hover {
-            color: var(--primary);
-            text-decoration: underline;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: 1px solid;
-            border-radius: 2px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--bg);
-            border-color: var(--primary);
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dim);
-            box-shadow: var(--glow);
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            background: var(--muted);
-            border-color: var(--muted);
-            color: var(--bg);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--secondary);
-            border-color: var(--secondary);
-        }
-
-        .btn-secondary:hover {
-            background: var(--secondary);
-            color: var(--bg);
-        }
-
-        .btn-danger {
-            background: transparent;
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .btn-danger:hover {
-            background: var(--accent);
-            color: var(--bg);
-        }
-
-        .btn-sm {
-            padding: 8px 12px;
-            font-size: 0.7rem;
-        }
-
-        .progress-area {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .progress-area.show {
-            display: block;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: var(--bg);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            width: 0%;
-            transition: width 0.4s ease;
-            box-shadow: var(--glow);
-        }
-
-        .status-msg {
-            padding: 12px 14px;
-            border-radius: 2px;
-            font-size: 0.8rem;
-            display: none;
-            border: 1px solid;
-        }
-
-        .status-msg.show {
-            display: block;
-        }
-
-        .status-msg a {
-            color: inherit;
-            font-weight: 500;
-        }
-
-        .status-success {
-            background: rgba(0, 255, 159, 0.1);
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .status-error {
-            background: rgba(255, 0, 170, 0.1);
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .status-info {
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--secondary);
-            border-color: var(--secondary);
-        }
-
-        .results-section {
-            background: var(--surface);
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
-            border: 1px solid var(--border);
-        }
-
-        .results-section.show {
-            display: block;
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface-2);
-        }
-
-        .results-header h3 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .results-list {
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .result-item {
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.15s ease;
-        }
-
-        .result-item:last-child {
-            border-bottom: none;
-        }
-
-        .result-item:hover {
-            background: var(--surface-2);
-        }
-
-        .result-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .result-name {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-
-        .result-meta {
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            margin-left: 16px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
-        .history-item {
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.15s ease;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-item:hover {
-            background: var(--surface-2);
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .history-type {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .history-badge {
-            padding: 4px 8px;
-            border-radius: 2px;
-            font-size: 0.65rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge-success {
-            background: rgba(0, 255, 159, 0.15);
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-
-        .badge-error {
-            background: rgba(255, 0, 170, 0.15);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-
-        .badge-processing {
-            background: rgba(0, 212, 255, 0.15);
-            color: var(--secondary);
-            border: 1px solid var(--secondary);
-        }
-
-        .history-input {
-            font-size: 0.8rem;
-            color: var(--muted);
-            word-break: break-all;
-            margin-bottom: 8px;
-        }
-
-        .history-meta {
-            display: flex;
-            gap: 16px;
-            font-size: 0.7rem;
-            color: var(--muted);
-        }
-
-        .config-grid {
-            display: grid;
-            gap: 16px;
-        }
-
-        @media (max-width: 640px) {
-            .app {
-                padding: 24px 16px 60px;
-            }
-
-            .header {
-                margin-bottom: 32px;
-            }
-
-            .logo-text {
-                font-size: 1.5rem;
-            }
-
-            .tabs {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .tab {
-                padding: 10px 8px;
-                font-size: 0.65rem;
-            }
-
-            .card {
-                padding: 16px;
-            }
-
-            .result-actions {
-                flex-direction: column;
-            }
-
-            .result-actions .btn {
-                width: 100%;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                transition-duration: 0.01ms !important;
-                animation-duration: 0.01ms !important;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>summary4u — 音视频总结工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ===== DESIGN TOKENS (from DESIGN.md) ===== */
+    :root {
+      --color-primary: #0D9488;
+      --color-primary-hover: #0F766E;
+      --color-primary-light: #CCFBF1;
+      --color-secondary: #14B8A6;
+      --color-bg: #FFFFFF;
+      --color-surface: #F8FAFC;
+      --color-surface-hover: #F1F5F9;
+      --color-border: #E2E8F0;
+      --color-border-strong: #CBD5E1;
+      --color-text: #1E293B;
+      --color-text-secondary: #64748B;
+      --color-text-muted: #94A3B8;
+      --color-success: #10B981;
+      --color-warning: #F59E0B;
+      --color-error: #EF4444;
+      --color-info: #3B82F6;
+
+      --font-display: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+
+      --sidebar-width: 240px;
+      --header-height: 56px;
+      --max-width: 1200px;
+
+      --space-2xs: 2px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--color-text);
+      background: var(--color-bg);
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: var(--space-lg) var(--space-lg) var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.3px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: var(--space-md) var(--space-sm);
+      overflow-y: auto;
+    }
+
+    .nav-section {
+      margin-bottom: var(--space-lg);
+    }
+
+    .nav-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 var(--space-sm);
+      margin-bottom: var(--space-xs);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px var(--space-sm);
+      border-radius: var(--radius-md);
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s var(--ease-out);
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: var(--color-surface-hover);
+      color: var(--color-text);
+    }
+
+    .nav-item.active {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .nav-item.active svg { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--color-primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-display);
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--color-text-muted);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      height: var(--header-height);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-lg);
+      background: var(--color-bg);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .header-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      transition: all 0.15s var(--ease-out);
+    }
+
+    .header-btn:hover {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border-color: var(--color-border-strong);
+    }
+
+    .header-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex;
+      gap: var(--space-xs);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: var(--space-sm) var(--space-md);
+      border: none;
+      background: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: all 0.15s var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .tab:hover {
+      color: var(--color-text);
+      background: var(--color-surface);
+    }
+
+    .tab.active {
+      color: var(--color-primary);
+      background: var(--color-primary-light);
+    }
+
+    /* ===== CONTENT ===== */
+    .content {
+      flex: 1;
+      padding: var(--space-lg);
+      max-width: var(--max-width);
+    }
+
+    /* ===== PANELS ===== */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadeIn 0.2s var(--ease-out);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card + .card {
+      margin-top: var(--space-md);
+    }
+
+    .card-header {
+      margin-bottom: var(--space-lg);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .card-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-primary);
+    }
+
+    /* ===== FORMS ===== */
+    .form-row {
+      margin-bottom: var(--space-md);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: var(--space-xs);
+    }
+
+    .form-row-inline {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      transition: all 0.15s var(--ease-out);
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    }
+
+    .input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .input-with-btn {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .input-with-btn .input {
+      flex: 1;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      height: 40px;
+      padding: 0 var(--space-md);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s var(--ease-out);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-strong);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-surface);
+      color: var(--color-text);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-sm {
+      height: 32px;
+      padding: 0 var(--space-sm);
+      font-size: 13px;
+    }
+
+    /* ===== SELECT ===== */
+    .select {
+      width: 100%;
+      height: 40px;
+      padding: 0 36px 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: all 0.15s var(--ease-out);
+    }
+
+    .select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    }
+
+    /* ===== CHECKBOX ===== */
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--color-text);
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
+
+    /* ===== FORM GRID ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .form-grid-full {
+      grid-column: 1 / -1;
+    }
+
+    /* ===== TOGGLE ===== */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .toggle-info {
+      flex: 1;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .toggle-desc {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--color-border-strong);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s var(--ease-out);
+      border: none;
+    }
+
+    .toggle.active {
+      background: var(--color-primary);
+    }
+
+    .toggle-knob {
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform 0.2s var(--ease-out);
+    }
+
+    .toggle.active .toggle-knob {
+      transform: translateX(20px);
+    }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: var(--space-md) 0;
+    }
+
+    /* ===== PROGRESS ===== */
+    .progress-area {
+      display: none;
+      margin-top: var(--space-md);
+    }
+
+    .progress-area.show {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--color-surface);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: var(--space-sm);
+      border: 1px solid var(--color-border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      width: 0%;
+      transition: width 0.4s var(--ease-out);
+    }
+
+    .status-msg {
+      padding: var(--space-sm) var(--space-sm);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      display: none;
+      border: 1px solid;
+    }
+
+    .status-msg.show { display: block; }
+
+    .status-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+      border-color: var(--color-success);
+    }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--color-error);
+      border-color: var(--color-error);
+    }
+
+    .status-info {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--color-info);
+      border-color: var(--color-info);
+    }
+
+    /* ===== RESULT CARDS ===== */
+    .result-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .result-card-header {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .result-video-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .result-video-thumb {
+      width: 56px;
+      height: 36px;
+      background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-mono);
+    }
+
+    .result-video-meta h3 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 2px;
+    }
+
+    .result-video-meta span {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .result-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--color-success);
+      font-weight: 500;
+    }
+
+    .result-status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-success);
+      border-radius: 50%;
+    }
+
+    .result-card-body {
+      padding: var(--space-lg);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .stat-item {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm) var(--space-sm);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .result-section {
+      margin-bottom: var(--space-md);
+    }
+
+    .result-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-xs);
+    }
+
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      background: var(--color-surface);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .tag-primary {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    /* ===== HISTORY LIST ===== */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s var(--ease-out);
+    }
+
+    .history-item:hover {
+      border-color: var(--color-border-strong);
+      background: var(--color-surface);
+    }
+
+    .history-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
+
+    .history-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-meta {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .history-badge {
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+
+    .badge-success {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--color-success);
+    }
+
+    .badge-error {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--color-error);
+    }
+
+    .badge-processing {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--color-info);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-2xl) var(--space-lg);
+      color: var(--color-text-muted);
+    }
+
+    .empty-state-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto var(--space-md);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--color-text-muted);
+    }
+
+    .empty-state-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-xs);
+    }
+
+    .empty-state-text {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* ===== CONFIG GRID ===== */
+    .config-grid {
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .config-item label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .config-item small {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .config-item small a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .config-item small a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s var(--ease-out);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .header {
+        padding: 0 var(--space-md);
+      }
+
+      .content {
+        padding: var(--space-md);
+      }
+
+      .tabs {
+        padding: var(--space-sm) var(--space-md);
+      }
+
+      .mode-switcher {
+        bottom: 80px;
+        right: 12px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    /* ===== DARK MODE ===== */
+    body.dark {
+      --color-bg: #0F172A;
+      --color-surface: #1E293B;
+      --color-surface-hover: #334155;
+      --color-border: #334155;
+      --color-border-strong: #475569;
+      --color-text: #F1F5F9;
+      --color-text-secondary: #94A3B8;
+      --color-text-muted: #64748B;
+    }
+
+    body.dark .sidebar {
+      background: #1E293B;
+    }
+
+    body.dark .result-video-thumb {
+      background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    }
+
+    /* ===== MODE SWITCHER ===== */
+    .mode-switcher {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 10px 14px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      z-index: 1000;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+  </style>
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                        <line x1="12" x2="12" y1="19" y2="22"/>
-                    </svg>
-                </div>
-                <span class="logo-text">Summary4U</span>
-            </div>
-            <p class="tagline">Audio/Video Summarization Engine</p>
-        </header>
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">S</div>
+          <div>
+            <div class="logo-text">summary4u</div>
+            <div class="logo-sub">音视频总结工具</div>
+          </div>
+        </div>
+      </div>
 
-        <nav class="tabs">
-            <button class="tab active" data-tab="url">URL处理</button>
-            <button class="tab" data-tab="audio">本地文件</button>
-            <button class="tab" data-tab="batch">批量处理</button>
-            <button class="tab" data-tab="results">输出</button>
-            <button class="tab" data-tab="history">日志</button>
-            <button class="tab" data-tab="config">配置</button>
-        </nav>
-
-        <!-- URL Panel -->
-        <div id="url" class="panel active">
-            <div class="card">
-                <h2 class="card-title">视频链接处理</h2>
-                <form id="urlForm">
-                    <div class="form-group">
-                        <label for="videoUrl">视频URL</label>
-                        <input type="url" id="videoUrl" placeholder="https://youtube.com/..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="whisperModel">转录模型</label>
-                        <select id="whisperModel">
-                            <option value="tiny">Tiny</option>
-                            <option value="base">Base</option>
-                            <option value="small" selected>Small</option>
-                            <option value="medium">Medium</option>
-                            <option value="large">Large</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="promptTemplate">摘要模板</label>
-                        <select id="promptTemplate">
-                            <option value="default 课堂笔记">课堂笔记</option>
-                            <option value="短视频知识">短视频知识</option>
-                            <option value="课堂内容">课堂内容</option>
-                            <option value="双语总结">双语总结</option>
-                            <option value="会议纪要">会议纪要</option>
-                            <option value="业务复盘">业务复盘</option>
-                            <option value="精炼摘要">精炼摘要</option>
-                            <option value="专业课程">专业课程</option>
-                            <option value="短视频素材">短视频素材</option>
-                            <option value="综合总结">综合总结</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="customPrompt">自定义提示词</label>
-                        <textarea id="customPrompt" placeholder="可选，覆盖模板设置"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="withScreenshots">
-                            生成截图
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="autoTemplate">
-                            自动选择模板（根据视频类型）
-                        </label>
-                    </div>
-                    <button type="submit" class="btn btn-primary">开始处理</button>
-                </form>
-                <div id="urlProgress" class="progress-area">
-                    <div class="progress-bar"><div id="urlProgressFill" class="progress-fill"></div></div>
-                    <div id="urlStatusMsg" class="status-msg"></div>
-                </div>
-            </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">工作区</div>
+          <button class="nav-item active" data-panel="url">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            视频链接
+          </button>
+          <button class="nav-item" data-panel="audio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            本地文件
+          </button>
+          <button class="nav-item" data-panel="batch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            批量处理
+          </button>
+          <button class="nav-item" data-panel="results">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            输出文件
+          </button>
+          <button class="nav-item" data-panel="history">
+            历史记录
+            <span class="nav-badge">3</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
         </div>
 
-        <!-- Audio Panel -->
-        <div id="audio" class="panel">
-            <div class="card">
-                <h2 class="card-title">本地文件处理</h2>
-                <form id="audioForm">
-                    <div class="form-group">
-                        <label for="audioFile">选择文件</label>
-                        <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.mp4,.aac,.flac,.wma,.amr" required>
-                        <small>MP3, WAV, M4A, AAC, FLAC</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="audioWhisperModel">转录模型</label>
-                        <select id="audioWhisperModel">
-                            <option value="tiny">Tiny</option>
-                            <option value="base">Base</option>
-                            <option value="small" selected>Small</option>
-                            <option value="medium">Medium</option>
-                            <option value="large">Large</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="audioLanguage">音频语言</label>
-                        <select id="audioLanguage">
-                            <option value="">自动检测</option>
-                            <option value="zh">中文</option>
-                            <option value="en">英语</option>
-                            <option value="ja">日语</option>
-                            <option value="ko">韩语</option>
-                            <option value="fr">法语</option>
-                            <option value="de">德语</option>
-                            <option value="es">西班牙语</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="audioPromptTemplate">摘要模板</label>
-                        <select id="audioPromptTemplate">
-                            <option value="default 课堂笔记">课堂笔记</option>
-                            <option value="短视频知识">短视频知识</option>
-                            <option value="课堂内容">课堂内容</option>
-                            <option value="双语总结">双语总结</option>
-                            <option value="会议纪要">会议纪要</option>
-                            <option value="业务复盘">业务复盘</option>
-                            <option value="精炼摘要">精炼摘要</option>
-                            <option value="专业课程">专业课程</option>
-                            <option value="短视频素材">短视频素材</option>
-                            <option value="综合总结">综合总结</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="audioCustomPrompt">自定义提示词</label>
-                        <textarea id="audioCustomPrompt" placeholder="可选，覆盖模板设置"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">上传处理</button>
-                </form>
-                <div id="audioProgress" class="progress-area">
-                    <div class="progress-bar"><div id="audioProgressFill" class="progress-fill"></div></div>
-                    <div id="audioStatusMsg" class="status-msg"></div>
-                </div>
+        <div class="nav-section">
+          <div class="nav-section-label">设置</div>
+          <button class="nav-item" data-panel="config">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            API 配置
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">B</div>
+          <div>
+            <div class="user-name">Ben</div>
+            <div class="user-role">Pro plan</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title">视频链接处理</h1>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="通知">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </button>
+          <button class="header-btn" title="帮助">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- TABS -->
+      <nav class="tabs">
+        <button class="tab active" data-tab="url">URL处理</button>
+        <button class="tab" data-tab="audio">本地文件</button>
+        <button class="tab" data-tab="batch">批量处理</button>
+        <button class="tab" data-tab="results">输出</button>
+        <button class="tab" data-tab="history">历史</button>
+        <button class="tab" data-tab="config">配置</button>
+      </nav>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <!-- URL PANEL -->
+        <div id="panel-url" class="panel active">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                输入视频链接
+              </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-label">视频 URL</div>
+              <div class="input-with-btn">
+                <input type="url" class="input" id="videoUrl" placeholder="粘贴 YouTube、Bilibili、抖音链接">
+                <button class="btn btn-primary" onclick="processUrl()">提取</button>
+              </div>
+              <div class="form-hint">支持 YouTube、Bilibili、抖音、TikTok 等平台</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-label">转录模型</div>
+                <select class="select" id="whisperModel">
+                  <option value="tiny">Tiny (最快，准确率最低)</option>
+                  <option value="base">Base (快速准确)</option>
+                  <option value="small" selected>Small (推荐)</option>
+                  <option value="medium">Medium (更准确)</option>
+                  <option value="large">Large (最准确，最慢)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label">摘要模板</div>
+                <select class="select" id="promptTemplate">
+                  <option>default 课堂笔记</option>
+                  <option>youtube_结构化提取</option>
+                  <option>youtube_英文笔记</option>
+                  <option>youtube_专业课笔记</option>
+                  <option>youtube_精炼提取</option>
+                  <option>youtube_视频总结</option>
+                  <option>爆款短视频文案</option>
+                </select>
+              </div>
+
+              <div class="form-row form-grid-full">
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">自动选择模板</div>
+                    <div class="toggle-desc">根据视频类型自动选择最优模板</div>
+                  </div>
+                  <button class="toggle" id="autoTemplateToggle" onclick="this.classList.toggle('active')">
+                    <div class="toggle-knob"></div>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row form-grid-full">
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">启用视频截图</div>
+                    <div class="toggle-desc">AI 自动选择关键帧插入总结</div>
+                  </div>
+                  <button class="toggle" id="screenshotToggle" onclick="this.classList.toggle('active')">
+                    <div class="toggle-knob"></div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: var(--space-lg);">
+              <button class="btn btn-primary btn-block" onclick="processUrl()">开始总结</button>
+            </div>
+
+            <div id="urlProgress" class="progress-area">
+              <div class="progress-bar">
+                <div class="progress-fill" id="urlProgressFill"></div>
+              </div>
+              <div class="status-msg" id="urlStatusMsg"></div>
+            </div>
+          </div>
+
+          <!-- RESULT PREVIEW -->
+          <div class="card" style="margin-top: var(--space-md);">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                最近完成
+              </div>
+              <button class="btn btn-ghost btn-sm">查看全部</button>
+            </div>
+
+            <div class="result-card">
+              <div class="result-card-header">
+                <div class="result-video-info">
+                  <div class="result-video-thumb">YT</div>
+                  <div class="result-video-meta">
+                    <h3>DeepLearning AI - Transformer入门教程</h3>
+                    <span>youtube.com · 18分钟 · 刚刚完成</span>
+                  </div>
+                </div>
+                <div class="result-status">
+                  <div class="result-status-dot"></div>
+                  完成
+                </div>
+              </div>
+              <div class="result-card-body">
+                <div class="stats-row">
+                  <div class="stat-item">
+                    <div class="stat-value">2,847</div>
+                    <div class="stat-label">转录字数</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">486</div>
+                    <div class="stat-label">总结字数</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">关键帧</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">3分22秒</div>
+                    <div class="stat-label">处理耗时</div>
+                  </div>
+                </div>
+
+                <div class="result-section">
+                  <div class="result-section-label">内容标签</div>
+                  <div class="result-tags">
+                    <span class="tag tag-primary">学习视频</span>
+                    <span class="tag">教程</span>
+                    <span class="tag">AI/ML</span>
+                    <span class="tag">Transformer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="history-list" style="margin-top: var(--space-md);">
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">Bilibili - 产品经理入门第一课</div>
+                  <div class="history-meta">bilibili.com · 25分钟前</div>
+                </div>
+                <span class="history-badge badge-success">完成</span>
+              </div>
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">播客录制 - 创业融资分享会.mp3</div>
+                  <div class="history-meta">本地文件 · 1小时前</div>
+                </div>
+                <span class="history-badge badge-success">完成</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Batch Panel -->
-        <div id="batch" class="panel">
-            <div class="card">
-                <h2 class="card-title">批量处理</h2>
-                <div class="form-group">
-                    <label for="batchUploadDir">文件夹路径</label>
-                    <input type="text" id="batchUploadDir" value="uploads" placeholder="uploads">
-                </div>
-                <div class="form-group">
-                    <label for="batchWhisperModel">转录模型</label>
-                    <select id="batchWhisperModel">
-                        <option value="tiny">Tiny</option>
-                        <option value="base">Base</option>
-                        <option value="small" selected>Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="batchPromptTemplate">摘要模板</label>
-                    <select id="batchPromptTemplate">
-                        <option value="default 课堂笔记">课堂笔记</option>
-                        <option value="短视频知识">短视频知识</option>
-                        <option value="课堂内容">课堂内容</option>
-                        <option value="双语总结">双语总结</option>
-                        <option value="会议纪要">会议纪要</option>
-                        <option value="业务复盘">业务复盘</option>
-                        <option value="精炼摘要">精炼摘要</option>
-                        <option value="专业课程">专业课程</option>
-                        <option value="短视频素材">短视频素材</option>
-                        <option value="综合总结">综合总结</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="batchCustomPrompt">自定义提示词</label>
-                    <textarea id="batchCustomPrompt" placeholder="可选，覆盖模板设置"></textarea>
-                </div>
-                <button type="button" onclick="startBatchProcess()" class="btn btn-primary">开始批量</button>
-                <div id="batchProgress" class="progress-area">
-                    <div class="progress-bar"><div id="batchProgressFill" class="progress-fill"></div></div>
-                    <div id="batchStatusMsg" class="status-msg"></div>
-                </div>
+        <!-- AUDIO PANEL -->
+        <div id="panel-audio" class="panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"></path>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                上传本地音频
+              </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-label">选择文件</div>
+              <input type="file" class="input" id="audioFile" accept=".mp3,.wav,.m4a,.mp4,.aac,.flac,.wma,.amr" style="padding: 8px 12px; height: auto;">
+              <div class="form-hint">支持 MP3, WAV, M4A, AAC, FLAC 等格式</div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-label">转录模型</div>
+                <select class="select" id="audioModel">
+                  <option value="small" selected>Small (推荐)</option>
+                  <option value="tiny">Tiny</option>
+                  <option value="base">Base</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label">音频语言</div>
+                <select class="select" id="audioLanguage">
+                  <option value="">自动检测</option>
+                  <option value="zh">中文</option>
+                  <option value="en">英语</option>
+                  <option value="ja">日语</option>
+                  <option value="ko">韩语</option>
+                  <option value="fr">法语</option>
+                  <option value="de">德语</option>
+                  <option value="es">西班牙语</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top: var(--space-lg);">
+              <button class="btn btn-primary btn-block">上传并处理</button>
+            </div>
+          </div>
         </div>
 
-        <!-- Results Panel -->
-        <div id="results" class="panel">
-            <div class="results-section" id="resultsSection">
-                <div class="results-header">
-                    <h3>生成文件</h3>
-                    <button onclick="loadResults()" class="btn btn-secondary btn-sm">刷新</button>
-                </div>
-                <div class="results-list" id="resultsList"></div>
+        <!-- BATCH PANEL -->
+        <div id="panel-batch" class="panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                批量处理
+              </div>
             </div>
-            <div class="empty-state" id="noResultsMsg">暂无处理结果</div>
+
+            <div class="form-row">
+              <div class="form-label">上传目录</div>
+              <input type="text" class="input" id="batchDir" value="uploads" placeholder="uploads">
+              <div class="form-hint">指定包含音频文件的文件夹路径</div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-label">转录模型</div>
+                <select class="select">
+                  <option value="small" selected>Small (推荐)</option>
+                  <option value="tiny">Tiny</option>
+                  <option value="base">Base</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label">摘要模板</div>
+                <select class="select">
+                  <option>default 课堂笔记</option>
+                  <option>youtube_结构化提取</option>
+                  <option>youtube_英文笔记</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top: var(--space-lg);">
+              <button class="btn btn-primary btn-block">开始批量处理</button>
+            </div>
+          </div>
         </div>
 
-        <!-- History Panel -->
-        <div id="history" class="panel">
-            <div class="results-section" id="historySection">
-                <div class="results-header">
-                    <h3>处理日志</h3>
-                    <div style="display:flex;gap:8px;">
-                        <button onclick="loadTaskHistory()" class="btn btn-secondary btn-sm">刷新</button>
-                        <button onclick="clearTaskHistory()" class="btn btn-danger btn-sm">清空</button>
-                    </div>
-                </div>
-                <div class="results-list" id="historyList"></div>
+        <!-- RESULTS PANEL -->
+        <div id="panel-results" class="panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                生成文件
+              </div>
+              <button class="btn btn-secondary btn-sm">刷新</button>
             </div>
-            <div class="empty-state" id="noHistoryMsg">暂无历史记录</div>
+
+            <div class="history-list">
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">DeepLearning_Transformer总结.md</div>
+                  <div class="history-meta">2.4 MB · 刚刚</div>
+                </div>
+                <button class="btn btn-secondary btn-sm">下载</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Config Panel -->
-        <div id="config" class="panel">
-            <div class="card">
-                <h2 class="card-title">API配置</h2>
-                <div class="config-grid">
-                    <div class="form-group">
-                        <label for="apiKeyTikhub">TikHub API</label>
-                        <input type="password" id="apiKeyTikhub" placeholder="抖音/TikTok下载">
-                        <small><a href="https://user.tikhub.io/users/signin" target="_blank">tikhub.io</a></small>
-                    </div>
-                    <div class="form-group">
-                        <label for="apiKeyDeepseek">DeepSeek API</label>
-                        <input type="password" id="apiKeyDeepseek" placeholder="AI摘要">
-                    </div>
-                    <div class="form-group">
-                        <label for="apiKeyOpenai">OpenAI API</label>
-                        <input type="password" id="apiKeyOpenai" placeholder="可选">
-                    </div>
-                    <div class="form-group">
-                        <label for="apiKeyAnthropic">Anthropic API</label>
-                        <input type="password" id="apiKeyAnthropic" placeholder="可选">
-                    </div>
-                </div>
-                <button onclick="saveApiConfig()" class="btn btn-primary" style="margin-top:20px;">保存</button>
-                <div id="apiConfigMsg" class="status-msg" style="margin-top:16px;"></div>
+        <!-- HISTORY PANEL -->
+        <div id="panel-history" class="panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                处理历史
+              </div>
+              <div style="display: flex; gap: var(--space-sm);">
+                <button class="btn btn-secondary btn-sm">刷新</button>
+                <button class="btn btn-secondary btn-sm" style="color: var(--color-error);">清空</button>
+              </div>
             </div>
+
+            <div class="history-list">
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">DeepLearning AI - Transformer入门教程</div>
+                  <div class="history-meta">youtube.com · small · 刚刚</div>
+                </div>
+                <span class="history-badge badge-success">完成</span>
+              </div>
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">Bilibili - 产品经理入门第一课</div>
+                  <div class="history-meta">bilibili.com · small · 25分钟前</div>
+                </div>
+                <span class="history-badge badge-success">完成</span>
+              </div>
+              <div class="history-item">
+                <div class="history-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                  </svg>
+                </div>
+                <div class="history-info">
+                  <div class="history-title">播客录制 - 创业融资分享会.mp3</div>
+                  <div class="history-meta">本地文件 · base · 1小时前</div>
+                </div>
+                <span class="history-badge badge-success">完成</span>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
 
-    <script>
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-                if (tab.dataset.tab === 'results') loadResults();
-                if (tab.dataset.tab === 'history') loadTaskHistory();
-                if (tab.dataset.tab === 'config') loadApiConfig();
-            });
-        });
+        <!-- CONFIG PANEL -->
+        <div id="panel-config" class="panel">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                API 配置
+              </div>
+            </div>
 
-        document.getElementById('urlForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const url = document.getElementById('videoUrl').value.trim();
-            const model = document.getElementById('whisperModel').value;
-            const template = document.getElementById('promptTemplate').value;
-            const custom = document.getElementById('customPrompt').value.trim();
-            const withScreenshots = document.getElementById('withScreenshots').checked;
-            const autoTemplate = document.getElementById('autoTemplate').checked;
-            if (!url) {
-                showProgress('url', '请输入视频URL', 'error');
-                return;
-            }
+            <div class="config-grid">
+              <div class="config-item">
+                <label for="apiTikhub">TikHub API</label>
+                <input type="password" class="input" id="apiTikhub" placeholder="抖音/TikTok 下载用">
+                <small><a href="https://user.tikhub.io/users/signin" target="_blank">获取 API Key</a></small>
+              </div>
 
-            showProgress('url', '正在发送请求...', 'info');
-            try {
-                const res = await fetch('/process-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, model, prompt_template: template, prompt: custom || null, with_screenshots: withScreenshots, auto_template: autoTemplate })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || '请求失败');
-                await pollTaskStatus(data.task_id, 'url');
-            } catch (err) {
-                showProgress('url', '错误: ' + err.message, 'error');
-            }
-        });
+              <div class="config-item">
+                <label for="apiDeepseek">DeepSeek API</label>
+                <input type="password" class="input" id="apiDeepseek" placeholder="AI 摘要用">
+                <small><a href="https://platform.deepseek.com/api_keys" target="_blank">获取 API Key</a></small>
+              </div>
 
-        document.getElementById('audioForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const file = document.getElementById('audioFile').files[0];
-            const model = document.getElementById('audioWhisperModel').value;
-            const lang = document.getElementById('audioLanguage').value;
-            const template = document.getElementById('audioPromptTemplate').value;
-            const custom = document.getElementById('audioCustomPrompt').value.trim();
-            if (!file) {
-                showProgress('audio', '请选择音频文件', 'error');
-                return;
-            }
+              <div class="config-item">
+                <label for="apiOpenai">OpenAI API（可选）</label>
+                <input type="password" class="input" id="apiOpenai" placeholder="备用">
+              </div>
 
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('model', model);
-            if (lang) fd.append('language', lang);
-            fd.append('prompt_template', template);
-            if (custom) fd.append('prompt', custom);
+              <div class="config-item">
+                <label for="apiAnthropic">Anthropic API（可选）</label>
+                <input type="password" class="input" id="apiAnthropic" placeholder="备用">
+              </div>
+            </div>
 
-            showProgress('audio', '正在上传文件...', 'info');
-            try {
-                const res = await fetch('/upload-audio', { method: 'POST', body: fd });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || '上传失败');
-                await pollTaskStatus(data.task_id, 'audio');
-            } catch (err) {
-                showProgress('audio', '错误: ' + err.message, 'error');
-            }
-        });
+            <div style="margin-top: var(--space-lg); display: flex; justify-content: flex-end; gap: var(--space-sm);">
+              <button class="btn btn-secondary">测试连接</button>
+              <button class="btn btn-primary">保存配置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-        async function startBatchProcess() {
-            const dir = document.getElementById('batchUploadDir').value.trim() || 'uploads';
-            const model = document.getElementById('batchWhisperModel').value;
-            const template = document.getElementById('batchPromptTemplate').value;
-            const custom = document.getElementById('batchCustomPrompt').value.trim();
+  <!-- MODE SWITCHER -->
+  <div class="mode-switcher">
+    <span>Light</span>
+    <button class="toggle" id="darkModeToggle" onclick="document.body.classList.toggle('dark'); this.classList.toggle('active');">
+      <div class="toggle-knob"></div>
+    </button>
+    <span>Dark</span>
+  </div>
 
-            showProgress('batch', '正在开始批量处理...', 'info');
-            try {
-                const res = await fetch('/batch-process', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ upload_dir: dir, model, prompt_template: template, prompt: custom || null })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || '批量处理请求失败');
-                await pollTaskStatus(data.task_id, 'batch');
-            } catch (err) {
-                showProgress('batch', '错误: ' + err.message, 'error');
-            }
-        }
+  <script>
+    // Tab navigation
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panelId = 'panel-' + tab.dataset.tab;
+        document.getElementById(panelId).classList.add('active');
+        updatePageTitle(tab.textContent);
+      });
+    });
 
-        async function pollTaskStatus(taskId, prefix) {
-            let status;
-            do {
-                await new Promise(r => setTimeout(r, 2000));
-                try {
-                    const res = await fetch(`/task-status/${taskId}`);
-                    status = await res.json();
-                } catch (err) {
-                    showProgress(prefix, '无法获取任务状态', 'error');
-                    return;
-                }
-                const fill = document.getElementById(prefix + 'ProgressFill');
-                const msg = document.getElementById(prefix + 'StatusMsg');
-                if (fill) fill.style.width = status.progress + '%';
-                if (msg) {
-                    if (status.status === 'completed') {
-                        msg.className = 'status-msg status-success show';
-                        msg.innerHTML = status.message + (status.result_path ? '<br><a href="/download-result/' + encodeURIComponent(status.result_path) + '" target="_blank">点击下载结果</a>' : '');
-                    } else if (status.status === 'error') {
-                        msg.className = 'status-msg status-error show';
-                        msg.textContent = status.message;
-                    } else {
-                        msg.className = 'status-msg status-info show';
-                        msg.textContent = status.message;
-                    }
-                }
-            } while (status.status === 'processing');
-        }
+    // Sidebar navigation
+    document.querySelectorAll('.nav-item[data-panel]').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        const panelId = 'panel-' + item.dataset.panel;
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const matchingTab = document.querySelector(`.tab[data-tab="${item.dataset.panel}"]`);
+        if (matchingTab) matchingTab.classList.add('active');
+        updatePageTitle(item.textContent.trim());
+      });
+    });
 
-        function showProgress(prefix, msg, type) {
-            document.getElementById(prefix + 'Progress').classList.add('show');
-            document.getElementById(prefix + 'ProgressFill').style.width = '5%';
-            const el = document.getElementById(prefix + 'StatusMsg');
-            el.className = 'status-msg status-' + type + ' show';
-            el.textContent = msg;
-        }
+    function updatePageTitle(title) {
+      document.querySelector('.page-title').textContent = title;
+    }
 
-        async function loadResults() {
-            try {
-                const res = await fetch('/api/results');
-                const data = await res.json();
-                const list = document.getElementById('resultsList');
-                const section = document.getElementById('resultsSection');
-                const empty = document.getElementById('noResultsMsg');
+    // Process URL
+    function processUrl() {
+      const url = document.getElementById('videoUrl').value;
+      if (!url) {
+        showProgress('url', '请输入视频URL', 'error');
+        return;
+      }
+      showProgress('url', '正在发送请求...', 'info');
+    }
 
-                if (data.results && data.results.length > 0) {
-                    list.innerHTML = data.results.map(r => `
-                        <div class="result-item">
-                            <div class="result-info">
-                                <div class="result-name">${r.filename}</div>
-                                <div class="result-meta">${r.modified} · ${(r.size / 1024 / 1024).toFixed(2)} MB</div>
-                            </div>
-                            <div class="result-actions">
-                                <a href="/download-result/${encodeURIComponent(r.path)}" target="_blank"><button class="btn btn-secondary btn-sm">下载</button></a>
-                            </div>
-                        </div>
-                    `).join('');
-                    section.classList.add('show');
-                    empty.style.display = 'none';
-                } else {
-                    section.classList.remove('show');
-                    empty.style.display = 'block';
-                }
-            } catch (err) { console.error(err); }
-        }
+    function showProgress(prefix, msg, type) {
+      const progressEl = document.getElementById(prefix + 'Progress');
+      const fillEl = document.getElementById(prefix + 'ProgressFill');
+      const msgEl = document.getElementById(prefix + 'StatusMsg');
+      progressEl.classList.add('show');
+      fillEl.style.width = '5%';
+      msgEl.className = 'status-msg status-' + type + ' show';
+      msgEl.textContent = msg;
+    }
 
-        async function loadTaskHistory() {
-            try {
-                const res = await fetch('/api/task-history');
-                const data = await res.json();
-                const list = document.getElementById('historyList');
-                const section = document.getElementById('historySection');
-                const empty = document.getElementById('noHistoryMsg');
-
-                if (data.history && data.history.length > 0) {
-                    const typeMap = { video_url: '视频链接', local_audio: '本地音频', batch_process: '批量处理' };
-                    const statusMap = { completed: ['已完成', 'badge-success'], error: ['失败', 'badge-error'], processing: ['处理中', 'badge-processing'] };
-                    list.innerHTML = data.history.map(t => {
-                        const [tText, tClass] = (statusMap[t.status] || ['未知', 'badge-processing']);
-                        const input = t.input.length > 60 ? t.input.substring(0, 60) + '...' : t.input;
-                        const start = new Date(t.start_time).toLocaleString('zh-CN');
-                        return `
-                            <div class="history-item">
-                                <div class="history-header">
-                                    <span class="history-type">${typeMap[t.type] || t.type}</span>
-                                    <span class="history-badge ${tClass[1]}">${tClass[0]}</span>
-                                </div>
-                                <div class="history-input">${input}</div>
-                                <div class="history-meta">
-                                    <span>模型: ${t.model}</span>
-                                    <span>${start}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    section.classList.add('show');
-                    empty.style.display = 'none';
-                } else {
-                    section.classList.remove('show');
-                    empty.style.display = 'block';
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        async function clearTaskHistory() {
-            if (!confirm('确定要清空所有历史记录吗？')) return;
-            await fetch('/api/task-history', { method: 'DELETE' });
-            loadTaskHistory();
-        }
-
-        async function loadApiConfig() {
-            try {
-                const res = await fetch('/api/config');
-                const data = await res.json();
-                document.getElementById('apiKeyTikhub').value = data.api_keys.tikhub || '';
-                document.getElementById('apiKeyDeepseek').value = data.api_keys.deepseek || '';
-                document.getElementById('apiKeyOpenai').value = data.api_keys.openai || '';
-                document.getElementById('apiKeyAnthropic').value = data.api_keys.anthropic || '';
-            } catch (err) { console.error(err); }
-        }
-
-        async function saveApiConfig() {
-            const keys = {
-                tikhub: document.getElementById('apiKeyTikhub').value.trim(),
-                deepseek: document.getElementById('apiKeyDeepseek').value.trim(),
-                openai: document.getElementById('apiKeyOpenai').value.trim(),
-                anthropic: document.getElementById('apiKeyAnthropic').value.trim()
-            };
-            try {
-                const res = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ api_keys: keys })
-                });
-                const el = document.getElementById('apiConfigMsg');
-                if (res.ok) {
-                    el.className = 'status-msg status-success show';
-                    el.textContent = '配置已保存';
-                    loadApiConfig();
-                } else {
-                    el.className = 'status-msg status-error show';
-                    el.textContent = '保存失败';
-                }
-                setTimeout(() => el.classList.remove('show'), 4000);
-            } catch (err) {
-                const el = document.getElementById('apiConfigMsg');
-                el.className = 'status-msg status-error show';
-                el.textContent = '保存失败: ' + err.message;
-            }
-        }
-    </script>
+    // Dark mode toggle
+    const darkToggle = document.getElementById('darkModeToggle');
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+  </script>
 </body>
-</html>
-    """
+</html>"""
     return HTMLResponse(content=html_content)
 
 
