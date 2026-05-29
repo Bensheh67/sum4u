@@ -27,8 +27,12 @@ from src.batch_processor import process_batch
 from src.douyin_handler import is_douyin_url, clean_douyin_url
 from src.config import config_manager
 from src.video_classifier import classify_video
+import re
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
+
+# Obsidian 配置
+OBSIDIAN_VAULT_PATH_KEY = "obsidian_vault_path"
 
 # 创建必要的目录
 os.makedirs("downloads", exist_ok=True)
@@ -1772,22 +1776,21 @@ async def read_root():
                 </svg>
                 生成文件
               </div>
-              <button class="btn btn-secondary btn-sm">刷新</button>
+              <div style="display: flex; gap: var(--space-sm);">
+                <button class="btn btn-secondary btn-sm">刷新</button>
+              </div>
             </div>
 
-            <div class="history-list">
-              <div class="history-item">
-                <div class="history-icon">
+            <div id="resultsList" class="history-list">
+              <div class="empty-state">
+                <div class="empty-state-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                   </svg>
                 </div>
-                <div class="history-info">
-                  <div class="history-title">DeepLearning_Transformer总结.md</div>
-                  <div class="history-meta">2.4 MB · 刚刚</div>
-                </div>
-                <button class="btn btn-secondary btn-sm">下载</button>
+                <div class="empty-state-title">暂无生成文件</div>
+                <div class="empty-state-text">处理视频后将显示总结文件</div>
               </div>
             </div>
           </div>
@@ -1889,11 +1892,19 @@ async def read_root():
                 <label for="apiAnthropic">Anthropic API（可选）</label>
                 <input type="password" class="input" id="apiAnthropic" placeholder="备用">
               </div>
+
+              <div class="divider"></div>
+
+              <div class="config-item">
+                <label for="obsidianVault">Obsidian Vault 路径</label>
+                <input type="text" class="input" id="obsidianVault" placeholder="/Users/用户名/Library/Mobile Documents/com~obsidian~md/Documents/我的笔记库">
+                <small>用于将总结一键导入 Obsidian vault 的根目录路径</small>
+              </div>
             </div>
 
             <div style="margin-top: var(--space-lg); display: flex; justify-content: flex-end; gap: var(--space-sm);">
-              <button class="btn btn-secondary">测试连接</button>
-              <button class="btn btn-primary">保存配置</button>
+              <button class="btn btn-secondary" onclick="testObsidianPath()">测试连接</button>
+              <button class="btn btn-primary" onclick="saveAllConfig()">保存配置</button>
             </div>
           </div>
         </div>
@@ -1967,6 +1978,123 @@ async def read_root():
     darkToggle.addEventListener('click', () => {
       document.body.classList.toggle('dark');
     });
+
+    // Load saved config on page load
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        if (data.api_keys) {
+          if (data.api_keys.tikhub) document.getElementById('apiTikhub').value = data.api_keys.tikhub;
+          if (data.api_keys.deepseek) document.getElementById('apiDeepseek').value = data.api_keys.deepseek;
+          if (data.api_keys.openai) document.getElementById('apiOpenai').value = data.api_keys.openai;
+          if (data.api_keys.anthropic) document.getElementById('apiAnthropic').value = data.api_keys.anthropic;
+        }
+      } catch (e) { console.error('Failed to load config', e); }
+
+      try {
+        const res = await fetch('/api/config/obsidian');
+        const data = await res.json();
+        if (data.obsidian_vault_path) document.getElementById('obsidianVault').value = data.obsidian_vault_path;
+      } catch (e) { console.error('Failed to load obsidian config', e); }
+    }
+    loadConfig();
+
+    async function saveAllConfig() {
+      const apiKeys = {
+        tikhub: document.getElementById('apiTikhub').value,
+        deepseek: document.getElementById('apiDeepseek').value,
+        openai: document.getElementById('apiOpenai').value,
+        anthropic: document.getElementById('apiAnthropic').value,
+      };
+      try {
+        await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_keys: apiKeys }) });
+      } catch (e) { console.error('Failed to save API config', e); }
+
+      const obsidianVault = document.getElementById('obsidianVault').value;
+      try {
+        await fetch('/api/config/obsidian', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ obsidian_vault_path: obsidianVault }) });
+      } catch (e) { console.error('Failed to save obsidian config', e); }
+
+      alert('配置已保存');
+    }
+
+    async function testObsidianPath() {
+      const path = document.getElementById('obsidianVault').value;
+      if (!path) { alert('请先输入 Obsidian vault 路径'); return; }
+      try {
+        const res = await fetch('/api/config/obsidian', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ obsidian_vault_path: path }) });
+        if (res.ok) alert('路径有效'); else alert('路径无效');
+      } catch (e) { alert('测试失败: ' + e.message); }
+    }
+
+    async function exportToObsidian(summaryPath, filename) {
+      try {
+        const res = await fetch('/api/export-obsidian', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ summary_path: summaryPath })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('已导入 Obsidian: ' + data.relative_path);
+        } else {
+          alert('导入失败: ' + (data.detail || '未知错误'));
+        }
+      } catch (e) {
+        alert('导入失败: ' + e.message);
+      }
+    }
+
+    async function loadResults() {
+      try {
+        const res = await fetch('/api/results');
+        const data = await res.json();
+        const list = document.getElementById('resultsList');
+        if (!data.results || data.results.length === 0) {
+          list.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="empty-state-title">暂无生成文件</div><div class="empty-state-text">处理视频后将显示总结文件</div></div>';
+          return;
+        }
+        list.innerHTML = data.results.map(r => `
+          <div class="history-item">
+            <div class="history-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+            <div class="history-info">
+              <div class="history-title">${r.filename}</div>
+              <div class="history-meta">${(r.size / 1024).toFixed(1)} KB · ${r.modified}</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="exportToObsidian('${r.path}', '${r.filename}')" title="导入到 Obsidian">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Obsidian
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('${r.path}')">下载</button>
+          </div>
+        `).join('');
+      } catch (e) { console.error('Failed to load results', e); }
+    }
+
+    function downloadFile(path) {
+      window.location.href = '/download-result/' + encodeURIComponent(path);
+    }
+
+    // Load results when switching to results tab
+    const resultsTab = document.querySelector('.tab[data-tab="results"]');
+    if (resultsTab) {
+      resultsTab.addEventListener('click', () => setTimeout(loadResults, 50));
+    }
+
+    // Also load on page load if on results panel
+    if (document.getElementById('panel-results').classList.contains('active')) {
+      setTimeout(loadResults, 50);
+    }
   </script>
 </body>
 </html>"""
@@ -2322,6 +2450,116 @@ async def save_api_config(data: dict):
         key = api_keys.get(provider, "")
         if key:
             config_manager.set_api_key(provider, key)
+    return {"status": "success"}
+
+
+@app.post("/api/export-obsidian")
+async def export_to_obsidian(data: dict):
+    """将总结文档导出到 Obsidian vault
+
+    Body:
+        summary_path: 总结文件的本地路径
+        vault_path: Obsidian vault 路径（可选，从配置读取）
+    """
+    summary_path = data.get("summary_path")
+    vault_path = data.get("vault_path")
+
+    # 如果未提供 vault_path，从配置读取
+    if not vault_path:
+        config = config_manager.config
+        vault_path = config.get(OBSIDIAN_VAULT_PATH_KEY)
+
+    if not vault_path:
+        raise HTTPException(status_code=400, detail=f"未配置 Obsidian vault 路径，请在「API 配置」中设置「{OBSIDIAN_VAULT_PATH_KEY}」")
+
+    if not os.path.exists(summary_path):
+        raise HTTPException(status_code=404, detail="总结文件不存在")
+
+    # 读取总结内容
+    with open(summary_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # 解析总结文件的元数据
+    # 尝试从第一行提取平台和标题信息
+    platform = "unknown"
+    title = ""
+    source = ""
+    duration = ""
+
+    # 从文件内容中提取信息（假设内容包含 # 标题）
+    title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+    if title_match:
+        title = title_match.group(1).strip()
+
+    # 清理文件名特殊字符
+    safe_title = re.sub(r'[/\:*?"<>|]', '_', title or "总结")
+    if len(safe_title) > 50:
+        safe_title = safe_title[:50]
+
+    # 生成日期前缀
+    date_str = datetime.now().strftime("%Y%m%d")
+    filename = f"{safe_title}_{date_str}.md"
+
+    # 构建 Obsidian 子目录路径
+    obsidian_subdir = os.path.join(vault_path, "summary4u")
+    os.makedirs(obsidian_subdir, exist_ok=True)
+
+    # 检查文件是否已存在，如果存在则生成唯一文件名
+    obsidian_path = os.path.join(obsidian_subdir, filename)
+    counter = 1
+    while os.path.exists(obsidian_path):
+        base_name = f"{safe_title}_{date_str}"
+        filename = f"{base_name}_{counter}.md"
+        obsidian_path = os.path.join(obsidian_subdir, filename)
+        counter += 1
+
+    # 提取 tags
+    if "youtube" in content.lower() or "youtube.com" in content.lower():
+        platform = "youtube"
+    elif "bilibili" in content.lower() or "b23.tv" in content.lower():
+        platform = "bilibili"
+    elif "抖音" in content or "douyin" in content.lower():
+        platform = "douyin"
+
+    # 写入 Obsidian vault
+    created_date = datetime.now().strftime("%Y-%m-%d")
+
+    obsidian_content = f"""---
+title: "{title}"
+created: {created_date}
+source: "{source}"
+platform: "{platform}"
+tags: [summary4u, {platform}]
+---
+
+{content}
+"""
+
+    with open(obsidian_path, "w", encoding="utf-8") as f:
+        f.write(obsidian_content)
+
+    return {
+        "success": True,
+        "obsidian_path": obsidian_path,
+        "relative_path": os.path.join("summary4u", os.path.basename(obsidian_path))
+    }
+
+
+@app.get("/api/config/obsidian")
+async def get_obsidian_config():
+    """获取 Obsidian 配置"""
+    config = config_manager.config
+    vault_path = config.get(OBSIDIAN_VAULT_PATH_KEY, "")
+    return {"obsidian_vault_path": vault_path}
+
+
+@app.post("/api/config/obsidian")
+async def save_obsidian_config(data: dict):
+    """保存 Obsidian 配置"""
+    vault_path = data.get("obsidian_vault_path", "").strip()
+    if vault_path:
+        config_manager.config[OBSIDIAN_VAULT_PATH_KEY] = vault_path
+        config_manager.save()
     return {"status": "success"}
 
 
