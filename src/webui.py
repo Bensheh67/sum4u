@@ -2513,11 +2513,18 @@ async def get_results():
                 "filename": os.path.basename(file_path),
                 "path": file_path,
                 "size": size,
-                "modified": mod_date
+                "modified": mod_date,
+                "mod_timestamp": mod_time
             })
         except Exception:
             # 如果无法获取文件信息，跳过该文件
             continue
+
+    # 按修改时间倒序排列（最新的在前）
+    results.sort(key=lambda x: x.get("mod_timestamp", 0), reverse=True)
+    # 移除内部使用的 timestamp 字段
+    for r in results:
+        r.pop("mod_timestamp", None)
 
     return {"results": results}
 
