@@ -1575,7 +1575,10 @@ async def read_root():
               <div class="progress-bar">
                 <div class="progress-fill" id="urlProgressFill"></div>
               </div>
-              <div class="status-msg" id="urlStatusMsg"></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <div class="status-msg" id="urlStatusMsg"></div>
+                <span id="urlProgressPercent" style="font-size: 13px; font-weight: 600; color: var(--color-primary);">0%</span>
+              </div>
             </div>
           </div>
 
@@ -2014,6 +2017,7 @@ async def read_root():
             } else {
               const pct = data.progress || 5;
               document.getElementById('urlProgressFill').style.width = pct + '%';
+              document.getElementById('urlProgressPercent').textContent = pct + '%';
               document.getElementById('urlStatusMsg').textContent = data.message || '处理中...';
             }
           })
@@ -2041,8 +2045,10 @@ async def read_root():
       const progressEl = document.getElementById(prefix + 'Progress');
       const fillEl = document.getElementById(prefix + 'ProgressFill');
       const msgEl = document.getElementById(prefix + 'StatusMsg');
+      const pctEl = document.getElementById(prefix + 'ProgressPercent');
       progressEl.classList.add('show');
       fillEl.style.width = '5%';
+      if (pctEl) pctEl.textContent = '5%';
       msgEl.className = 'status-msg status-' + type + ' show';
       msgEl.textContent = msg;
     }
