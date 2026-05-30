@@ -32,6 +32,26 @@
 - **模板增强**: 重写所有提示词模板，10个优化模板覆盖更多场景，结构更清晰、条理性更强
 - **下载稳定性修复**: 解决YouTube视频下载挂起问题，添加300秒超时保护
 
+## 📝 What's Changed
+
+> 2026 年 5 月
+
+### Features
+- **MiniMax API 集成**: AI 摘要新增 MiniMax 作为备用提供商，支持 DeepSeek / MiniMax 切换
+- **Obsidian 一键导入**: WebUI 增加「导入 Obsidian」按钮，将总结以原生格式写入 vault，支持 YAML frontmatter 元数据
+- **取消任务功能**: URL 处理页面增加取消任务按钮，支持中断正在执行的任务
+- **实时进度百分比**: 进度条实时显示当前处理阶段的百分比数值
+
+### Fixes
+- **修复 API Key 保存**: save_api_config/get_api_config 漏掉 minimax provider 导致 Key 无法保存
+- **修复 task_history 未定义**: 变量初始化位置错误导致 NameError
+- **修复 Obsidian 路径验证**: save_obsidian_config 增加路径有效性检查
+- **CI 测试收集失败**: .gitignore 规则误排除了 tests/test_*.py 文件
+
+### Chores
+- **CI workflow 优化**: 合并依赖安装、使用 pip cache、清理冗余步骤
+- **设计系统应用**: 字体 16px、Header 按钮 44px、移动端 toggle 重叠修复
+
 ## 🚀 快速开始
 
 ### 系统要求
