@@ -2116,7 +2116,10 @@ async def read_root():
       };
       // 过滤掉掩码值（不保存未修改的掩码）
       for (const [provider, key] of Object.entries(apiKeys)) {
-        if (!key || key.match(/^\*+$/)) {
+        if (!key) {
+          delete apiKeys[provider];
+        } else if (key.match(/^\*+.{4}$/) && !key.includes('sk-')) {
+          // 掩码格式：全是星号+最后4位真实字符，且不含 sk- 前缀
           delete apiKeys[provider];
         }
       }
