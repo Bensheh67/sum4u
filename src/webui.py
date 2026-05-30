@@ -44,8 +44,8 @@ os.makedirs("templates", exist_ok=True)
 # 模拟任务状态存储
 task_status = {}
 
-# 任务历史记录
-task_history = []
+# 正在运行的任务（用于取消）
+running_tasks = {}
 
 
 def process_local_audio_task(task_id: str, audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None):
@@ -1566,8 +1566,9 @@ async def read_root():
               </div>
             </div>
 
-            <div style="margin-top: var(--space-lg);">
-              <button class="btn btn-primary btn-block" onclick="processUrl()">开始总结</button>
+            <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-sm);">
+              <button class="btn btn-primary btn-block" onclick="processUrl()" id="startBtn">开始总结</button>
+              <button class="btn btn-secondary" onclick="cancelCurrentTask()" id="cancelBtn" style="display: none;">取消任务</button>
             </div>
 
             <div id="urlProgress" class="progress-area">
@@ -1965,6 +1966,9 @@ async def read_root():
     }
 
     // Process URL
+    let currentTaskId = null;
+    let pollInterval = null;
+
     function processUrl() {
       const url = document.getElementById('videoUrl').value;
       if (!url) {
@@ -1972,6 +1976,65 @@ async def read_root():
         return;
       }
       showProgress('url', '正在发送请求...', 'info');
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('cancelBtn').style.display = 'inline-flex';
+
+      fetch('/process-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+      .then(res => res.json())
+      .then(data => {
+        currentTaskId = data.task_id;
+        pollStatus(currentTaskId);
+      })
+      .catch(e => {
+        showProgress('url', '请求失败: ' + e.message, 'error');
+        document.getElementById('startBtn').style.display = 'inline-flex';
+        document.getElementById('cancelBtn').style.display = 'none';
+      });
+    }
+
+    function pollStatus(taskId) {
+      pollInterval = setInterval(() => {
+        fetch('/task-status/' + taskId)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'completed') {
+              clearInterval(pollInterval);
+              showProgress('url', '处理完成！', 'success');
+              document.getElementById('startBtn').style.display = 'inline-flex';
+              document.getElementById('cancelBtn').style.display = 'none';
+            } else if (data.status === 'error') {
+              clearInterval(pollInterval);
+              showProgress('url', '处理失败: ' + data.message, 'error');
+              document.getElementById('startBtn').style.display = 'inline-flex';
+              document.getElementById('cancelBtn').style.display = 'none';
+            } else {
+              const pct = data.progress || 5;
+              document.getElementById('urlProgressFill').style.width = pct + '%';
+              document.getElementById('urlStatusMsg').textContent = data.message || '处理中...';
+            }
+          })
+          .catch(() => {});
+      }, 2000);
+    }
+
+    function cancelCurrentTask() {
+      if (!currentTaskId) return;
+      if (!confirm('确定要取消当前任务吗？')) return;
+      clearInterval(pollInterval);
+      fetch('/api/task/' + currentTaskId, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(() => {
+          showProgress('url', '任务已取消', 'error');
+          currentTaskId = null;
+          document.getElementById('startBtn').style.display = 'inline-flex';
+          document.getElementById('cancelBtn').style.display = 'none';
+          document.getElementById('urlProgressFill').style.width = '0%';
+        })
+        .catch(e => { showProgress('url', '取消失败: ' + e.message, 'error'); });
     }
 
     function showProgress(prefix, msg, type) {
@@ -2178,6 +2241,7 @@ async def process_video_url_endpoint(
         target=process_video_url_task,
         args=(task_id, url, model, prompt_to_use, output_path, with_screenshots, auto_template)
     )
+    running_tasks[task_id] = thread
     thread.start()
 
     return {"task_id": task_id}
@@ -2218,6 +2282,7 @@ async def upload_audio_endpoint(
         target=process_local_audio_task,
         args=(task_id, file_location, model, prompt_to_use, output_path, language)
     )
+    running_tasks[task_id] = thread
     thread.start()
     
     return {"task_id": task_id}
@@ -2448,6 +2513,22 @@ async def clear_task_history():
     global task_history
     task_history = []
     return {"message": "任务历史记录已清空"}
+
+
+@app.delete("/api/task/{task_id}")
+async def cancel_task(task_id: str):
+    """取消正在运行的任务"""
+    if task_id in running_tasks:
+        task_thread = running_tasks[task_id]
+        # 设置取消标志
+        task_status[task_id] = {"status": "cancelled", "progress": 0, "message": "任务已取消"}
+        del running_tasks[task_id]
+        return {"message": "任务已取消", "task_id": task_id}
+    elif task_id in task_status:
+        task_status[task_id] = {"status": "cancelled", "progress": 0, "message": "任务已取消"}
+        return {"message": "任务已取消", "task_id": task_id}
+    else:
+        raise HTTPException(status_code=404, detail="任务不存在")
 
 
 @app.get("/api/config")
