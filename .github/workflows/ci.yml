@@ -42,4 +42,5 @@ jobs:
 
       - name: Run unit tests
         run: |
-          python -m pytest tests/ -v --ignore-glob="**/.venv/**"
+          rm -rf .pytest_cache __pycache__ tests/__pycache__
+          python -m pytest tests/ -v
