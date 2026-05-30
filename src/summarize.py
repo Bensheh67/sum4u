@@ -13,6 +13,12 @@ from .prompts import prompt_templates, prompt_with_screenshots
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 MINIMAX_API_URL = "https://api.minimax.chat/v1/chat/completions"
 
+# Provider 默认模型映射
+_PROVIDER_MODELS = {
+    "deepseek": "deepseek-chat",
+    "minimax": "MiniMax-M2.7",
+}
+
 
 def split_text(text, max_len=15000):
     """将文本按最大长度分段，优先按段落分割。"""
@@ -94,7 +100,8 @@ def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepse
     def call_api(chunk):
         p = prompt if prompt else prompt_templates["短视频知识"]
         caller = _PROVIDER_CALLERS.get(provider, call_deepseek)
-        return caller(chunk, model, p)
+        actual_model = _PROVIDER_MODELS.get(provider, model)
+        return caller(chunk, actual_model, p)
 
     # 分段处理
     chunks = split_text(text, 15000)
