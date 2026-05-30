@@ -42,6 +42,5 @@ jobs:
 
       - name: Run unit tests
         run: |
-          ls tests/
           rm -rf .pytest_cache __pycache__ tests/__pycache__
           python -m pytest tests/ -v
