@@ -1889,6 +1889,12 @@ async def read_root():
               </div>
 
               <div class="config-item">
+                <label for="apiMinimax">MiniMax API</label>
+                <input type="password" class="input" id="apiMinimax" placeholder="AI 摘要用">
+                <small><a href="https://platform.minimax.chat/" target="_blank">获取 API Key</a></small>
+              </div>
+
+              <div class="config-item">
                 <label for="apiOpenai">OpenAI API（可选）</label>
                 <input type="password" class="input" id="apiOpenai" placeholder="备用">
               </div>
@@ -1992,6 +1998,7 @@ async def read_root():
         if (data.api_keys) {
           if (data.api_keys.tikhub) document.getElementById('apiTikhub').value = data.api_keys.tikhub;
           if (data.api_keys.deepseek) document.getElementById('apiDeepseek').value = data.api_keys.deepseek;
+          if (data.api_keys.minimax) document.getElementById('apiMinimax').value = data.api_keys.minimax;
           if (data.api_keys.openai) document.getElementById('apiOpenai').value = data.api_keys.openai;
           if (data.api_keys.anthropic) document.getElementById('apiAnthropic').value = data.api_keys.anthropic;
         }
@@ -2009,6 +2016,7 @@ async def read_root():
       const apiKeys = {
         tikhub: document.getElementById('apiTikhub').value,
         deepseek: document.getElementById('apiDeepseek').value,
+        minimax: document.getElementById('apiMinimax').value,
         openai: document.getElementById('apiOpenai').value,
         anthropic: document.getElementById('apiAnthropic').value,
       };

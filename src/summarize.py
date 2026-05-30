@@ -11,6 +11,7 @@ from .config import get_api_key
 from .prompts import prompt_templates, prompt_with_screenshots
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
+MINIMAX_API_URL = "https://api.minimax.chat/v1/chat/completions"
 
 
 def split_text(text, max_len=15000):
@@ -31,36 +32,69 @@ def split_text(text, max_len=15000):
     return parts
 
 
-def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat", video_title: Optional[str] = None) -> str:
+def call_deepseek(chunk, model, prompt):
+    api_key = get_api_key("deepseek")
+    p = prompt + "\n" + chunk
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": p}
+        ],
+        "temperature": 0.6,
+        "stream": False
+    }
+    response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
+    response.raise_for_status()
+    data = response.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+def call_minimax(chunk, model, prompt):
+    api_key = get_api_key("minimax")
+    p = prompt + "\n" + chunk
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": p}
+        ],
+        "temperature": 0.6,
+        "stream": False
+    }
+    response = requests.post(MINIMAX_API_URL, headers=headers, json=payload, timeout=120)
+    response.raise_for_status()
+    data = response.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+_PROVIDER_CALLERS = {
+    "deepseek": call_deepseek,
+    "minimax": call_minimax,
+}
+
+
+def summarize_text(text: str, prompt: Optional[str] = None, model: str = "deepseek-chat", video_title: Optional[str] = None, provider: str = "deepseek") -> str:
     """
-    调用 DeepSeek API 对转录文本进行结构化总结。
+    调用 AI API 对转录文本进行结构化总结。
     自动分段摘要，单段不超过15000字。
     :param text: 需要总结的文本
     :param prompt: 自定义摘要提示词（可选）
-    :param model: DeepSeek 模型名，默认 deepseek-chat
+    :param model: 模型名，默认 deepseek-chat
     :param video_title: 视频标题（可选），会作为总结的第一行标题
+    :param provider: API 提供商，默认 deepseek，可选 minimax
     :return: 结构化摘要文本
     """
     def call_api(chunk):
-        api_key = get_api_key("deepseek")
         p = prompt if prompt else prompt_templates["短视频知识"]
-        p = p + "\n" + chunk
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "user", "content": p}
-            ],
-            "temperature": 0.6,
-            "stream": False
-        }
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
+        caller = _PROVIDER_CALLERS.get(provider, call_deepseek)
+        return caller(chunk, model, p)
 
     # 分段处理
     chunks = split_text(text, 15000)
@@ -84,7 +118,8 @@ def summarize_with_screenshots(
     summary_name: str,
     prompt: Optional[str] = None,
     model: str = "deepseek-chat",
-    video_title: Optional[str] = None
+    video_title: Optional[str] = None,
+    provider: str = "deepseek"
 ) -> Tuple[str, List[Dict], Path]:
     """
     生成带截图引用的总结
@@ -151,7 +186,7 @@ def summarize_with_screenshots(
     base_prompt = prompt if prompt else prompt_templates.get("短视频知识", prompt_templates["default 课堂笔记"])
     screenshot_prompt = prompt_with_screenshots(base_prompt, extracted_frames, video_duration)
 
-    summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model, video_title=video_title)
+    summary = summarize_text(transcript_text, prompt=screenshot_prompt, model=model, video_title=video_title, provider=provider)
 
     # 7. 备用：如果 AI 没有插入截图，使用备用插入逻辑
     summary_with_refs = insert_screenshot_references(summary, extracted_frames)
