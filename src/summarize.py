@@ -64,7 +64,7 @@ def call_minimax(chunk, model, prompt):
     base_url = get_api_key("minimax_base_url") or MINIMAX_API_URL
     p = prompt + "\n" + chunk
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "X-Api-Key": api_key,
         "Content-Type": "application/json",
         "anthropic-version": "2023-06-01"
     }
@@ -79,10 +79,8 @@ def call_minimax(chunk, model, prompt):
     response = requests.post(base_url, headers=headers, json=payload, timeout=120)
     response.raise_for_status()
     data = response.json()
-    # MiniMax Anthropic 格式响应
     content = data.get("content", [])
     if isinstance(content, list) and len(content) > 0:
-        # 可能包含 thinking 块
         for block in content:
             if block.get("type") == "text":
                 return block.get("text", "").strip()
