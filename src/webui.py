@@ -2581,7 +2581,7 @@ async def save_obsidian_config(data: dict):
         if not os.path.isdir(vault_path):
             raise HTTPException(status_code=400, detail="路径不是有效的文件夹")
         config_manager.config[OBSIDIAN_VAULT_PATH_KEY] = vault_path
-        config_manager.save()
+        config_manager.save_config()
     return {"status": "success"}
 
 
