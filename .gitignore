@@ -137,11 +137,9 @@ config.json
 .env
 *.env
 
-# 测试和验证脚本
+# 测试和验证脚本 (只忽略根目录下的 test_*.py，不忽略 tests/ 目录)
 test_*.py
 final_*.py
-simple_*.py
-validate_*.py
 
 # 临时文件
 *.tmp
