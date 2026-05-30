@@ -19,6 +19,12 @@ _PROVIDER_MODELS = {
     "minimax": "MiniMax-M2.7",
 }
 
+# Provider Base URL 映射
+_PROVIDER_BASE_URLS = {
+    "deepseek": "https://api.deepseek.com/v1/chat/completions",
+    "minimax": "https://api.minimaxi.com/anthropic/v1/messages",
+}
+
 
 def split_text(text, max_len=15000):
     """将文本按最大长度分段，优先按段落分割。"""
@@ -40,6 +46,7 @@ def split_text(text, max_len=15000):
 
 def call_deepseek(chunk, model, prompt):
     api_key = get_api_key("deepseek")
+    base_url = _PROVIDER_BASE_URLS["deepseek"]
     p = prompt + "\n" + chunk
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -53,7 +60,7 @@ def call_deepseek(chunk, model, prompt):
         "temperature": 0.6,
         "stream": False
     }
-    response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=120)
+    response = requests.post(base_url, headers=headers, json=payload, timeout=120)
     response.raise_for_status()
     data = response.json()
     return data["choices"][0]["message"]["content"].strip()
@@ -61,7 +68,7 @@ def call_deepseek(chunk, model, prompt):
 
 def call_minimax(chunk, model, prompt):
     api_key = get_api_key("minimax")
-    base_url = get_api_key("minimax_base_url") or MINIMAX_API_URL
+    base_url = _PROVIDER_BASE_URLS["minimax"]
     p = prompt + "\n" + chunk
     headers = {
         "X-Api-Key": api_key,
