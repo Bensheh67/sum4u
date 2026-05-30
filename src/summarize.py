@@ -11,7 +11,7 @@ from .config import get_api_key
 from .prompts import prompt_templates, prompt_with_screenshots
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
-MINIMAX_API_URL = "https://api.minimax.chat/v1/chat/completions"
+MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions"
 
 # Provider 默认模型映射
 _PROVIDER_MODELS = {
