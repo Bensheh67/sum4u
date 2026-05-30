@@ -11,7 +11,7 @@ from .config import get_api_key
 from .prompts import prompt_templates, prompt_with_screenshots
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
-MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions"
+MINIMAX_API_URL = "https://api.minimaxi.com/anthropic/v1/messages"
 
 # Provider 默认模型映射
 _PROVIDER_MODELS = {
@@ -61,10 +61,12 @@ def call_deepseek(chunk, model, prompt):
 
 def call_minimax(chunk, model, prompt):
     api_key = get_api_key("minimax")
+    base_url = get_api_key("minimax_base_url") or MINIMAX_API_URL
     p = prompt + "\n" + chunk
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01"
     }
     payload = {
         "model": model,
@@ -72,12 +74,19 @@ def call_minimax(chunk, model, prompt):
             {"role": "user", "content": p}
         ],
         "temperature": 0.6,
-        "stream": False
+        "max_tokens": 4096
     }
-    response = requests.post(MINIMAX_API_URL, headers=headers, json=payload, timeout=120)
+    response = requests.post(base_url, headers=headers, json=payload, timeout=120)
     response.raise_for_status()
     data = response.json()
-    return data["choices"][0]["message"]["content"].strip()
+    # MiniMax Anthropic 格式响应
+    content = data.get("content", [])
+    if isinstance(content, list) and len(content) > 0:
+        # 可能包含 thinking 块
+        for block in content:
+            if block.get("type") == "text":
+                return block.get("text", "").strip()
+    return ""
 
 
 _PROVIDER_CALLERS = {
