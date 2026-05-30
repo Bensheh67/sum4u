@@ -51,7 +51,7 @@ class ConfigManager:
         return self.default_config.copy()
 
     def _merge_configs(self, default: Dict, loaded: Dict) -> Dict:
-        """合并默认配置和已加载的配置"""
+        """合并默认配置和已加载的配置（深度合并）"""
         result = default.copy()
 
         for key, value in loaded.items():
