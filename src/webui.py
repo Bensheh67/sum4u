@@ -47,6 +47,9 @@ task_status = {}
 # 正在运行的任务（用于取消）
 running_tasks = {}
 
+# 任务历史记录
+task_history = []
+
 
 def process_local_audio_task(task_id: str, audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None):
     """处理本地音频文件的后台任务"""
