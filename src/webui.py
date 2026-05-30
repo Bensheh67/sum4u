@@ -2106,6 +2106,12 @@ async def read_root():
         openai: document.getElementById('apiOpenai').value,
         anthropic: document.getElementById('apiAnthropic').value,
       };
+      // 过滤掉掩码值（不保存未修改的掩码）
+      for (const [provider, key] of Object.entries(apiKeys)) {
+        if (!key || key.match(/^\*+$/)) {
+          delete apiKeys[provider];
+        }
+      }
       try {
         await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_keys: apiKeys }) });
       } catch (e) { console.error('Failed to save API config', e); }
