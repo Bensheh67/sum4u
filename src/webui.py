@@ -1911,12 +1911,6 @@ async def read_root():
               </div>
 
               <div class="config-item">
-                <label for="apiMinimaxBaseUrl">MiniMax Base URL</label>
-                <input type="text" class="input" id="apiMinimaxBaseUrl" placeholder="https://api.minimaxi.com/anthropic/v1/chat/completions">
-                <small>MiniMax API 端点地址（可选）</small>
-              </div>
-
-              <div class="config-item">
                 <label for="apiOpenai">OpenAI API（可选）</label>
                 <input type="password" class="input" id="apiOpenai" placeholder="备用">
               </div>
@@ -2091,7 +2085,6 @@ async def read_root():
           if (data.api_keys.tikhub) document.getElementById('apiTikhub').value = data.api_keys.tikhub;
           if (data.api_keys.deepseek) document.getElementById('apiDeepseek').value = data.api_keys.deepseek;
           if (data.api_keys.minimax) document.getElementById('apiMinimax').value = data.api_keys.minimax;
-          if (data.api_keys.minimax_base_url) document.getElementById('apiMinimaxBaseUrl').value = data.api_keys.minimax_base_url;
           if (data.api_keys.openai) document.getElementById('apiOpenai').value = data.api_keys.openai;
           if (data.api_keys.anthropic) document.getElementById('apiAnthropic').value = data.api_keys.anthropic;
         }
@@ -2110,7 +2103,6 @@ async def read_root():
         tikhub: document.getElementById('apiTikhub').value,
         deepseek: document.getElementById('apiDeepseek').value,
         minimax: document.getElementById('apiMinimax').value,
-        minimax_base_url: document.getElementById('apiMinimaxBaseUrl').value,
         openai: document.getElementById('apiOpenai').value,
         anthropic: document.getElementById('apiAnthropic').value,
       };
@@ -2579,7 +2571,7 @@ async def get_api_config():
     config = config_manager.config
     api_keys = config.get("api_keys", {})
     masked = {}
-    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax", "minimax_base_url"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
         key = api_keys.get(provider, "")
         masked[provider] = key[-4:].rjust(len(key), "*") if key else ""
     return {"api_keys": masked}
@@ -2589,7 +2581,7 @@ async def get_api_config():
 async def save_api_config(data: dict):
     """保存API密钥配置"""
     api_keys = data.get("api_keys", {})
-    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax", "minimax_base_url"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
         key = api_keys.get(provider, "")
         if key:
             config_manager.set_api_key(provider, key)

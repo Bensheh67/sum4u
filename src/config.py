@@ -20,8 +20,7 @@ class ConfigManager:
                 "openai": "",
                 "anthropic": "",
                 "tikhub": "",
-                "minimax": "",
-                "minimax_base_url": ""
+                "minimax": ""
             },
             "default_model": "deepseek-v4-flash",
             "default_language": "auto",
@@ -105,8 +104,7 @@ def get_api_key(provider: str) -> Optional[str]:
         "deepseek": "DEEPSEEK_API_KEY",
         "openai": "OPENAI_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
-        "minimax": "MINIMAX_API_KEY",
-        "minimax_base_url": "MINIMAX_BASE_URL"
+        "minimax": "MINIMAX_API_KEY"
     }
     
     env_var = env_var_map.get(provider)
