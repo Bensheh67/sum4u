@@ -2498,7 +2498,7 @@ async def get_models():
 async def get_results():
     """获取所有生成的总结结果"""
     import glob
-    summary_files = glob.glob("summaries/*.md")
+    summary_files = glob.glob("summaries/**/*.md", recursive=True)
     results = []
     for file_path in summary_files:
         try:
