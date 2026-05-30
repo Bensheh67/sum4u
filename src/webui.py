@@ -92,7 +92,7 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
         task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 
         print(f"[{task_id}] 结构化总结...")
-        summary = summarize_text(transcript, prompt=prompt_to_use)
+        summary = summarize_text(transcript, prompt=prompt_to_use, provider="deepseek")
         print(f"[{task_id}] 摘要完成！")
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 
@@ -120,7 +120,7 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
         print(f"[{task_id}] 处理失败: {str(e)}")
 
 
-def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: bool = False):
+def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: bool = False, provider: str = "deepseek"):
     """处理视频URL的后台任务
 
     Args:
@@ -212,14 +212,15 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
                 video_path=video_path,
                 summary_name=video_title,
                 prompt=prompt_to_use,
-                video_title=video_title
+                video_title=video_title,
+                provider=provider
             )
 
             # 处理视频文件不存在的情况
             if summary_result[0] is None:
                 print(f"[{task_id}] 视频文件不存在，无法提取截图，回退到纯文本总结...")
                 # 回退到不带截图的总结
-                summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title)
+                summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title, provider="deepseek")
                 frames = []
                 # 保存到文件夹内的 summary.md
                 summary_dir = Path("summaries") / video_title
@@ -263,7 +264,7 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 
             print(f"[{task_id}] 结构化总结...")
-            summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title)
+            summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title, provider=provider)
             print(f"[{task_id}] 摘要完成！")
             # 使用视频标题命名
             safe_title = video_title.replace('/', '_').replace('\\', '_')
@@ -1544,6 +1545,14 @@ async def read_root():
                 </select>
               </div>
 
+              <div class="form-row">
+                <div class="form-label">AI 提供商</div>
+                <select class="select" id="aiProvider">
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="minimax">MiniMax</option>
+                </select>
+              </div>
+
               <div class="form-row form-grid-full">
                 <div class="toggle-row">
                   <div class="toggle-info">
@@ -1988,7 +1997,12 @@ async def read_root():
       fetch('/process-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({
+          url,
+          with_screenshots: document.getElementById('screenshotToggle').classList.contains('active'),
+          auto_template: document.getElementById('autoTemplateToggle').classList.contains('active'),
+          provider: document.getElementById('aiProvider').value
+        })
       })
       .then(res => res.json())
       .then(data => {
@@ -2202,6 +2216,7 @@ async def process_video_url_endpoint(
     prompt: Optional[str] = Form(default=None),
     with_screenshots: bool = Form(default=False),
     auto_template: bool = Form(default=False),
+    provider: str = Form(default="deepseek"),
     # 为支持JSON请求添加参数
     request: Request = None
 ):
@@ -2215,6 +2230,7 @@ async def process_video_url_endpoint(
             prompt = body.get("prompt", prompt)
             with_screenshots = body.get("with_screenshots", with_screenshots)
             auto_template = body.get("auto_template", auto_template)
+            provider = body.get("provider", provider)
         except:
             pass  # 如果JSON解析失败，使用表单参数
 
@@ -2248,7 +2264,7 @@ async def process_video_url_endpoint(
     # 在后台线程中运行处理任务
     thread = threading.Thread(
         target=process_video_url_task,
-        args=(task_id, url, model, prompt_to_use, output_path, with_screenshots, auto_template)
+        args=(task_id, url, model, prompt_to_use, output_path, with_screenshots, auto_template, provider)
     )
     running_tasks[task_id] = thread
     thread.start()
@@ -2546,7 +2562,7 @@ async def get_api_config():
     config = config_manager.config
     api_keys = config.get("api_keys", {})
     masked = {}
-    for provider in ["tikhub", "deepseek", "openai", "anthropic"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
         key = api_keys.get(provider, "")
         masked[provider] = key[-4:].rjust(len(key), "*") if key else ""
     return {"api_keys": masked}
@@ -2556,7 +2572,7 @@ async def get_api_config():
 async def save_api_config(data: dict):
     """保存API密钥配置"""
     api_keys = data.get("api_keys", {})
-    for provider in ["tikhub", "deepseek", "openai", "anthropic"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
         key = api_keys.get(provider, "")
         if key:
             config_manager.set_api_key(provider, key)
