@@ -23,7 +23,7 @@ from .video_classifier import classify_video
 
 
 
-def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None):
+def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None, provider: str = "deepseek"):
     """处理本地音频文件的完整流程"""
     print("[1/3] 准备音频文件...")
     processed_audio_path = handle_audio_upload(audio_file_path, output_dir="downloads")
@@ -35,7 +35,7 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     print("转录完成！")
 
     print("[3/4] 结构化总结...")
-    summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model())
+    summary = summarize_text(transcript, prompt=prompt_to_use, model=model, provider=provider)
     print("摘要完成！")
 
     print("[4/4] 保存结果...")
@@ -45,7 +45,7 @@ def process_local_audio(audio_file_path: str, model: str, prompt_to_use: str, ou
     print(f"结果已保存到: {output_path}")
 
 
-def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: str = None):
+def process_video_url(video_url: str, model: str, prompt_to_use: str, output_path: str, with_screenshots: bool = False, auto_template: str = None, provider: str = "deepseek"):
     """处理视频URL的完整流程
 
     Args:
@@ -85,13 +85,14 @@ def process_video_url(video_url: str, model: str, prompt_to_use: str, output_pat
             video_path=video_path,
             summary_name=video_title,
             video_title=video_title,
-            prompt_key="短视频知识"
+            prompt_key="短视频知识",
+            provider=provider
         )
         print(f"已提取 {len(frames)} 张截图")
         # 保存到文件夹内的 summary.md
         summary_file_path = summary_dir / "summary.md"
     else:
-        summary = summarize_text(transcript, prompt=prompt_to_use, model=config_manager.get_default_model(), video_title=video_title)
+        summary = summarize_text(transcript, prompt=prompt_to_use, model=model, video_title=video_title, provider=provider)
         # 使用视频标题命名
         safe_title = video_title.replace('/', '_').replace('\\', '_')
         summary_file_path = os.path.join("summaries", f"{safe_title}_总结.md")
@@ -179,7 +180,8 @@ def main():
             prompt_to_use,
             output_path,
             with_screenshots=args.with_screenshots,
-            auto_template=args.auto_template
+            auto_template=args.auto_template,
+            provider=args.provider or "deepseek"
         )
 
     elif args.audio_file:
@@ -206,7 +208,7 @@ def main():
         # 更新prompt_to_use使用用户的模板或自定义提示词
         prompt_to_use = args.prompt if args.prompt else prompt_templates.get(args.prompt_template, prompt_templates["default课堂笔记"])
 
-        process_local_audio(args.audio_file, model_to_use, prompt_to_use, output_path, args.language)
+        process_local_audio(args.audio_file, model_to_use, prompt_to_use, output_path, args.language, args.provider or "deepseek")
 
     elif args.batch:
         # 批量处理模式
