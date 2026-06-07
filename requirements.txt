@@ -9,7 +9,7 @@ moviepy>=1.0.3
 requests>=2.31.0
 
 # 视频下载
-yt-dlp>=2023.12.30
+yt-dlp>0=2023.12.3
 
 # Web框架
 fastapi>=0.104.1

@@ -16,13 +16,15 @@ MINIMAX_API_URL = "https://api.minimaxi.com/anthropic/v1/messages"
 # Provider 默认模型映射
 _PROVIDER_MODELS = {
     "deepseek": "deepseek-chat",
-    "minimax": "MiniMax-M2.7",
+    "minimax": "MiniMax-M3",
+    "agnes": "agnes-2.0-flash",
 }
 
 # Provider Base URL 映射
 _PROVIDER_BASE_URLS = {
     "deepseek": "https://api.deepseek.com/v1/chat/completions",
     "minimax": "https://api.minimaxi.com/anthropic/v1/messages",
+    "agnes": "https://apihub.agnes-ai.com/v1/chat/completions",
 }
 
 
@@ -94,9 +96,32 @@ def call_minimax(chunk, model, prompt):
     return ""
 
 
+def call_agnes(chunk, model, prompt):
+    api_key = get_api_key("agnes")
+    base_url = _PROVIDER_BASE_URLS["agnes"]
+    p = prompt + "\n" + chunk
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": p}
+        ],
+        "temperature": 0.6,
+        "stream": False
+    }
+    response = requests.post(base_url, headers=headers, json=payload, timeout=120)
+    response.raise_for_status()
+    data = response.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
 _PROVIDER_CALLERS = {
     "deepseek": call_deepseek,
     "minimax": call_minimax,
+    "agnes": call_agnes,
 }
 
 

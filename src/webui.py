@@ -51,7 +51,7 @@ running_tasks = {}
 task_history = []
 
 
-def process_local_audio_task(task_id: str, audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None):
+def process_local_audio_task(task_id: str, audio_file_path: str, model: str, prompt_to_use: str, output_path: str, language: str = None, provider: str = "deepseek"):
     """处理本地音频文件的后台任务"""
     # 记录任务开始时间
     start_time = datetime.now()
@@ -92,7 +92,7 @@ def process_local_audio_task(task_id: str, audio_file_path: str, model: str, pro
         task_status[task_id] = {"status": "processing", "progress": 70, "message": "生成AI总结..."}
 
         print(f"[{task_id}] 结构化总结...")
-        summary = summarize_text(transcript, prompt=prompt_to_use, provider="deepseek")
+        summary = summarize_text(transcript, prompt=prompt_to_use, provider=provider)
         print(f"[{task_id}] 摘要完成！")
         task_status[task_id] = {"status": "processing", "progress": 90, "message": "保存结果..."}
 
@@ -196,7 +196,12 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 15, "message": "提取音频..."}
 
             print(f"[{task_id}] 提取音频...")
-            audio_path, _ = download_audio(video_url)
+            try:
+                audio_path, _ = download_audio(video_url)
+            except Exception as e:
+                print(f"[ERROR] download_audio 异常: {e}")
+                task_status[task_id] = {"status": "error", "progress": 0, "message": f"音频提取失败: {str(e)}", "error": str(e)}
+                return
             print(f"[{task_id}] 音频已保存: {audio_path}")
             task_status[task_id] = {"status": "processing", "progress": 25, "message": "开始转录..."}
 
@@ -220,7 +225,7 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             if summary_result[0] is None:
                 print(f"[{task_id}] 视频文件不存在，无法提取截图，回退到纯文本总结...")
                 # 回退到不带截图的总结
-                summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title, provider="deepseek")
+                summary = summarize_text(transcript, prompt=prompt_to_use, video_title=video_title, provider=provider)
                 frames = []
                 # 保存到文件夹内的 summary.md
                 summary_dir = Path("summaries") / video_title
@@ -239,7 +244,12 @@ def process_video_url_task(task_id: str, video_url: str, model: str, prompt_to_u
             task_status[task_id] = {"status": "processing", "progress": 10, "message": "下载并提取音频..."}
 
             print(f"[{task_id}] 下载并提取音频...")
-            audio_path, video_title = download_audio(video_url)
+            try:
+                audio_path, video_title = download_audio(video_url)
+            except Exception as e:
+                print(f"[ERROR] download_audio 异常: {e}")
+                task_status[task_id] = {"status": "error", "progress": 0, "message": f"音频提取失败: {str(e)}", "error": str(e)}
+                return
             print(f"[{task_id}] 音频已保存: {audio_path}")
             print(f"[{task_id}] 视频标题: {video_title}")
 
@@ -1550,6 +1560,7 @@ async def read_root():
                 <select class="select" id="aiProvider">
                   <option value="deepseek">DeepSeek</option>
                   <option value="minimax">MiniMax</option>
+                  <option value="agnes">Agnes</option>
                 </select>
               </div>
 
@@ -1911,6 +1922,12 @@ async def read_root():
               </div>
 
               <div class="config-item">
+                <label for="apiAgnes">Agnes API</label>
+                <input type="password" class="input" id="apiAgnes" placeholder="AI 摘要用">
+                <small><a href="https://apihub.agnes-ai.com/" target="_blank">获取 API Key</a></small>
+              </div>
+
+              <div class="config-item">
                 <label for="apiOpenai">OpenAI API（可选）</label>
                 <input type="password" class="input" id="apiOpenai" placeholder="备用">
               </div>
@@ -2085,6 +2102,7 @@ async def read_root():
           if (data.api_keys.tikhub) document.getElementById('apiTikhub').value = data.api_keys.tikhub;
           if (data.api_keys.deepseek) document.getElementById('apiDeepseek').value = data.api_keys.deepseek;
           if (data.api_keys.minimax) document.getElementById('apiMinimax').value = data.api_keys.minimax;
+          if (data.api_keys.agnes) document.getElementById('apiAgnes').value = data.api_keys.agnes;
           if (data.api_keys.openai) document.getElementById('apiOpenai').value = data.api_keys.openai;
           if (data.api_keys.anthropic) document.getElementById('apiAnthropic').value = data.api_keys.anthropic;
         }
@@ -2103,6 +2121,7 @@ async def read_root():
         tikhub: document.getElementById('apiTikhub').value,
         deepseek: document.getElementById('apiDeepseek').value,
         minimax: document.getElementById('apiMinimax').value,
+        agnes: document.getElementById('apiAgnes').value,
         openai: document.getElementById('apiOpenai').value,
         anthropic: document.getElementById('apiAnthropic').value,
       };
@@ -2287,7 +2306,8 @@ async def upload_audio_endpoint(
     model: str = Form(default="small"),
     language: Optional[str] = Form(default=None),
     prompt_template: str = Form(default="default 课堂笔记"),
-    prompt: Optional[str] = Form(default=None)
+    prompt: Optional[str] = Form(default=None),
+    provider: str = Form(default="deepseek")
 ):
     task_id = str(uuid.uuid4())
     
@@ -2314,7 +2334,7 @@ async def upload_audio_endpoint(
     # 在后台线程中运行处理任务
     thread = threading.Thread(
         target=process_local_audio_task,
-        args=(task_id, file_location, model, prompt_to_use, output_path, language)
+        args=(task_id, file_location, model, prompt_to_use, output_path, language, provider)
     )
     running_tasks[task_id] = thread
     thread.start()
@@ -2578,7 +2598,7 @@ async def get_api_config():
     config = config_manager.config
     api_keys = config.get("api_keys", {})
     masked = {}
-    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax", "agnes"]:
         key = api_keys.get(provider, "")
         masked[provider] = key[-4:].rjust(len(key), "*") if key else ""
     return {"api_keys": masked}
@@ -2588,7 +2608,7 @@ async def get_api_config():
 async def save_api_config(data: dict):
     """保存API密钥配置"""
     api_keys = data.get("api_keys", {})
-    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax"]:
+    for provider in ["tikhub", "deepseek", "openai", "anthropic", "minimax", "agnes"]:
         key = api_keys.get(provider, "")
         if key:
             config_manager.set_api_key(provider, key)

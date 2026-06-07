@@ -19,6 +19,7 @@ from .douyin_handler import is_douyin_url, process_douyin_url
 async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> str:
     """使用 yt-dlp 下载 Bilibili 视频音频"""
     os.makedirs(output_dir, exist_ok=True)
+    audio_path = None  # 初始化，避免异常处理时未定义
 
     # 从 URL 中提取视频 ID 用于生成唯一文件名
     video_id = "unknown"
@@ -55,6 +56,7 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             "--force-overwrites",  # 强制覆盖已存在的文件
             "--no-update",  # 不检查更新
             "--extractor-retries", "5",  # 提取器重试次数
+            "--cookies-from-browser", "chrome",  # 使用浏览器 cookies 认证
             "-o", str(audio_template) + ".%(ext)s",  # 输出模板
             decoded_url
         ]
@@ -85,7 +87,7 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
         print(f"yt-dlp 下载失败：{e}")
         print(f"错误输出：{e.stderr}")
         # 下载失败时清理可能产生的部分文件
-        if audio_path.exists():
+        if audio_path and audio_path.exists():
             print(f"清理下载失败的文件：{audio_path}")
             audio_path.unlink()
         # 尝试不使用 cookies 的方式下载
@@ -106,14 +108,15 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
                 "--force-overwrites",  # 强制覆盖已存在的文件
                 "--no-update",  # 不检查更新
                 "--extractor-retries", "5",  # 提取器重试次数
-                "-o", str(audio_path),  # 输出文件
+                "--cookies-from-browser", "chrome",  # 使用浏览器 cookies 认证
+                "-o", str(audio_template) + ".%(ext)s",  # 输出模板
                 decoded_url
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             print("Bilibili 下载完成（无 cookies）")
 
             # 检查文件是否存在
-            if audio_path.exists():
+            if audio_path and audio_path.exists():
                 file_size = audio_path.stat().st_size
                 print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
                 return str(audio_path)
@@ -129,14 +132,14 @@ async def download_bilibili_audio(url: str, output_dir: str = "downloads") -> st
             print(f"yt-dlp 下载失败（无 cookies）: {e2}")
             print(f"错误输出：{e2.stderr}")
             # 下载失败时清理可能产生的部分文件
-            if audio_path.exists():
+            if audio_path and audio_path.exists():
                 print(f"清理下载失败的文件：{audio_path}")
                 audio_path.unlink()
             raise RuntimeError(f"Bilibili 视频下载失败：{e2}")
     except Exception as e:
         print(f"Bilibili 下载出错：{e}")
         # 其他异常时也清理文件
-        if audio_path.exists():
+        if audio_path and audio_path.exists():
             print(f"清理异常文件：{audio_path}")
             audio_path.unlink()
         raise RuntimeError(f"Bilibili 视频下载失败：{e}")
@@ -164,7 +167,7 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
     audio_path = Path(output_dir) / f"youtube_{video_id}.mp3"
 
     # 下载前删除已存在的旧文件，确保不会复用旧内容
-    if audio_path.exists():
+    if audio_path and audio_path.exists():
         print(f"删除旧的音频文件：{audio_path}")
         audio_path.unlink()
 
@@ -190,7 +193,7 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         print("YouTube 下载完成")
 
         # 验证下载结果
-        if audio_path.exists():
+        if audio_path and audio_path.exists():
             file_size = audio_path.stat().st_size
             print(f"音频文件大小：{file_size / 1024 / 1024:.1f} MB")
         else:
@@ -199,13 +202,13 @@ async def download_youtube_audio(url: str, output_dir: str = "downloads") -> str
         print(f"yt-dlp 下载失败：{e}")
         print(f"错误输出：{e.stderr}")
         # 下载失败时清理可能产生的部分文件
-        if audio_path.exists():
+        if audio_path and audio_path.exists():
             print(f"清理下载失败的文件：{audio_path}")
             audio_path.unlink()
         raise RuntimeError(f"YouTube 视频下载失败：{e.stderr}")
     except Exception:
         # 其他异常时也清理文件
-        if audio_path.exists():
+        if audio_path and audio_path.exists():
             print(f"清理异常文件：{audio_path}")
             audio_path.unlink()
         raise
