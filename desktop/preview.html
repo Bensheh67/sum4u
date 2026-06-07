@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>summary4u — preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #1E293B;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: #0D9488;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+    }
+
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    p  { font-size: 14px; color: #64748B; }
+
+    .status {
+      margin-top: 32px;
+      padding: 12px 20px;
+      background: #F0FDFA;
+      border: 1px solid #99F6E4;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #0D9488;
+    }
+
+    .status.running { background: #FEF9C3; border-color: #FDE047; color: #A16207; }
+    .status.done    { background: #F0FDF4; border-color: #BBF7D0; color: #166534; }
+    .status.error   { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+  </style>
+</head>
+<body>
+  <div class="logo">S4U</div>
+  <h1>summary4u</h1>
+  <p>桌面 App 骨架 — preview.html</p>
+  <div class="status" id="status">AC-23: localhost:8000 可访问 ✓</div>
+</body>
+</html>
