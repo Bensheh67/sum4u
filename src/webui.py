@@ -27,6 +27,7 @@ from src.batch_processor import process_batch
 from src.douyin_handler import is_douyin_url, clean_douyin_url
 from src.config import config_manager
 from src.video_classifier import classify_video
+import json
 import re
 
 app = FastAPI(title="音频/视频总结工具 Web UI", version="1.0.0")
@@ -2442,6 +2443,89 @@ async def get_task_status(task_id: str):
     return task_status[task_id]
 
 
+# ── M3: SSE progress stream for desktop app ────────────────────────────────
+@app.get("/api/progress/stream")
+async def progress_stream():
+    """
+    Server-Sent Events endpoint for real-time task progress.
+    desktop_main.js uses EventSource('/api/progress/stream') to receive
+    progress updates and update the task cards in real-time.
+
+    Each event is a JSON line: { task_id, title, state, progress, message }
+    State values are normalized to match JS expectations:
+      processing/queued → queued, downloading, transcribing, summarizing,
+      completed → completed, error → error
+    """
+    import asyncio
+    from starlette.responses import StreamingResponse
+
+    async def event_generator():
+        last_snapshot = {}
+        seen_ids = set()
+
+        while True:
+            await asyncio.sleep(1.5)
+
+            # Broadcast all active tasks + any newly completed ones
+            for task_id, status in list(task_status.items()):
+                state = status.get("status", "")
+                progress = status.get("progress", 0)
+                message = status.get("message", "")
+
+                # Normalize state name to JS expectations
+                if state in ("processing", "queued"):
+                    normalized_state = "queued"
+                elif state == "completed":
+                    normalized_state = "completed"
+                elif state == "error":
+                    normalized_state = "error"
+                else:
+                    # Try to infer from message
+                    msg = message.lower()
+                    if "下载" in message or "download" in msg:
+                        normalized_state = "downloading"
+                    elif "转录" in message or "transcribe" in msg:
+                        normalized_state = "transcribing"
+                    elif "总结" in message or "summar" in msg:
+                        normalized_state = "summarizing"
+                    else:
+                        normalized_state = state
+
+                # Extract title from the task's input/historical record
+                title = ""
+                for h in task_history:
+                    if h.get("task_id") == task_id:
+                        inp = h.get("input", "")
+                        if inp:
+                            title = inp.split("/")[-1][:60]
+                        break
+
+                # Don't re-send completed tasks (they auto-advance in JS)
+                if normalized_state == "completed" and task_id in seen_ids:
+                    continue
+
+                seen_ids.add(task_id)
+
+                data = {
+                    "task_id": task_id,
+                    "title": title,
+                    "state": normalized_state,
+                    "progress": progress,
+                    "message": message,
+                }
+                yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @app.get("/download-result/{file_path:path}")
 async def download_result(file_path: str):
     import urllib.parse
@@ -2725,7 +2809,6 @@ async def save_obsidian_config(data: dict):
     """保存 Obsidian 配置"""
     vault_path = data.get("obsidian_vault_path", "").strip()
     if vault_path:
-        # 验证路径是否存在
         if not os.path.exists(vault_path):
             raise HTTPException(status_code=400, detail="路径不存在或无法访问")
         if not os.path.isdir(vault_path):
@@ -2733,6 +2816,16 @@ async def save_obsidian_config(data: dict):
         config_manager.config[OBSIDIAN_VAULT_PATH_KEY] = vault_path
         config_manager.save_config()
     return {"status": "success"}
+
+
+@app.post("/api/open-in-finder")
+async def api_open_in_finder(data: dict):
+    """Fallback: open Finder and select the file at `path` (AC-16)."""
+    file_path = data.get("path", "")
+    if file_path and os.path.exists(file_path):
+        import subprocess
+        subprocess.Popen(["open", "-R", file_path])
+    return {"ok": True}
 
 
 if __name__ == "__main__":
