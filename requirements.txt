@@ -1,5 +1,4 @@
-# requirements.txt
-# 视频总结工具依赖包列表
+# summary4u — video/audio summarization tool
 
 # 音频处理
 openai-whisper>=20231117
@@ -9,7 +8,7 @@ moviepy>=1.0.3
 requests>=2.31.0
 
 # 视频下载
-yt-dlp>0=2023.12.3
+yt-dlp>=2023.12.3
 
 # Web框架
 fastapi>=0.104.1
@@ -20,5 +19,5 @@ python-multipart>=0.0.6
 pathlib2>=2.3.7; python_version < "3.4"
 pytz>=2023.3
 
-# 推荐使用uv进行依赖和虚拟环境管理
-# 安装: pip install uv
+# 桌面 App (Mac menu-bar)
+desktop/requirements.txt
