@@ -3,3 +3,4 @@ rumps>=0.4.0
 pywebview>=4.0
 pynput>=1.7.7
 pync>=1.0.4
+platformdirs>=4.0.0

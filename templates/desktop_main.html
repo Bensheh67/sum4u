@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>summary4u</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/desktop.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Header -->
+  <header class="app-header">
+    <a href="#" class="app-header__logo">
+      <div class="app-header__logo-icon">S4U</div>
+      <span class="app-header__title">summary4u</span>
+    </a>
+    <div class="app-header__actions">
+      <button class="btn-ghost" id="settingsBtn" title="设置" aria-label="打开设置">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="app-content">
+
+    <!-- URL Input Card -->
+    <div class="card url-section">
+      <form class="url-form" id="urlForm" autocomplete="off">
+        <div class="url-input-wrap">
+          <!-- Link icon SVG -->
+          <svg class="url-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <input
+            type="text"
+            id="urlInput"
+            class="url-input"
+            placeholder="输入 YouTube/B站/抖音链接，或拖入文件..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <select class="template-select" id="templateSelect" aria-label="选择模板">
+          <option value="default">📚 课堂笔记</option>
+          <option value="youtube_structured">📝 结构化提取</option>
+          <option value="youtube_bullet">💡 精炼提取</option>
+          <option value="youtube_course">🎓 专业课笔记</option>
+          <option value="short_video">🎬 爆款短视频文案</option>
+        </select>
+        <button type="submit" class="btn-primary" id="submitBtn" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 3 14 13 2 22 11 11 22 13 2"/>
+          </svg>
+          开始总结
+        </button>
+      </form>
+    </div>
+
+    <!-- Drop Zone Card -->
+    <div class="card">
+      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="拖放文件或点击选择">
+        <input type="file" id="fileInput" multiple accept=".mp3,.wav,.m4a,.mp4,.flac,.txt,.md" />
+        <div class="drop-zone__icon">📁</div>
+        <div class="drop-zone__title">拖放文件到这里</div>
+        <div class="drop-zone__subtitle">或点击选择文件</div>
+        <div class="drop-zone__formats">支持 .mp3 .wav .m4a .mp4 .flac .txt .md</div>
+      </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section" id="progressSection">
+      <div class="section-label">当前任务</div>
+      <div id="taskList">
+        <div class="empty-state">
+          <div class="empty-state__icon">🎙️</div>
+          <div class="empty-state__text">暂无进行中的任务</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Section -->
+    <div class="history-section">
+      <div class="history-header">
+        <div class="history-header__title">历史记录</div>
+        <a href="#" class="history-header__link" id="viewAllBtn">查看全部</a>
+      </div>
+      <div id="historyList">
+        <div class="empty-state">
+          <div class="empty-state__icon">📄</div>
+          <div class="empty-state__text">暂无历史记录</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/js/desktop_main.js"></script>
+</body>
+</html>
