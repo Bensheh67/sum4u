@@ -289,7 +289,7 @@ class Summary4uApp(rumps.App):
         from menu_bar import MenuBarController
         self._controller = MenuBarController(self)
 
-        self.menu = self._build_menu()
+        self._build_menu()
 
         start_uvicorn()
         _setup_m2()
@@ -306,20 +306,23 @@ class Summary4uApp(rumps.App):
         # Recent tasks submenu (placeholder — populated dynamically in M3)
         recent = rumps.MenuItem("最近任务")
         recent.add(rumps.MenuItem("（暂无）"))
-        recent.items["（暂无）"].enabled = False
+        for _k, _mi in recent.items():
+            if _mi.title == "（暂无）":
+                _mi.state = 0
+                break
 
         self.menu = [
             rumps.MenuItem("打开主窗口"),     # → AC-2
-            rumps.separator(),
+            rumps.separator,
             rumps.MenuItem("快速输入"),       # → AC-8
-            rumps.separator(),
+            rumps.separator,
             recent,
-            rumps.separator(),
+            rumps.separator,
             rumps.MenuItem("启动浏览器"),     # → AC-23
             rumps.MenuItem("停止服务"),
-            rumps.separator(),
+            rumps.separator,
             rumps.MenuItem("偏好设置..."),    # → opens preferences
-            rumps.separator(),
+            rumps.separator,
             rumps.MenuItem("退出"),
         ]
 
