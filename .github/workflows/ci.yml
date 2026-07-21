@@ -7,40 +7,53 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install dependencies
-        run: |
-          pip install -e '.[test]'
+        run: uv sync --frozen --all-extras
 
-      - name: Run ruff check with auto-fix
-        run: |
-          ruff check src/ --fix || true
+      - name: Lint with ruff
+        run: uv run ruff check src/
 
-      - name: Check Python syntax
-        run: |
-          python -m py_compile src/*.py
+      - name: Check formatting
+        run: uv run ruff format --check src/
 
-      - name: Verify imports
-        run: |
-          python -c "
-          import src.main
-          import src.audio
-          import src.video
-          import src.config
-          print('All imports successful')
-          "
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.12"]
 
-      - name: Run unit tests
-        run: |
-          rm -rf .pytest_cache __pycache__ tests/__pycache__
-          python -m pytest tests/ -v
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra test
+
+      - name: Run tests
+        run: uv run pytest
