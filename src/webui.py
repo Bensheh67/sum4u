@@ -2443,13 +2443,10 @@ async def get_task_status(task_id: str):
     return task_status[task_id]
 
 
-# ── M3: SSE progress stream for desktop app ────────────────────────────────
 @app.get("/api/progress/stream")
 async def progress_stream():
     """
     Server-Sent Events endpoint for real-time task progress.
-    desktop_main.js uses EventSource('/api/progress/stream') to receive
-    progress updates and update the task cards in real-time.
 
     Each event is a JSON line: { task_id, title, state, progress, message }
     State values are normalized to match JS expectations:
